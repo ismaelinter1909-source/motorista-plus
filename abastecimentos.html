@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Abastecimento — Motorista Plus</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF + autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* ===== Tema Motorista Plus ===== */
+    :root {
+      --bg: #0b0f14;
+      --bg2: #10161d;
+      --card: #161c23;
+      --primary: #f39220;
+      --primary-700: #d47e16;
+      --outline: #2b3a49;
+      --text: #fff;
+      --muted: #b5bcc7;
+      --green: #2b9348;
+      --red: #dc3545;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Botão voltar */
+    #voltarPainel {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      width: auto;
+      padding: 8px 14px;
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      cursor: pointer;
+      font-size: 14px;
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      transition: .3s ease;
+    }
+
+    #voltarPainel:hover {
+      background: rgba(255, 255, 255, .16);
+    }
+
+    /* Header */
+    header {
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .3), rgba(0, 0, 0, .6)),
+        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+      padding: 30px 15px;
+      text-align: center;
+      border-bottom: 1px solid var(--outline);
+    }
+
+    header h1 {
+      font-size: clamp(20px, 4vw, 30px);
+      font-weight: 800;
+    }
+
+    header .plus {
+      color: var(--primary);
+    }
+
+    main {
+      width: 94%;
+      max-width: 1100px;
+      margin: 18px auto 40px;
+      display: grid;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--outline);
+      padding: 16px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 1.2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #e8e8e8;
+    }
+
+    /* Ajuste inputs e selects — corrigido */
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--outline);
+      background: rgba(255, 255, 255, .12);
+      color: #fff;
+      font-size: 14px;
+      appearance: none;
+    }
+
+    select {
+      background: rgba(255, 255, 255, .18);
+      cursor: pointer;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    /* Botões com transition corrigida */
+    button,
+    .btn,
+    .btn-green,
+    .btn-red,
+    .btn-ghost {
+      transition: .3s ease;
+      cursor: pointer;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 700;
+    }
+
+    .btn:hover {
+      background: var(--primary-700);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-green:hover {
+      filter: brightness(1.12);
+    }
+
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-red:hover {
+      filter: brightness(1.12);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--outline);
+      color: var(--muted);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, .12);
+    }
+
+    /* Dados usuário */
+    #dadosUsuarioCard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    #dadosUsuarioCard .item {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--outline);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #dadosUsuarioCard .item strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    /* Lista */
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--outline);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    canvas {
+      display: block;
+      margin: 10px auto;
+      max-width: 420px;
+    }
+
+    footer {
+      padding: 12px;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--outline);
+    }
+  </style>
+</head>
+
+<body>
+
+  <button id="voltarPainel" onclick="window.location.href='painel.html'">← Voltar</button>
+
+  <header>
+    <h1>Abastecimento — Motorista<span class="plus">Plus</span></h1>
+  </header>
+
+  <main>
+
+    <!-- Dados do motorista -->
+    <section class="card">
+      <h2>Dados do Motorista</h2>
+      <div id="dadosUsuarioCard">Carregando...</div>
+    </section>
+
+    <!-- Filtro -->
+    <section class="card">
+      <h2>Filtro de Período</h2>
+      <div class="grid2">
+        <div>
+          <label>Data de Início</label>
+          <input type="date" id="filtroInicio">
+        </div>
+        <div>
+          <label>Data de Fim</label>
+          <input type="date" id="filtroFim">
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+        <button id="filtrar" class="btn">Filtrar</button>
+        <button id="limparFiltro" class="btn-ghost">Limpar Filtro</button>
+        <button id="gerarPDFFiltroButton" class="btn">Gerar PDF do Período</button>
+      </div>
+    </section>
+
+    <!-- Registrar -->
+    <section class="card">
+      <h2>Registrar Abastecimento</h2>
+      <div class="grid2">
+        <div>
+          <label>Tipo</label>
+          <select id="tipoCombustivel">
+            <option value="Diesel">Diesel</option>
+            <option value="Arla">Arla</option>
+          </select>
+        </div>
+        <div>
+          <label>Data</label>
+          <input type="date" id="data">
+        </div>
+        <div>
+          <label>KM</label>
+          <input type="number" id="km" inputmode="numeric">
+        </div>
+        <div>
+          <label>Litragem (L)</label>
+          <input type="number" id="litros" step="0.01">
+        </div>
+        <div>
+          <label>Valor Total (R$)</label>
+          <input type="number" id="valor" step="0.01">
+        </div>
+        <div>
+          <label>Forma de Pagamento</label>
+          <select id="pagamento">
+            <option value="Nota Assinada">Nota Assinada</option>
+            <option value="Base-Porto">Base-Porto</option>
+            <option value="Pix">Pix</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Carta Frete">Carta Frete</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+        <button id="adicionar" class="btn-green">Salvar</button>
+        <button id="cancelarEdicao" class="btn-ghost" style="display:none">Cancelar edição</button>
+        <button id="limparTodos" class="btn-red">Apagar TODOS</button>
+      </div>
+      <p id="statusEdicao" style="margin-top:6px; color:var(--muted)"></p>
+    </section>
+
+    <!-- Lista -->
+    <section class="card">
+      <h2>Lista de Abastecimentos</h2>
+      <ul id="listaAbastecimentos"></ul>
+    </section>
+
+    <!-- Gráfico -->
+    <section class="card" style="text-align:center">
+      <h2>Resumo Visual</h2>
+      <canvas id="graficoAbastecimento"></canvas>
+    </section>
+
+    <!-- PDF -->
+    <section class="card" style="text-align:center">
+      <button id="gerarPDFButton" class="btn" style="width:220px">Gerar PDF Completo</button>
+    </section>
+
+  </main>
+
+  <footer>© 2025 Motorista Plus</footer>
+
+  <!-- Script completo (inalterado) -->
+  <script type="module">
+    /* ===== Firebase ===== */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+      collection, addDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
+      authDomain: "motorista-plus-dc909.firebaseapp.com",
+      projectId: "motorista-plus-dc909"
+    });
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const $ = (id) => document.getElementById(id);
+
+    let uid = null;
+    let perfil = null;
+    let abastecimentos = [];
+    let chart;
+    let filtroAtivo = null;
+    let editId = null;
+
+    const toISO = (d) => d ? new Date(d).toISOString().slice(0, 10) : "";
+    const fmtBR = (iso) => {
+      const d = new Date(iso);
+      if (isNaN(d)) return "";
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    };
+    const asDateOnly = (v) => {
+      if (!v) return "";
+      const d = new Date(v);
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
+      return String(v).slice(0, 10);
+    };
+
+    async function carregarPerfil() {
+      const snap = await getDoc(doc(db, "usuarios", uid));
+      if (!snap.exists()) return;
+      perfil = snap.data();
+      $('dadosUsuarioCard').innerHTML = `
+        <div class="item"><strong>Motorista</strong>${perfil.nome || "—"}</div>
+        <div class="item"><strong>Telefone</strong>${perfil.telefone || "—"}</div>
+        <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || "—"}</div>
+        <div class="item"><strong>Reboque</strong>${perfil.placaReboque || "—"}</div>
+        <div class="item"><strong>Email</strong>${perfil.email || "—"}</div>
+      `;
+    }
+
+    function iniciarStream() {
+      const qRef = query(collection(db, "usuarios", uid, "abastecimentos"), orderBy("criadoEm", "desc"));
+      onSnapshot(qRef, (snap) => {
+        abastecimentos = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            tipo: data.tipo,
+            data: asDateOnly(data.data),
+            km: Number(data.km || 0),
+            litros: Number(data.litros || 0),
+            valor: Number(data.valor || 0),
+            pagamento: data.pagamento || "—",
+            criadoEm: data.criadoEm?.toDate?.() || null
+          };
+        });
+        renderLista();
+        atualizarGrafico();
+      });
+    }
+
+    function renderLista() {
+      const lista = $('listaAbastecimentos');
+      let items = [...abastecimentos];
+
+      if (filtroAtivo) {
+        items = items.filter(a => {
+          const d = new Date(a.data);
+          const okInicio = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
+          const okFim = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
+          return okInicio && okFim;
+        });
+      }
+
+      if (items.length === 0) {
+        lista.innerHTML = `<li>Nenhum registro.</li>`;
+        return;
+      }
+
+      lista.innerHTML = items.map(a => `
+        <li>
+          <div style="flex:1; min-width:220px;">
+            <div style="font-weight:700">${a.tipo} — ${fmtBR(a.data)}</div>
+            <div style="font-size:13px; color:var(--muted)">
+              KM: ${a.km.toLocaleString('pt-BR')} • 
+              ${a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} L • 
+              R$ ${a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} • 
+              ${a.pagamento}
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" data-act="edit" data-id="${a.id}">Editar</button>
+            <button class="btn-red" data-act="del" data-id="${a.id}">Remover</button>
+          </div>
+        </li>
+      `).join("");
+
+      lista.querySelectorAll("button").forEach(b => {
+        b.onclick = async () => {
+          const id = b.dataset.id;
+          const act = b.dataset.act;
+          if (act === "edit") {
+            const a = abastecimentos.find(x => x.id === id);
+            if (!a) return;
+            $('tipoCombustivel').value = a.tipo;
+            $('data').value = a.data;
+            $('km').value = a.km;
+            $('litros').value = a.litros;
+            $('valor').value = a.valor;
+            $('pagamento').value = a.pagamento;
+            editId = id;
+            $('statusEdicao').textContent = "Editando registro (" + fmtBR(a.data) + ")";
+            $('cancelarEdicao').style.display = 'inline-block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (act === "del") {
+            if (!confirm("Deseja remover este registro?")) return;
+            await deleteDoc(doc(db, "usuarios", uid, "abastecimentos", id));
+          }
+        };
+      });
+    }
+
+    function atualizarGrafico() {
+      const totalDiesel = abastecimentos.filter(a => a.tipo === "Diesel")
+        .reduce((t, a) => t + (Number(a.valor) || 0), 0);
+      const totalArla = abastecimentos.filter(a => a.tipo === "Arla")
+        .reduce((t, a) => t + (Number(a.valor) || 0), 0);
+
+      const ctx = $('graficoAbastecimento').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Diesel", "Arla"],
+          datasets: [{ data: [totalDiesel, totalArla] }]
+        }
+      });
+    }
+
+    $('adicionar').onclick = async () => {
+      const tipo = $('tipoCombustivel').value;
+      const dataStr = $('data').value;
+      const km = Number($('km').value);
+      const litros = Number($('litros').value);
+      const valor = Number($('valor').value);
+      const pagamento = $('pagamento').value;
+
+      if (!dataStr || isNaN(km) || isNaN(litros) || isNaN(valor)) {
+        alert("Preencha todos os campos corretamente!");
+        return;
+      }
+
+      const registro = {
+        tipo,
+        data: dataStr,
+        km, litros, valor, pagamento,
+        criadoEm: serverTimestamp()
+      };
+
+      if (editId) {
+        await updateDoc(doc(db, "usuarios", uid, "abastecimentos", editId), registro);
+        $('statusEdicao').textContent = "Registro atualizado.";
+      } else {
+        await addDoc(collection(db, "usuarios", uid, "abastecimentos"), registro);
+        $('statusEdicao').textContent = "Registro adicionado.";
+      }
+
+      editId = null;
+      $('cancelarEdicao').style.display = 'none';
+      $('tipoCombustivel').value = "Diesel";
+      $('data').value = "";
+      $('km').value = "";
+      $('litros').value = "";
+      $('valor').value = "";
+      $('pagamento').value = "Nota Assinada";
+    };
+
+    $('cancelarEdicao').onclick = () => {
+      editId = null;
+      $('statusEdicao').textContent = "";
+      $('cancelarEdicao').style.display = 'none';
+      $('data').value = $('km').value = $('litros').value = $('valor').value = "";
+      $('tipoCombustivel').value = "Diesel";
+      $('pagamento').value = "Nota Assinada";
+    };
+
+    $('limparTodos').onclick = async () => {
+      if (!confirm("Excluir TODOS os registros?")) return;
+      const snap = await getDocs(collection(db, "usuarios", uid, "abastecimentos"));
+      const promises = [];
+      snap.forEach(d => promises.push(deleteDoc(d.ref)));
+      await Promise.all(promises);
+    };
+
+    $('filtrar').onclick = () => {
+      const inicioStr = $('filtroInicio').value;
+      const fimStr = $('filtroFim').value;
+      filtroAtivo = {
+        inicio: inicioStr ? new Date(inicioStr) : null,
+        fim: fimStr ? new Date(fimStr) : null
+      };
+      renderLista();
+    };
+
+    $('limparFiltro').onclick = () => {
+      filtroAtivo = null;
+      $('filtroInicio').value = "";
+      $('filtroFim').value = "";
+      renderLista();
+    };
+
+    function construirLinhasPDF(arr) {
+      return arr.map(a => [
+        fmtBR(a.data),
+        a.tipo,
+        a.km.toLocaleString('pt-BR'),
+        a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        "R$ " + a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        a.pagamento
+      ]);
+    }
+
+    async function gerarPDF(registros, tituloExtra = "") {
+      const { jsPDF } = window.jspdf;
+      const docpdf = new jsPDF({ unit: "pt", format: "a4" });
+
+      const startX = 40;
+      try {
+        docpdf.addImage("img/Logo.Motorista-Plus.png", "PNG", startX, 14, 110, 42);
+      } catch (e) { }
+
+      docpdf.setFontSize(15);
+      docpdf.text(`Relatório de Abastecimentos — Motorista Plus ${tituloExtra}`, startX + 130, 40);
+
+      let y = 80;
+      docpdf.setFontSize(11);
+      docpdf.text(`Motorista: ${perfil?.nome || "—"}`, startX, y);
+      docpdf.text(`Placas: ${perfil?.placaCavalo || "—"} / ${perfil?.placaReboque || "—"}`, startX + 260, y);
+
+      const corpo = construirLinhasPDF(registros);
+
+      docpdf.autoTable({
+        startY: y + 14,
+        head: [["Data", "Tipo", "KM", "Litros", "Valor", "Pagamento"]],
+        body: corpo,
+        headStyles: { fillColor: [243, 146, 32] },
+        margin: { left: startX, right: startX }
+      });
+
+      docpdf.save("abastecimentos.pdf");
+    }
+
+    $('gerarPDFFiltroButton').onclick = () => {
+      let itens = [...abastecimentos];
+      if (filtroAtivo) {
+        itens = itens.filter(a => {
+          const d = new Date(a.data);
+          const okInicio = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
+          const okFim = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
+          return okInicio && okFim;
+        });
+      }
+
+      const tExtra = (filtroAtivo?.inicio || filtroAtivo?.fim)
+        ? `(${filtroAtivo?.inicio ? fmtBR(filtroAtivo.inicio.toISOString()) : '…'} a ${filtroAtivo?.fim ? fmtBR(filtroAtivo.fim.toISOString()) : '…'})`
+        : "";
+
+      gerarPDF(itens, tExtra);
+    };
+
+    $('gerarPDFButton').onclick = () => {
+      gerarPDF(abastecimentos, "(Completo)");
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return window.location.href = "login.html";
+      uid = user.uid;
+      await carregarPerfil();
+      iniciarStream();
+    });
+
+  </script>
+
+</body>
+
+</html>

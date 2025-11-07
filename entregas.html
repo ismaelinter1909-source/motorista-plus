@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Entregas — Motorista Plus</title>
+
+  <!-- libs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Firebase -->
+  <script type="module">
+    // este bloco vazio evita bloqueio de pré-carregamento em alguns navegadores
+  </script>
+
+  <style>
+    /* ===== Tema Motorista Plus (mesmo do painel/gastos/abastecimento) ===== */
+    :root{
+      --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
+      --primary:#f39220; --primary-700:#d47e16;
+      --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
+      --green:#2b9348; --red:#dc3545; --info:#0077b6;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
+    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+    /* Botão voltar fixo (igual abastecimentos.html) */
+    #voltarPainel{
+      position:fixed; top:12px; left:12px; z-index:9999;
+      padding:10px 14px;
+      width: auto;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.08); color:#fff; cursor:pointer; font-weight:700;
+      backdrop-filter:blur(4px);
+      transition:background .2s ease, transform .08s ease, box-shadow .25s ease, border-color .2s ease;
+    }
+    #voltarPainel:hover{ background:rgba(255,255,255,.16) }
+    #voltarPainel:active{ transform:translateY(1px) }
+
+    header{
+      background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
+      padding:28px 16px;text-align:center;border-bottom:1px solid var(--outline)
+    }
+    header h1{font-weight:800;font-size:clamp(20px,4vw,30px)}
+    header .plus{color:var(--primary)}
+
+    main{width:94%;max-width:1100px;margin:70px auto 24px;display:grid;gap:14px;flex:1}
+
+    .card{
+      background:var(--card);border:1px solid var(--outline);
+      padding:16px;border-radius:12px;backdrop-filter:blur(6px)
+    }
+    h2{color:var(--primary);font-size:1.15rem;margin-bottom:8px}
+
+    label{display:block;font-size:13px;margin-top:8px;color:#e8e8e8}
+    input,select,textarea,button{
+      width:100%;padding:12px;border-radius:10px;border:1px solid var(--outline);
+      background:rgba(255,255,255,.08);color:#fff;font-size:14px;outline:none;
+      transition:box-shadow .2s ease, transform .08s ease, background .2s ease, border-color .2s ease;
+    }
+    input:focus,select:focus,textarea:focus{
+      box-shadow:0 0 0 3px rgba(243,146,32,.15); border-color:var(--primary)
+    }
+
+    /* selects visíveis em todos navegadores (se usados) */
+    select{
+      -webkit-appearance:none;-moz-appearance:none;appearance:none;
+      background-image:linear-gradient(45deg,transparent 50%, #fff 50%),
+                       linear-gradient(135deg, #fff 50%, transparent 50%),
+                       linear-gradient(to right, transparent, transparent);
+      background-position:calc(100% - 18px) calc(50% - 3px),
+                          calc(100% - 13px) calc(50% - 3px),
+                          calc(100% - 2.2em) 0.6em;
+      background-size:5px 5px, 5px 5px, 1px 1.6em;
+      background-repeat:no-repeat;
+    }
+
+    .btn{background:var(--primary);border:none;font-weight:700;color:#fff;cursor:pointer}
+    .btn:hover{background:var(--primary-700)}
+    .btn:active{transform:translateY(1px)}
+    .btn-green{background:var(--green)} .btn-green:hover{filter:brightness(1.05)}
+    .btn-red{background:var(--red)} .btn-red:hover{filter:brightness(1.05)}
+    .btn-info{background:var(--info)} .btn-info:hover{filter:brightness(1.05)}
+    .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+    /* Dados do usuário */
+    #dadosUsuarioCard{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px
+    }
+    #dadosUsuarioCard .item{
+      background:rgba(255,255,255,.05);border:1px solid var(--outline);
+      padding:10px;border-radius:10px;text-align:center
+    }
+    #dadosUsuarioCard .item strong{display:block;color:var(--primary);margin-bottom:4px}
+
+    /* Lista de entregas */
+    ul{list-style:none;padding-left:0;margin-top:8px}
+    li{
+      background:rgba(255,255,255,.05);border:1px solid var(--outline);
+      padding:10px;border-radius:10px;margin:6px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap
+    }
+    .tag{font-size:12px;color:var(--muted)}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .row-actions button{width:auto;padding:8px 12px;border-radius:8px}
+
+    table{width:100%;border-collapse:collapse;margin-top:6px;font-size:.92rem}
+    th,td{border:1px solid var(--outline);padding:8px;text-align:center}
+    th{background:rgba(255,255,255,.06)}
+    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
+  </style>
+</head>
+<body>
+
+  <!-- Voltar -->
+  <button id="voltarPainel" onclick="window.location.href='painel.html'">← Voltar</button>
+
+  <header>
+    <h1>Entregas — Motorista<span class="plus">Plus</span></h1>
+  </header>
+
+  <main>
+    <!-- Dados do usuário -->
+    <section class="card">
+      <h2>Dados do Motorista</h2>
+      <div id="dadosUsuarioCard">Carregando...</div>
+    </section>
+
+    <!-- Registrar entrega -->
+    <section class="card">
+      <h2>Registrar Entrega</h2>
+      <div class="grid2">
+        <div><label for="deliveryDate">Data</label><input type="date" id="deliveryDate"></div>
+        <div><label for="clientName">Cliente</label><input type="text" id="clientName" placeholder="Cliente"></div>
+        <div><label for="origin">Origem</label><input type="text" id="origin" placeholder="Cidade/UF"></div>
+        <div><label for="destination">Destino</label><input type="text" id="destination" placeholder="Cidade/UF"></div>
+        <div><label for="initialKm">KM Inicial</label><input type="number" id="initialKm" inputmode="numeric" placeholder="0"></div>
+        <div><label for="finalKm">KM Final</label><input type="number" id="finalKm" inputmode="numeric" placeholder="0"></div>
+        <div><label for="implementPlate">Placa</label><input type="text" id="implementPlate" placeholder="AAA0A00"></div>
+        <div><label for="product">Produto</label><input type="text" id="product" placeholder="Produto"></div>
+        <div><label for="weight">Peso (kg)</label><input type="number" id="weight" inputmode="decimal" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="salvarEntrega" class="btn btn-green" style="flex:1 1 200px">Salvar</button>
+        <button id="cancelarEdicao" class="btn btn-ghost" style="flex:1 1 200px;display:none">Cancelar edição</button>
+        <button id="apagarTodos" class="btn btn-red" style="flex:1 1 200px">Apagar TODOS</button>
+      </div>
+      <p id="statusEdicao" class="tag" style="margin-top:6px"></p>
+    </section>
+
+    <!-- Filtro / PDF -->
+    <section class="card">
+      <h2>Filtro de Datas (para PDF)</h2>
+      <div class="grid2">
+        <div><label for="filterStart">Data Início</label><input type="date" id="filterStart"></div>
+        <div><label for="filterEnd">Data Fim</label><input type="date" id="filterEnd"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="gerarPDFFiltro" class="btn btn-green" style="flex:1 1 220px">Gerar PDF do Período</button>
+        <button id="gerarPDFCompleto" class="btn btn-green" style="flex:1 1 220px">Gerar PDF Completo</button>
+      </div>
+    </section>
+
+    <!-- Lista -->
+    <section class="card">
+      <h2>Entregas Registradas</h2>
+      <ul id="listaEntregas"></ul>
+    </section>
+  </main>
+
+  <footer>© 2025 Motorista Plus</footer>
+
+  <!-- ====================== SCRIPT ====================== -->
+  <script type="module">
+    /* ===== Firebase ===== */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
+      collection, addDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
+      authDomain: "motorista-plus-dc909.firebaseapp.com",
+      projectId: "motorista-plus-dc909"
+    });
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const $ = (id) => document.getElementById(id);
+
+    let uid = null;
+    let perfil = null;
+    let entregas = [];
+    let editId = null;
+
+    /* ===== Helpers ===== */
+    const fmtBR = (isoLike) => {
+      const d = new Date(isoLike);
+      if (isNaN(d)) return "";
+      return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+    };
+    const asDateOnly = (v) => {
+      if (!v) return "";
+      const d = new Date(v);
+      if (!isNaN(d)) return d.toISOString().slice(0,10);
+      return String(v).slice(0,10);
+    };
+
+    /* ===== Perfil ===== */
+    async function carregarPerfil(){
+      const snap = await getDoc(doc(db,"usuarios", uid));
+      if(!snap.exists()) return;
+      perfil = snap.data();
+      $('dadosUsuarioCard').innerHTML = `
+        <div class="item"><strong>Motorista</strong>${perfil.nome || "—"}</div>
+        <div class="item"><strong>Telefone</strong>${perfil.telefone || "—"}</div>
+        <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || "—"}</div>
+        <div class="item"><strong>Reboque</strong>${perfil.placaReboque || "—"}</div>
+        <div class="item"><strong>Email</strong>${perfil.email || "—"}</div>
+      `;
+    }
+
+    /* ===== Stream Entregas ===== */
+    function iniciarStream(){
+      const qRef = query(collection(db,"usuarios",uid,"entregas"), orderBy("criadoEm","desc"));
+      onSnapshot(qRef, (snap)=>{
+        entregas = snap.docs.map(d=>{
+          const x = d.data();
+          return {
+            id: d.id,
+            date: asDateOnly(x.date),
+            client: x.client || "",
+            origin: x.origin || "",
+            destination: x.destination || "",
+            kmStart: Number(x.kmStart||0),
+            kmEnd: Number(x.kmEnd||0),
+            kmPercorrido: Number(x.kmPercorrido|| (Number(x.kmEnd||0)-Number(x.kmStart||0))),
+            plate: x.plate || "",
+            product: x.product || "",
+            weight: Number(x.weight||0),
+            criadoEm: x.criadoEm?.toDate?.() || null
+          };
+        });
+        renderLista();
+      });
+    }
+
+    /* ===== Render Lista ===== */
+    function renderLista(){
+      const ul = $('listaEntregas');
+      if(!entregas.length){ ul.innerHTML = '<li>Nenhuma entrega.</li>'; return; }
+
+      ul.innerHTML = entregas.map(e=>`
+        <li>
+          <div style="flex:1;min-width:260px">
+            <div style="font-weight:700">${fmtBR(e.date)} — ${e.client}</div>
+            <div class="tag">Origem: ${e.origin} • Destino: ${e.destination} • KM: ${e.kmStart}→${e.kmEnd} (${e.kmPercorrido})</div>
+            <div class="tag">Placa: ${e.plate} • Produto: ${e.product} • Peso: ${e.weight.toLocaleString('pt-BR')}</div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" data-act="edit" data-id="${e.id}">Editar</button>
+            <button class="btn-red" data-act="del" data-id="${e.id}">Remover</button>
+          </div>
+        </li>
+      `).join("");
+
+      ul.querySelectorAll("button").forEach(b=>{
+        b.onclick = async ()=>{
+          const id = b.dataset.id;
+          const act = b.dataset.act;
+          if(act === "edit"){
+            const e = entregas.find(x=>x.id===id);
+            if(!e) return;
+            $('deliveryDate').value = e.date;
+            $('clientName').value = e.client;
+            $('origin').value = e.origin;
+            $('destination').value = e.destination;
+            $('initialKm').value = e.kmStart;
+            $('finalKm').value = e.kmEnd;
+            $('implementPlate').value = e.plate;
+            $('product').value = e.product;
+            $('weight').value = e.weight;
+            editId = id;
+            $('statusEdicao').textContent = `Editando (${fmtBR(e.date)} — ${e.client})`;
+            $('cancelarEdicao').style.display = 'inline-block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }else if(act === "del"){
+            if(!confirm("Deseja remover esta entrega?")) return;
+            await deleteDoc(doc(db,"usuarios",uid,"entregas",id));
+          }
+        };
+      });
+    }
+
+    /* ===== Salvar / Atualizar ===== */
+    $('salvarEntrega').onclick = async ()=>{
+      const date = $('deliveryDate').value;
+      const client = $('clientName').value.trim();
+      const origin = $('origin').value.trim();
+      const destination = $('destination').value.trim();
+      const kmStart = Number($('initialKm').value||0);
+      const kmEnd = Number($('finalKm').value||0);
+      const plate = $('implementPlate').value.trim();
+      const product = $('product').value.trim();
+      const weight = Number($('weight').value||0);
+
+      if(!date || !client || !origin || !destination || isNaN(kmStart) || isNaN(kmEnd) || !plate || !product || isNaN(weight)){
+        alert("Preencha todos os campos corretamente!"); return;
+      }
+
+      const registro = {
+        date, client, origin, destination,
+        kmStart, kmEnd, kmPercorrido: (kmEnd - kmStart),
+        plate, product, weight,
+        criadoEm: serverTimestamp()
+      };
+
+      if(editId){
+        await updateDoc(doc(db,"usuarios",uid,"entregas",editId), registro);
+        $('statusEdicao').textContent = "Entrega atualizada.";
+      }else{
+        await addDoc(collection(db,"usuarios",uid,"entregas"), registro);
+        $('statusEdicao').textContent = "Entrega registrada.";
+      }
+
+      editId = null;
+      $('cancelarEdicao').style.display = 'none';
+      ['deliveryDate','clientName','origin','destination','initialKm','finalKm','implementPlate','product','weight'].forEach(id=>$(id).value="");
+    };
+
+    $('cancelarEdicao').onclick = ()=>{
+      editId = null;
+      $('statusEdicao').textContent = "";
+      $('cancelarEdicao').style.display = 'none';
+      ['deliveryDate','clientName','origin','destination','initialKm','finalKm','implementPlate','product','weight'].forEach(id=>$(id).value="");
+    };
+
+    /* ===== Apagar TODOS ===== */
+    $('apagarTodos').onclick = async ()=>{
+      if(!confirm("Excluir TODAS as entregas?")) return;
+      const snap = await getDocs(collection(db,"usuarios",uid,"entregas"));
+      const tasks = [];
+      snap.forEach(d => tasks.push(deleteDoc(d.ref)));
+      await Promise.all(tasks);
+    };
+
+    /* ===== PDF (SEM LOGO) ===== */
+    function linhasPDF(arr){
+      return arr.map(e=>[
+        fmtBR(e.date), e.client, e.origin, e.destination,
+        e.kmStart, e.kmEnd, e.kmPercorrido, e.plate, e.product, e.weight
+      ]);
+    }
+
+    async function gerarPDF(registros, tituloExtra=""){
+      const { jsPDF } = window.jspdf;
+      const docpdf = new jsPDF({ unit:"pt", format:"a4", orientation:"landscape" });
+
+      const startX = 30; let y = 36;
+      docpdf.setFontSize(16);
+      docpdf.text(`Relatório de Entregas — Motorista Plus ${tituloExtra}`, startX, y); y += 18;
+
+      docpdf.setFontSize(11);
+      docpdf.text(`Motorista: ${perfil?.nome || "—"}`, startX, y);
+      docpdf.text(`Placas: ${perfil?.placaCavalo || "—"} / ${perfil?.placaReboque || "—"}`, startX+280, y);
+      y += 14;
+
+      const corpo = linhasPDF(registros);
+
+      docpdf.autoTable({
+        startY: y+6,
+        head: [["Data","Cliente","Origem","Destino","KM Inicial","KM Final","KM Percorrido","Placa","Produto","Peso (kg)"]],
+        body: corpo,
+        headStyles: { fillColor:[43,147,72] }, // verde
+        styles: { fontSize:9, cellPadding:3, halign:"center" },
+        margin: { left:startX, right:startX }
+      });
+
+      // Total de KM
+      const totalKM = registros.reduce((t,e)=> t + Number(e.kmPercorrido||0), 0);
+      const finalY = docpdf.autoTable.previous.finalY + 24;
+      docpdf.setFontSize(12);
+      docpdf.text(`Total KM Percorrido: ${totalKM}`, startX, finalY);
+
+      docpdf.save("entregas.pdf");
+    }
+
+    $('gerarPDFFiltro').onclick = ()=>{
+      let itens = [...entregas];
+      const s = $('filterStart').value ? new Date($('filterStart').value) : null;
+      const e = $('filterEnd').value ? new Date($('filterEnd').value) : null;
+      if(s || e){
+        itens = itens.filter(x=>{
+          const d = new Date(x.date);
+          const okS = s ? d >= s : true;
+          const okE = e ? d <= e : true;
+          return okS && okE;
+        });
+      }
+      const tExtra = (s||e) ? `(${s?fmtBR(s):"…"} a ${e?fmtBR(e):"…"})` : "";
+      gerarPDF(itens, tExtra);
+    };
+
+    $('gerarPDFCompleto').onclick = ()=>{
+      gerarPDF(entregas, "(Completo)");
+    };
+
+    /* ===== Auth ===== */
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user) return window.location.href = "login.html";
+      uid = user.uid;
+      await carregarPerfil();
+      iniciarStream();
+    });
+  </script>
+</body>
+</html>

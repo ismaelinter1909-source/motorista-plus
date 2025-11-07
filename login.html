@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - Motorista Plus</title>
+
+  <style>
+    :root{
+      --mp-bg:#0b0f14;
+      --mp-card-alpha: rgba(16,22,29,.85);
+      --mp-primary:#f39220;
+      --mp-primary-700:#d47e16;
+      --mp-outline:#2b3a49;
+      --mp-text:white;
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      font-family:system-ui, Arial, sans-serif;
+      background:var(--mp-bg);
+      color:white;
+    }
+
+    header.hero{
+      height:100vh;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+      padding:20px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.85) 100%),
+        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+    }
+
+    .brand{
+      font-weight:800;
+      font-size:clamp(36px, 6vw, 60px);
+      text-align:center;
+    }
+    .brand .plus{ color:var(--mp-primary); }
+
+    .slogan{
+      margin-top:-6px;
+      font-size:clamp(14px, 2vw, 20px);
+      letter-spacing:.20em;
+      color:#eef1f5;
+    }
+
+    .card{
+      width:min(90vw, 420px);
+      padding:24px;
+      background:var(--mp-card-alpha);
+      border-radius:14px;
+      border:1px solid var(--mp-outline);
+      box-shadow:0 20px 40px rgba(0,0,0,.35);
+      backdrop-filter:blur(6px);
+    }
+
+    .card h2{
+      text-align:center;
+      margin-bottom:14px;
+      font-size:22px;
+      font-weight:700;
+      color:var(--mp-primary);
+    }
+
+    label{ display:block; margin-top:10px; font-weight:600; }
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:5px;
+      border-radius:10px;
+      border:1px solid var(--mp-outline);
+      background:rgba(255,255,255,.08);
+      color:white;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:20px;
+      background:var(--mp-primary);
+      border:none;
+      border-radius:10px;
+      font-weight:700;
+      color:white;
+      cursor:pointer;
+    }
+    button:hover{ background:var(--mp-primary-700); }
+
+    .reset{
+      margin-top:10px;
+      text-align:center;
+      color:#ffb37a;
+      cursor:pointer;
+    }
+
+    a{
+      display:block;
+      text-align:center;
+      margin-top:14px;
+      color:#ffd9ad;
+      text-decoration:none;
+    }
+
+    footer{
+      text-align:center;
+      padding:12px;
+      color:#b5bcc7;
+      font-size:12px;
+    }
+
+  </style>
+</head>
+<body>
+
+<header class="hero">
+
+  <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
+  <p class="slogan">SEMPRE EM MOVIMENTO</p>
+
+  <div class="card">
+
+    <h2>Entrar</h2>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="seuemail@exemplo.com">
+
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="Digite sua senha">
+
+    <button id="btnLogin">Login</button>
+
+    <p class="reset" id="resetSenha">Esqueci minha senha</p>
+
+    <a href="cadastro.html">Criar uma conta</a>
+  </div>
+
+</header>
+
+<footer>© 2025 Motorista Plus</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { 
+    getAuth, 
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
+    authDomain: "motorista-plus-dc909.firebaseapp.com",
+    projectId: "motorista-plus-dc909"
+  });
+
+  const auth = getAuth(app);
+
+
+  /* ✅ LOGIN COM TRATAMENTO */
+  document.getElementById("btnLogin").addEventListener("click", async ()=>{
+
+    const emailValor = email.value.trim();
+    const senhaValor = senha.value.trim();
+
+    if(!emailValor || !senhaValor){
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    try{
+      await signInWithEmailAndPassword(auth, emailValor, senhaValor);
+
+      window.location.href = "painel.html";
+
+    }catch(e){
+
+      switch(e.code){
+        case "auth/user-not-found":
+          alert("Usuário não cadastrado. Crie uma conta.");
+          break;
+
+        case "auth/wrong-password":
+          alert("Senha incorreta.");
+          break;
+
+        case "auth/invalid-email":
+          alert("Digite um email válido.");
+          break;
+
+        case "auth/too-many-requests":
+          alert("Muitas tentativas. Aguarde alguns minutos.");
+          break;
+
+        default:
+          alert("Erro ao entrar: " + e.message);
+      }
+    }
+  });
+
+
+  /* ✅ RECUPERAÇÃO DE SENHA */
+  document.getElementById("resetSenha").addEventListener("click", async ()=>{
+
+    const emailValor = email.value.trim();
+
+    if(!emailValor){
+      alert("Digite seu email para recuperar a senha.");
+      return;
+    }
+
+    try{
+      await sendPasswordResetEmail(auth, emailValor);
+      alert("Enviamos um link de recuperação ao seu email.");
+
+    }catch(e){
+      alert("Erro: " + e.message);
+    }
+  });
+
+</script>
+
+</body>
+</html>

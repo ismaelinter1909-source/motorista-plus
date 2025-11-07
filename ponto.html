@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Ponto — Motorista Plus</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+    :root{
+        --mp-bg:#0b0f14;
+        --mp-bg2:#10161d;
+        --mp-card:#162029ee;
+        --mp-primary:#f39220;
+        --mp-primary-700:#d47e16;
+        --mp-outline:#2b3a49;
+        --mp-text:white;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Arial;}
+
+    body{
+        background:var(--mp-bg);
+        color:var(--mp-text);
+        min-height:100vh;
+    }
+
+    /* ✅ BOTÃO VOLTAR PADRÃO MOTORISTA PLUS */
+    #btnVoltar{
+        position:fixed;
+        top:15px;
+        left:15px;
+        padding:8px 14px;
+        background:rgba(0,0,0,.35);
+        border:1px solid var(--mp-outline);
+        border-radius:8px;
+        color:white;
+        cursor:pointer;
+        z-index:999;
+        font-size:14px;
+        backdrop-filter:blur(4px);
+    }
+    #btnVoltar:hover{
+        background:rgba(0,0,0,.55);
+    }
+
+    header{
+        text-align:center;
+        padding:30px 20px;
+    }
+
+    header h1{
+        font-size:28px;
+        font-weight:800;
+        color:var(--mp-primary);
+        text-transform:uppercase;
+    }
+
+    main{
+        width:95%;
+        max-width:900px;
+        margin:0 auto 40px auto;
+    }
+
+    .card{
+        background:var(--mp-card);
+        border:1px solid var(--mp-outline);
+        padding:20px;
+        border-radius:14px;
+        margin-bottom:18px;
+        backdrop-filter:blur(6px);
+        box-shadow:0 10px 25px rgba(0,0,0,.35);
+    }
+
+    h2{
+        color:var(--mp-primary);
+        margin-bottom:10px;
+    }
+
+    /* ✅ CORREÇÃO DO SELECT (AGORA FUNCIONA CORRETAMENTE EM TUDO) */
+    select{
+        width:100%;
+        background:#0f141a;
+        padding:12px;
+        border-radius:10px;
+        border:1px solid var(--mp-outline);
+        color:white !important;
+        font-size:15px;
+        appearance:none;
+        -webkit-appearance:none;
+        -moz-appearance:none;
+    }
+    select option{
+        background:#0f141a !important;
+        color:white !important;
+        padding:10px;
+    }
+
+    .button-group{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+        gap:10px;
+        margin-top:10px;
+    }
+
+    button{
+        padding:12px;
+        background:var(--mp-primary);
+        border:none;
+        border-radius:10px;
+        color:white;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+    }
+    button:hover{ background:var(--mp-primary-700); }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+        font-size:14px;
+    }
+    th, td{
+        border:1px solid var(--mp-outline);
+        padding:8px;
+        text-align:center;
+    }
+    th{
+        background:var(--mp-primary);
+        color:white;
+    }
+
+    .edit-btn{
+        background:#ffa500;
+        padding:6px 10px;
+        border-radius:8px;
+        border:none;
+        color:#000;
+        font-weight:bold;
+        cursor:pointer;
+    }
+
+    footer{
+        text-align:center;
+        margin-top:40px;
+        padding:10px;
+        color:#aaa;
+        font-size:14px;
+    }
+</style>
+</head>
+
+<body>
+
+<button id="btnVoltar" onclick="window.location.href='painel.html'">← Voltar</button>
+
+<header>
+    <h1>Registro de Ponto — Motorista Plus</h1>
+</header>
+
+<main>
+
+    <div class="card" id="dadosUsuarioCard"></div>
+
+    <div class="card">
+        <h2>Registrar Ponto (Hoje)</h2>
+        <div class="button-group">
+            <button data-tipo="Início">Início</button>
+            <button data-tipo="Intervalo">Intervalo</button>
+            <button data-tipo="Reinício">Reinício</button>
+            <button data-tipo="Fim">Fim</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Selecionar Mês</h2>
+        <select id="mesSelect">
+            <option value="0">Janeiro</option>
+            <option value="1">Fevereiro</option>
+            <option value="2">Março</option>
+            <option value="3">Abril</option>
+            <option value="4">Maio</option>
+            <option value="5">Junho</option>
+            <option value="6">Julho</option>
+            <option value="7">Agosto</option>
+            <option value="8">Setembro</option>
+            <option value="9">Outubro</option>
+            <option value="10">Novembro</option>
+            <option value="11">Dezembro</option>
+        </select>
+
+        <button id="exportPdfBtn" style="margin-top:12px; background:#00b409;">Gerar PDF</button>
+    </div>
+
+    <div class="card">
+        <h2>Histórico de Registros</h2>
+
+        <button id="toggleHistorico" style="margin-bottom:12px;">Mostrar Histórico</button>
+
+        <table id="tableRegistros" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Início</th>
+                    <th>Intervalo</th>
+                    <th>Reinício</th>
+                    <th>Fim</th>
+                    <th>Extras</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+</main>
+
+<footer>© 2025 Motorista Plus</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const usuario = JSON.parse(localStorage.getItem("usuario") || "{}");
+let registros = JSON.parse(localStorage.getItem("pontoRegistros") || "[]");
+
+/* ✅ MOSTRAR DADOS DO USUÁRIO */
+function renderUsuario(){
+    $("dadosUsuarioCard").innerHTML = `
+        <div><strong>Nome:</strong> ${usuario.nome || "—"}</div>
+        <div><strong>Telefone:</strong> ${usuario.telefone || "—"}</div>
+        <div><strong>E-mail:</strong> ${usuario.email || "—"}</div>
+    `;
+}
+
+/* ✅ SALVAR */
+function salvar(){ localStorage.setItem("pontoRegistros", JSON.stringify(registros)); }
+
+/* ✅ FORMATAR DATA */
+function formatarData(d){
+    const dt = new Date(d);
+    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()}`;
+}
+
+/* ✅ CALCULAR HORAS EXTRAS */
+function horasExtras(dia){
+    const i = dia["Início"] ? dia["Início"].split(":") : null;
+    const f = dia["Fim"] ? dia["Fim"].split(":") : null;
+
+    if(i && f){
+        const ini = new Date(0,0,0,i[0],i[1],i[2]);
+        const fim = new Date(0,0,0,f[0],f[1],f[2]);
+
+        const h = (fim - ini) / 3600000;
+        return h > 8 ? (h-8).toFixed(2) : "0.00";
+    }
+    return "Folga";
+}
+
+/* ✅ GERAR LISTA DO MÊS */
+function renderTabela(){
+    const mes = parseInt($("mesSelect").value);
+    const ano = new Date().getFullYear();
+    const diasNoMes = new Date(ano, mes+1, 0).getDate();
+
+    const tbody = $("tableRegistros").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    const map = {};
+
+    registros.forEach(r=>{
+        const d = new Date(r.data);
+        if(d.getMonth() === mes && d.getFullYear() === ano){
+            const str = formatarData(d);
+            if(!map[str]) map[str] = {};
+            map[str][r.tipo] = r.hora;
+        }
+    });
+
+    for(let dia=1; dia<=diasNoMes; dia++){
+        const dataStr = `${String(dia).padStart(2,"0")}/${String(mes+1).padStart(2,"0")}/${ano}`;
+        const row = map[dataStr] || {};
+
+        const extra = horasExtras(row);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${dataStr}</td>
+            <td>${row["Início"] || ""}</td>
+            <td>${row["Intervalo"] || ""}</td>
+            <td>${row["Reinício"] || ""}</td>
+            <td>${row["Fim"] || ""}</td>
+            <td>${extra}</td>
+            <td><button class="edit-btn" data-data="${dataStr}">Editar</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    document.querySelectorAll(".edit-btn").forEach(btn=>{
+        btn.onclick = ()=>{
+            const data = btn.dataset.data;
+            const tipo = ["Início","Intervalo","Reinício","Fim"];
+
+            tipo.forEach(t=>{
+                const atual = (map[data]||{})[t] || "";
+                const novo = prompt(`Editar ${t} em ${data}`, atual);
+                if(novo){
+                    const [d,m,a] = data.split("/");
+                    const dt = new Date(a, m-1, d);
+
+                    let idx = registros.findIndex(r =>
+                        formatarData(r.data) === data && r.tipo === t
+                    );
+
+                    if(idx >= 0) registros[idx].hora = novo;
+                    else registros.push({data:dt, tipo:t, hora:novo});
+                }
+            });
+
+            salvar();
+            renderTabela();
+        };
+    });
+}
+
+/* ✅ REGISTRAR PONTO */
+document.querySelectorAll(".button-group button").forEach(btn=>{
+    btn.onclick = ()=>{
+        const tipo = btn.dataset.tipo;
+        const data = new Date();
+        const hora = data.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+        
+        registros.push({data, tipo, hora});
+        registros.sort((a,b)=>new Date(a.data)-new Date(b.data));
+
+        salvar();
+        renderTabela();
+    };
+});
+
+/* ✅ MOSTRAR / ESCONDER TABELA */
+$("toggleHistorico").onclick = ()=>{
+    const t = $("tableRegistros");
+    if(t.style.display==="none"){
+        t.style.display = "table";
+        $("toggleHistorico").textContent = "Ocultar Histórico";
+    } else {
+        t.style.display = "none";
+        $("toggleHistorico").textContent = "Mostrar Histórico";
+    }
+};
+
+/* ✅ PDF */
+$("exportPdfBtn").onclick = ()=>{
+
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({unit:"pt", format:"a4", orientation:"landscape"});
+
+    const w = doc.internal.pageSize.getWidth();
+
+    /* Logo */
+    doc.setFontSize(18);
+    doc.setFont(undefined,"bold");
+    doc.text("Motorista Plus — Registro de Ponto", w/2, 40, {align:"center"});
+
+    /* Usuário */
+    doc.setFontSize(12);
+    doc.text(`Motorista: ${usuario.nome || "—"}`, 40, 70);
+    doc.text(`Telefone: ${usuario.telefone || "—"}`, 300, 70);
+
+    const mesTxt = $("mesSelect").selectedOptions[0].text;
+    doc.text(`Mês: ${mesTxt}`, w-140, 70);
+
+    /* Tabela */
+    const mes = parseInt($("mesSelect").value);
+    const ano = new Date().getFullYear();
+
+    const map = {};
+    registros.forEach(r=>{
+        const d = new Date(r.data);
+        if(d.getMonth()===mes && d.getFullYear()===ano){
+            const s = formatarData(d);
+            if(!map[s]) map[s] = {};
+            map[s][r.tipo] = r.hora;
+        }
+    });
+
+    const tabela = [];
+    const dias = new Date(ano, mes+1, 0).getDate();
+
+    for(let d=1; d<=dias; d++){
+        const s = `${String(d).padStart(2,"0")}/${String(mes+1).padStart(2,"0")}/${ano}`;
+        const r = map[s] || {};
+        tabela.push([
+            s,
+            r["Início"] || "",
+            r["Intervalo"] || "",
+            r["Reinício"] || "",
+            r["Fim"] || "",
+            horasExtras(r)
+        ]);
+    }
+
+    doc.autoTable({
+        startY: 90,
+        head:[["Data","Início","Intervalo","Reinício","Fim","Extras"]],
+        body:tabela,
+        theme:"grid",
+        styles:{halign:"center", fontSize:10},
+        headStyles:{fillColor:[243,146,32]}
+    });
+
+    doc.save(`ponto_${mesTxt}_${ano}.pdf`);
+};
+
+/* ✅ Inicialização */
+renderUsuario();
+renderTabela();
+
+</script>
+
+</body>
+</html>

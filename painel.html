@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Motorista — Motorista Plus</title>
+
+<style>
+  :root{
+    --bg:#0b0f14;
+    --bg2:#10161d;
+    --card:rgba(16,22,29,.86);
+    --primary:#f39220;
+    --primary-700:#d47e16;
+    --outline:#2b3a49;
+    --text:#fff;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Arial;}
+
+  body{background:var(--bg);color:var(--text);overflow-x:hidden;}
+
+  /* BOTÃO PERFIL */
+  #abrirMenu{
+    position:fixed;
+    top:15px;
+    left:15px;
+    padding:10px 14px;
+    background:var(--primary);
+    border:none;
+    border-radius:8px;
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+    z-index:9999;
+    transition:.25s;
+  }
+  #abrirMenu:hover{
+    background:var(--primary-700);
+    transform:scale(1.05);
+  }
+
+  /* MENU LATERAL */
+  .menu-lateral{
+    position:fixed;
+    top:0; left:-330px;
+    width:300px;
+    height:100vh;
+    background:var(--bg2);
+    padding:20px;
+    border-right:1px solid var(--outline);
+    transition:.3s;
+    z-index:9998;
+  }
+  .menu-lateral.active{ left:0; }
+
+  .menu-lateral h3{
+    text-align:center;
+    color:var(--primary);
+    margin-bottom:10px;
+  }
+
+  .menu-lateral input{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border-radius:10px;
+    background:#0f141a;
+    border:1px solid var(--outline);
+    color:white;
+  }
+
+  .menu-lateral button{
+    margin-top:12px;
+    padding:12px;
+    border:none;
+    background:var(--primary);
+    color:white;
+    font-weight:700;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.25s;
+  }
+  .menu-lateral button:hover{
+    background:var(--primary-700);
+    transform:scale(1.05);
+  }
+
+  /* HERO */
+  header.hero{
+    height:70vh;
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.85)),
+      url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:20px;
+  }
+
+  .brand{
+    font-size:clamp(38px,6vw,60px);
+    font-weight:800;
+  }
+  .brand .plus{ color:var(--primary); }
+
+  .slogan{
+    font-size:clamp(14px,2vw,20px);
+    letter-spacing:.15em;
+    margin-bottom:20px;
+    opacity:.9;
+  }
+
+  /* CARD PERFIL */
+  .card-perfil{
+    background:var(--card);
+    border:1px solid var(--outline);
+    border-radius:16px;
+    padding:22px;
+    width:min(90%,450px);
+    backdrop-filter:blur(6px);
+    box-shadow:0 10px 35px rgba(0,0,0,.35);
+  }
+
+  .foto-perfil{
+    width:120px; height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid var(--primary);
+    display:block;
+    margin:0 auto 12px auto;
+  }
+
+  .btnFoto{
+    background:var(--primary);
+    color:white;
+    border:none;
+    padding:8px 14px;
+    border-radius:10px;
+    font-weight:700;
+    display:block;
+    margin:0 auto 18px auto;
+    cursor:pointer;
+    transition:.25s;
+  }
+  .btnFoto:hover{
+    background:var(--primary-700);
+    transform:scale(1.05);
+  }
+
+  .info{
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--outline);
+    padding:10px;
+    margin:8px 0;
+    border-radius:10px;
+  }
+
+  /* FUNÇÕES */
+  .conteudo{
+    max-width:1100px;
+    margin:40px auto;
+    padding:20px;
+  }
+
+  .titulo-sessao{
+    text-align:center;
+    font-size:22px;
+    color:var(--primary);
+    margin-bottom:20px;
+    font-weight:800;
+  }
+
+  .links-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:18px;
+  }
+
+  .links-grid a{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    background:var(--card);
+    border:1px solid var(--outline);
+    padding:22px;
+    border-radius:16px;
+    text-decoration:none;
+    color:white;
+    font-size:18px;
+    font-weight:700;
+    transition:.28s;
+  }
+  .links-grid a:hover{
+    transform:translateY(-4px);
+    background:rgba(255,255,255,.04);
+  }
+
+  .card-icon{
+    width:48px;
+    height:48px;
+    fill:white;
+  }
+
+  /* LOGOUT */
+  #logoutBtn{
+    margin:40px auto;
+    background:#d94343;
+    padding:14px 20px;
+    border-radius:12px;
+    color:white;
+    border:none;
+    font-weight:700;
+    cursor:pointer;
+    transition:.25s;
+    display:block;
+    width:220px;
+  }
+  #logoutBtn:hover{
+    background:#b93636;
+    transform:scale(1.05);
+  }
+
+</style>
+</head>
+<body>
+
+<button id="abrirMenu">Perfil</button>
+
+<!-- MENU -->
+<div class="menu-lateral" id="menuLateral">
+  <h3>Editar Perfil</h3>
+
+  <label>Nome</label>
+  <input id="editarNome">
+
+  <label>Telefone</label>
+  <input id="editarTelefone">
+
+  <label>Placa Cavalo</label>
+  <input id="editarPlacaCavalo">
+
+  <label>Placa Reboque</label>
+  <input id="editarPlacaReboque">
+
+  <label>Email</label>
+  <input id="editarEmail">
+
+  <button id="salvarPerfil">Salvar</button>
+</div>
+
+<!-- HERO + PERFIL -->
+<header class="hero">
+  <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
+  <p class="slogan">SEMPRE EM MOVIMENTO</p>
+
+  <div class="card-perfil">
+
+    <img src="img/perfil-padrao.png" id="fotoPerfil" class="foto-perfil">
+
+    <button id="trocarFoto" class="btnFoto">Trocar Foto</button>
+    <input type="file" id="inputFoto" accept="image/*" style="display:none;">
+
+    <h2 id="boasVindas" style="text-align:center;">Bem-vindo(a)</h2>
+
+    <div class="info" id="userNome"></div>
+    <div class="info" id="userTelefone"></div>
+    <div class="info" id="userPlacaCavalo"></div>
+    <div class="info" id="userPlacaReboque"></div>
+    <div class="info" id="userEmail"></div>
+
+  </div>
+</header>
+
+<!-- FUNÇÕES -->
+<div class="conteudo">
+  <h2 class="titulo-sessao">Funcionalidades</h2>
+
+  <div class="links-grid">
+
+    <!-- MÉDIA -->
+    <a href="media.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M3 3h2v18H3zM9 13h2v8H9zM15 8h2v13h-2zM21 3h-2v18h2z"/>
+      </svg>
+      Média
+    </a>
+
+    <!-- ABASTECIMENTOS -->
+    <a href="abastecimentos.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M3 3h10v18H3zM18 6l3 3v9a3 3 0 1 1-6 0v-7h2v7a1 1 0 1 0 2 0V10l-2-2z"/>
+      </svg>
+      Abastecimento
+    </a>
+
+    <!-- GASTOS -->
+    <a href="gastos.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M2 7h20v10H2zm3 3v4h14v-4z"/>
+      </svg>
+      Gastos
+    </a>
+
+    <!-- VIAGEM -->
+    <a href="viagem.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M12 2l7 7-7 7-7-7z"/>
+      </svg>
+      Viagem
+    </a>
+
+    <!-- ENTREGAS -->
+    <a href="entregas.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M3 5h13v14H3zM16 8h4l1 3v8h-5z"/>
+      </svg>
+      Entregas
+    </a>
+
+    <!-- MANUTENÇÃO (ENGRENAGEM BOLD) -->
+    <a href="manutencao.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm9.4 6.2a8 8 0 0 0 .1-3.4l2-1.6-1.5-2.6-2.3.6a8 8 0 0 0-2.4-1.4L16.7 2h-3.4l-.6 2.4a8 8 0 0 0-2.4 1.4l-2.3-.6L5 6.6l2 1.6a8 8 0 0 0 0 3.4l-2 1.6L6.5 17l2.3-.6a8 8 0 0 0 2.4 1.4l.6 2.4h3.4l.6-2.4a8 8 0 0 0 2.4-1.4l2.3.6 1.5-2.6z"/>
+      </svg>
+      Manutenção
+    </a>
+
+    <!-- PONTO -->
+    <a href="ponto.html">
+      <svg class="card-icon" viewBox="0 0 24 24">
+        <path d="M12 1a11 11 0 1 1 0 22A11 11 0 0 1 12 1zm1 6h-2v7h6v-2h-4z"/>
+      </svg>
+      Ponto
+    </a>
+
+  </div>
+
+  <button id="logoutBtn">Sair</button>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { 
+    getAuth, onAuthStateChanged, signOut 
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  import {
+    getFirestore, doc, getDoc, updateDoc
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
+    authDomain: "motorista-plus-dc909.firebaseapp.com",
+    projectId: "motorista-plus-dc909"
+  });
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const menu = document.getElementById("menuLateral");
+  abrirMenu.onclick = ()=> menu.classList.toggle("active");
+
+  /* LOGIN */
+  onAuthStateChanged(auth, async user=>{
+    if(!user){ window.location.href="login.html"; return; }
+
+    const ref = doc(db,"usuarios",user.uid);
+    const snap = await getDoc(ref);
+    if(!snap.exists()){
+      alert("Erro ao carregar perfil.");
+      return;
+    }
+
+    const u = snap.data();
+
+    boasVindas.textContent = "Bem-vindo(a), " + u.nome;
+
+    userNome.textContent = "Nome: " + u.nome;
+    userTelefone.textContent = "Telefone: " + u.telefone;
+    userPlacaCavalo.textContent = "Placa Cavalo: " + u.placaCavalo;
+    userPlacaReboque.textContent = "Placa Reboque: " + u.placaReboque;
+    userEmail.textContent = "Email: " + u.email;
+
+    if(u.foto){ fotoPerfil.src = u.foto; }
+
+    editarNome.value = u.nome;
+    editarTelefone.value = u.telefone;
+    editarPlacaCavalo.value = u.placaCavalo;
+    editarPlacaReboque.value = u.placaReboque;
+    editarEmail.value = u.email;
+
+    salvarPerfil.onclick = async ()=>{
+      await updateDoc(ref,{
+        nome:editarNome.value,
+        telefone:editarTelefone.value,
+        placaCavalo:editarPlacaCavalo.value,
+        placaReboque:editarPlacaReboque.value,
+        email:editarEmail.value
+      });
+      alert("Perfil atualizado!");
+      location.reload();
+    };
+  });
+
+  /* FOTO PERFIL */
+  trocarFoto.onclick = ()=> inputFoto.click();
+
+  inputFoto.onchange = async e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      const base64 = reader.result;
+
+      await updateDoc(doc(db,"usuarios",auth.currentUser.uid),{
+        foto: base64
+      });
+
+      fotoPerfil.src = base64;
+      alert("Foto atualizada!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  /* LOGOUT */
+  logoutBtn.onclick = async ()=>{
+    await signOut(auth);
+    window.location.href = "login.html";
+  };
+
+</script>
+
+</body>
+</html>

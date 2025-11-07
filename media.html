@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Média — Motorista Plus</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF + AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --mp-bg: #0b0f14;
+            --mp-bg2: #10161d;
+            --mp-card-alpha: rgba(16, 22, 29, .85);
+            --mp-primary: #f39220;
+            --mp-primary-700: #d47e16;
+            --mp-outline: #2b3a49;
+            --mp-text: white;
+            --mp-muted: #b5bcc7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, Arial, sans-serif
+        }
+
+        body {
+            background: var(--mp-bg);
+            color: var(--mp-text);
+            min-height: 100vh;
+        }
+
+        /* Botão voltar (padrão Motorista Plus) */
+        #backBtn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.10);
+            color: #fff;
+            padding: 5px 10px;
+            width: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            transition: .2s;
+        }
+
+        #backBtn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Header */
+        header.hero {
+            text-align: center;
+            padding: 46px 20px 24px;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .85) 100%),
+                url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+            border-bottom: 1px solid var(--mp-outline);
+        }
+
+        header.hero h1 {
+            font-size: clamp(26px, 5.5vw, 44px);
+            font-weight: 800;
+        }
+
+        header.hero .plus {
+            color: var(--mp-primary);
+        }
+
+        main.container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 18px auto 40px;
+            display: grid;
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--mp-card-alpha);
+            padding: 16px;
+            border-radius: 14px;
+            border: 1px solid var(--mp-outline);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .28);
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            color: var(--mp-primary);
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        input,
+        button,
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--mp-outline);
+            background: #0f141a;
+            color: #fff;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        button {
+            background: var(--mp-primary);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--mp-primary-700);
+        }
+
+        .btn-ghost {
+            background: transparent;
+        }
+
+        /* Grid de inputs */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        /* Dados do usuário */
+        #dadosUsuarioCard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        #dadosUsuarioCard .item {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid var(--mp-outline);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #dadosUsuarioCard .item strong {
+            display: block;
+            color: var(--mp-primary);
+            margin-bottom: 4px;
+        }
+
+        /* Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border-bottom: 1px solid var(--mp-outline);
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background: var(--mp-primary);
+            color: #fff;
+        }
+
+        /* Gráfico */
+        canvas {
+            background: #0f141a;
+            border-radius: 14px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        .muted {
+            color: var(--mp-muted);
+        }
+
+        footer {
+            text-align: center;
+            padding: 12px;
+            color: var(--mp-muted);
+            border-top: 1px solid var(--mp-outline);
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="backBtn" onclick="window.location.href='painel.html'">← Voltar</button>
+
+    <header class="hero">
+        <h1>Média — Motorista<span class="plus">Plus</span></h1>
+    </header>
+
+    <main class="container">
+
+        <!-- Dados do motorista -->
+        <section class="card">
+            <h2>Dados do Motorista</h2>
+            <div id="dadosUsuarioCard" class="muted">Carregando...</div>
+        </section>
+
+        <!-- Registrar abastecimento -->
+        <section class="card">
+            <h2>Registrar Abastecimento</h2>
+            <div class="grid">
+                <div>
+                    <label>Data</label>
+                    <input type="date" id="data">
+                </div>
+                <div>
+                    <label>Local</label>
+                    <input type="text" id="local" placeholder="Posto / Cidade">
+                </div>
+                <div>
+                    <label>KM</label>
+                    <input type="number" id="quilometragem" placeholder="Ex: 120000">
+                </div>
+                <div>
+                    <label>Litros</label>
+                    <input type="number" id="litros" step="0.01" placeholder="Ex: 150.00">
+                </div>
+            </div>
+            <button id="addBtn">Adicionar</button>
+        </section>
+
+        <!-- Filtro, aprovador e PDF -->
+        <section class="card">
+            <h2>Período & PDF</h2>
+            <div class="grid">
+                <div><label>Início</label><input type="date" id="filterInicio"></div>
+                <div><label>Fim</label><input type="date" id="filterFim"></div>
+                <div><label>Aprovado por (opcional)</label><input type="text" id="aprovadoPor"
+                        placeholder="Nome de quem aprovou"></div>
+            </div>
+            <button id="exportPdfBtn" style="margin-top:10px;">Gerar PDF (filtrado)</button>
+        </section>
+
+        <!-- Histórico -->
+        <section class="card">
+            <h2>Histórico de Abastecimentos</h2>
+            <div style="overflow-x:auto">
+                <table id="tableRegistros">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Local</th>
+                            <th>KM</th>
+                            <th>Litros</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p id="resultado" style="margin-top:10px;font-weight:700;"></p>
+        </section>
+
+        <!-- Gráfico -->
+        <section class="card">
+            <h2>Gráfico de Desempenho</h2>
+            <canvas id="chart"></canvas>
+        </section>
+
+    </main>
+
+    <footer>© 2025 Motorista Plus</footer>
+
+    <script type="module">
+        /* ================= Firebase ================= */
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import {
+            getFirestore, doc, getDoc,
+            collection, addDoc, query, orderBy, getDocs, serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
+            authDomain: "motorista-plus-dc909.firebaseapp.com",
+            projectId: "motorista-plus-dc909"
+        });
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        /* ================= Helpers/UI ================= */
+        const $ = (id) => document.getElementById(id);
+        let uid = null;
+        let perfil = null; // usuarios/{uid}
+        let abastecimentos = []; // [{id,data,local,quilometragem,litros,createdAt}]
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+        function fmtBR(iso) {
+            const d = new Date(iso);
+            return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+        }
+
+        function renderUsuario() {
+            $('dadosUsuarioCard').innerHTML = `
+      <div class="item"><strong>Motorista</strong>${perfil?.nome || '—'}</div>
+      <div class="item"><strong>E-mail</strong>${perfil?.email || '—'}</div>
+      <div class="item"><strong>Telefone</strong>${perfil?.telefone || '—'}</div>
+      <div class="item"><strong>Placa Cavalo</strong>${perfil?.placaCavalo || '—'}</div>
+      <div class="item"><strong>Placa Reboque</strong>${perfil?.placaReboque || '—'}</div>
+    `;
+        }
+
+        /* ================= Firestore I/O ================= */
+        async function carregarPerfil() {
+            const snap = await getDoc(doc(db, "usuarios", uid));
+            if (snap.exists()) perfil = snap.data();
+            renderUsuario();
+        }
+
+        async function carregarAbastecimentos() {
+            const col = collection(db, "usuarios", uid, "abastecimentos");
+            const q = query(col, orderBy("data", "asc"));
+            const snaps = await getDocs(q);
+            abastecimentos = [];
+            snaps.forEach(s => {
+                const d = s.data();
+                // garante tipos
+                abastecimentos.push({
+                    id: s.id,
+                    data: d.data, // ISO yyyy-mm-dd
+                    local: String(d.local || ''),
+                    quilometragem: Number(d.quilometragem || 0),
+                    litros: Number(d.litros || 0),
+                    createdAt: d.createdAt || null
+                });
+            });
+        }
+
+        async function adicionarAbastecimento(obj) {
+            await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
+                ...obj,
+                createdAt: serverTimestamp()
+            });
+        }
+
+        /* ================= Lógica de tela ================= */
+        let chart;
+
+        function filtrar(arr, inicioISO, fimISO) {
+            const ini = inicioISO ? new Date(inicioISO) : null;
+            const fim = fimISO ? new Date(fimISO) : null;
+            return arr.filter(r => {
+                const d = new Date(r.data);
+                if (ini && d < ini) return false;
+                if (fim && d > fim) return false;
+                return true;
+            });
+        }
+
+        function calcularMedia(arr) {
+            if (arr.length < 2) return '--';
+            const kmIni = Number(arr[0].quilometragem);
+            const kmFim = Number(arr[arr.length - 1].quilometragem);
+            const litrosTot = arr.reduce((s, r) => s + Number(r.litros), 0);
+            return litrosTot > 0 ? ((kmFim - kmIni) / litrosTot).toFixed(2) : '--';
+        }
+
+        function atualizarTabelaEGrafico() {
+            const inicio = $('filterInicio').value || null;
+            const fim = $('filterFim').value || null;
+
+            const filtrados = filtrar(abastecimentos, inicio, fim);
+
+            // tabela
+            const tbody = $('tableRegistros').querySelector('tbody');
+            tbody.innerHTML = '';
+            filtrados.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${r.data}</td><td>${r.local}</td><td>${r.quilometragem}</td><td>${r.litros.toFixed(2)}</td>`;
+                tbody.appendChild(tr);
+            });
+
+            // gráfico
+            const ctx = $('chart').getContext('2d');
+            const labels = filtrados.slice(1).map(r => r.data);
+            const dataVals = [];
+            for (let i = 1; i < filtrados.length; i++) {
+                const kmDif = filtrados[i].quilometragem - filtrados[i - 1].quilometragem;
+                const med = kmDif > 0 && Number(filtrados[i].litros) > 0 ? (kmDif / filtrados[i].litros).toFixed(2) : 0;
+                dataVals.push(med);
+            }
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'km/L',
+                        data: dataVals,
+                        borderColor: '#f39220',
+                        backgroundColor: 'rgba(243,146,32,0.25)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } },
+                    plugins: { legend: { labels: { color: '#fff' } } }
+                }
+            });
+
+            // média
+            $('resultado').textContent = filtrados.length ? `Média: ${calcularMedia(filtrados)} km/L` : 'Nenhum registro.';
+        }
+
+        /* ================= PDF ================= */
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+            const startX = 40;
+            let y = 40;
+
+            // Logo + Título
+            try { doc.addImage('img/Logo.Motorista-Plus.png', 'PNG', startX, y, 110, 42); } catch (e) { }
+            doc.setFontSize(16); doc.setFont(undefined, 'bold');
+            doc.text('Relatório de Média — Motorista Plus', startX + 140, y + 28);
+            y += 60;
+
+            // Dados do usuário
+            doc.setFontSize(11); doc.setFont(undefined, 'normal');
+            const info = [
+                `Motorista: ${perfil?.nome || '—'}`,
+                `E-mail: ${perfil?.email || '—'}`,
+                `Telefone: ${perfil?.telefone || '—'}`,
+                `Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`
+            ];
+            info.forEach((t, i) => {
+                const rowY = y + i * 22;
+                doc.setFillColor(249, 250, 251); doc.setDrawColor(229, 231, 235);
+                doc.rect(startX - 4, rowY - 12, 520, 20, 'FD');
+                doc.text(t, startX, rowY);
+            });
+            y += 100;
+
+            // Filtrados de acordo com inputs
+            const inicio = $('filterInicio').value || null;
+            const fim = $('filterFim').value || null;
+            const filtrados = filtrar(abastecimentos, inicio, fim);
+
+            // Tabela via autoTable
+            const body = filtrados.map(r => [r.data, r.local, String(r.quilometragem), Number(r.litros).toFixed(2)]);
+            doc.autoTable({
+                startY: y,
+                head: [['Data', 'Local', 'KM', 'Litros']],
+                body,
+                theme: 'grid',
+                headStyles: { fillColor: [243, 146, 32], halign: 'center' },
+                styles: { fontSize: 10, cellPadding: 4, halign: 'center' },
+                margin: { left: startX, right: startX },
+                tableWidth: 'auto'
+            });
+            y = doc.autoTable.previous.finalY + 16;
+
+            // Média
+            doc.setFont(undefined, 'bold');
+            doc.text(`Média (km/L): ${calcularMedia(filtrados)}`, startX, y);
+            y += 10;
+
+            // Aprovado por
+            const aprov = $('aprovadoPor').value.trim();
+            if (aprov) {
+                doc.setFont(undefined, 'normal');
+                doc.text(`Aprovado por: ${aprov} — Data: ${fmtBR(new Date().toISOString())}`, startX, y + 18);
+                y += 24;
+            }
+
+            // Gráfico
+            try {
+                const img = $('chart').toDataURL('image/png', 1.0);
+                doc.addImage(img, 'PNG', startX, y + 6, 520, 220);
+                y += 230;
+            } catch (e) { }
+
+            // Assinatura do motorista
+            const pageW = doc.internal.pageSize.getWidth();
+            doc.line(pageW / 2 - 120, y + 40, pageW / 2 + 120, y + 40);
+            doc.text('Assinatura do Motorista', pageW / 2, y + 56, { align: 'center' });
+
+            const nomeArquivo = `relatorio_media_${new Date().toISOString().slice(0, 10)}.pdf`;
+            doc.save(nomeArquivo);
+        }
+
+        /* ================= Eventos UI ================= */
+        $('addBtn').addEventListener('click', async () => {
+            const data = $('data').value.trim();
+            const local = $('local').value.trim();
+            const quilometragem = Number(($('quilometragem').value || '').trim());
+            const litros = Number(($('litros').value || '').trim());
+
+            if (!data || !local || quilometragem <= 0 || litros <= 0) {
+                alert('Preencha todos os campos corretamente.');
+                return;
+            }
+            if (!uid) { alert('Sessão expirada. Faça login novamente.'); window.location.href = 'index.html'; return; }
+
+            await adicionarAbastecimento({ data, local, quilometragem, litros });
+            // Limpa campos
+            $('data').value = ''; $('local').value = ''; $('quilometragem').value = ''; $('litros').value = '';
+
+            await carregarAbastecimentos();
+            atualizarTabelaEGrafico();
+            alert('Abastecimento adicionado!');
+        });
+
+        $('filterInicio').addEventListener('change', atualizarTabelaEGrafico);
+        $('filterFim').addEventListener('change', atualizarTabelaEGrafico);
+        $('exportPdfBtn').addEventListener('click', gerarPDF);
+
+        /* ================= Bootstrap (Auth) ================= */
+        onAuthStateChanged(auth, async (u) => {
+            if (!u) { window.location.href = 'index.html'; return; }
+            uid = u.uid;
+            await carregarPerfil();
+            await carregarAbastecimentos();
+            // Chart altura amigável
+            (function () {
+                const c = $('chart'); c.height = 320;
+            })();
+            atualizarTabelaEGrafico();
+        });
+    </script>
+</body>
+
+</html>
