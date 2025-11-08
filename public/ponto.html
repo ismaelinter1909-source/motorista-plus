@@ -5,38 +5,52 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Registro de Ponto — Motorista Plus</title>
 
+<!-- jsPDF + AutoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-  :root{--bg:#0b0f14;--bg2:#10161d;--card:#161c23;--primary:#f39220;--primary-700:#d47e16;--outline:#2b3a49;--text:#fff;--muted:#b5bcc7}
+  :root{
+    --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
+    --primary:#f39220; --primary-700:#d47e16;
+    --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
+  }
   *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Arial,sans-serif}
   body{background:var(--bg);color:var(--text);min-height:100vh}
+
   #btnVoltar{position:fixed;top:12px;left:12px;z-index:9999;padding:8px 14px;width:auto;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;cursor:pointer;font-size:14px;backdrop-filter:blur(4px);transition:.25s}
   #btnVoltar:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+
   header{text-align:center;padding:30px 16px;border-bottom:1px solid var(--outline);background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.85))}
   header h1{font-size:clamp(22px,5vw,34px);font-weight:800}
   header .plus{color:var(--primary)}
+
   main{width:95%;max-width:1000px;margin:18px auto 36px}
   .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px);box-shadow:0 10px 26px rgba(0,0,0,.28);margin-bottom:14px}
   h2{color:var(--primary);margin-bottom:8px}
+
   label{display:block;font-size:13px;color:#e8e8e8;margin:6px 0 4px}
   input,select,button{width:100%;padding:12px;border-radius:10px;outline:none;border:1px solid var(--outline);background:#0f141a;color:#fff;transition:box-shadow .2s,transform .06s,background .2s,border-color .2s}
   input:focus,select:focus{box-shadow:0 0 0 3px rgba(243,146,32,.15);border-color:var(--primary)}
   select{appearance:none}
   select option{background:#0f141a;color:#fff}
+
   .btn{background:var(--primary);border:none;color:#fff;font-weight:700;cursor:pointer;transition:.25s}
   .btn:hover{background:var(--primary-700);transform:translateY(-1px)}
   .btn-ghost{background:transparent;color:var(--muted)}
   .btn-ghost:hover{background:rgba(255,255,255,.06)}
+
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
   .buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:8px}
+
   #dadosUsuarioCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   #dadosUsuarioCard .item{background:rgba(255,255,255,.06);border:1px solid var(--outline);padding:10px;border-radius:10px;text-align:center}
   #dadosUsuarioCard .item strong{display:block;color:var(--primary);margin-bottom:4px}
+
   table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
   th,td{border:1px solid var(--outline);padding:8px;text-align:center}
   th{background:var(--primary);color:#fff}
+
   .edit{background:#ffa500;color:#000;border:none;padding:6px 10px;border-radius:8px;font-weight:700;cursor:pointer}
   .muted{color:var(--muted)}
   footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
@@ -46,7 +60,9 @@
 
 <button id="btnVoltar" onclick="window.location.href='painel.html'">← Voltar</button>
 
-<header><h1>Registro de Ponto — Motorista<span class="plus">Plus</span></h1></header>
+<header>
+  <h1>Registro de Ponto — Motorista<span class="plus">Plus</span></h1>
+</header>
 
 <main>
   <section class="card">
@@ -100,7 +116,10 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, getDocs, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
@@ -109,44 +128,56 @@
   });
 
   const auth = getAuth(app);
-  const db   = getFirestore(app);
+  const db = getFirestore(app);
 
-  const $ = id => document.getElementById(id);
+  const $ = (id)=>document.getElementById(id);
   const pad2 = n => String(n).padStart(2,'0');
-  const hojeISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
-  // Sem Date local para evitar fuso: apenas formata string YYYY-MM-DD -> DD/MM/YYYY
-  const fromISOtoBR = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; };
+
+  // ✅ sem Date() para evitar fuso
+  const fromISOtoBR = (iso)=>{
+    if(!iso) return "";
+    const [y,m,d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  };
+
+  const hojeISO = ()=>{
+    const d = new Date();
+    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+  };
+
+  // ✅ número de dias do mês sem usar Date()
+  function diasNoMes(ano, mes /* 0..11 */){
+    const comum = [31,28,31,30,31,30,31,31,30,31,30,31];
+    const bissexto = (ano%4===0 && ano%100!==0) || (ano%400===0);
+    if(mes===1) return comum[1] + (bissexto?1:0);
+    return comum[mes];
+  }
+
   const timeNow = () => new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
 
-  let uid=null, perfil=null;
+  let uid = null;
+  let perfil = null;
 
-  // === Gera todas as datas do mês em UTC (evita 31/10) ===
-  function daysOfMonthUTC(year, monthIndex0){
-    const out=[];
-    let d = new Date(Date.UTC(year, monthIndex0, 1));
-    while(d.getUTCMonth() === monthIndex0){
-      out.push(`${year}-${pad2(monthIndex0+1)}-${pad2(d.getUTCDate())}`);
-      d.setUTCDate(d.getUTCDate()+1);
-    }
-    return out;
-  }
-
+  /* ===== PERFIL ===== */
   async function carregarPerfil(){
     const snap = await getDoc(doc(db,"usuarios",uid));
-    if(!snap.exists()){ $('dadosUsuarioCard').textContent='Perfil não encontrado.'; return; }
+    if(!snap.exists()){ $('dadosUsuarioCard').textContent = 'Perfil não encontrado.'; return; }
     perfil = snap.data();
+
     $('dadosUsuarioCard').innerHTML = `
-      <div class="item"><strong>Motorista</strong>${perfil.nome||'—'}</div>
-      <div class="item"><strong>Telefone</strong>${perfil.telefone||'—'}</div>
-      <div class="item"><strong>Email</strong>${perfil.email||'—'}</div>
-      <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo||'—'}</div>
-      <div class="item"><strong>Reboque</strong>${perfil.placaReboque||'—'}</div>`;
+      <div class="item"><strong>Motorista</strong>${perfil.nome || '—'}</div>
+      <div class="item"><strong>Telefone</strong>${perfil.telefone || '—'}</div>
+      <div class="item"><strong>Email</strong>${perfil.email || '—'}</div>
+      <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || '—'}</div>
+      <div class="item"><strong>Reboque</strong>${perfil.placaReboque || '—'}</div>
+    `;
   }
 
+  /* ===== CRUD ===== */
   async function getDocDia(iso){
     const ref = doc(db,"usuarios",uid,"pontos",iso);
-    const s = await getDoc(ref);
-    return s.exists()? {id:ref.id, ...s.data()} : null;
+    const snap = await getDoc(ref);
+    return snap.exists() ? {id:ref.id, ...snap.data()} : null;
   }
 
   async function marcar(tipo){
@@ -155,89 +186,106 @@
     const atual = await getDocDia(iso);
     const agora = timeNow();
     const base = { data: iso };
-    if(atual) await updateDoc(ref, { ...base, [tipo]:agora, updatedAt:serverTimestamp() });
-    else      await setDoc(  ref, { ...base, inicio:null, intervalo:null, reinicio:null, fim:null, [tipo]:agora, createdAt:serverTimestamp() });
+
+    if(atual){
+      await updateDoc(ref, { ...base, [tipo]: agora, updatedAt: serverTimestamp() });
+    }else{
+      await setDoc(ref, { ...base, inicio:null, intervalo:null, reinicio:null, fim:null, [tipo]: agora, createdAt: serverTimestamp() });
+    }
     $('status').textContent = `Registrado ${tipo[0].toUpperCase()+tipo.slice(1)} às ${agora}`;
-    renderTabela(); // atualiza mês atual
+    renderTabela();
   }
 
   async function editarDia(iso, valores){
     const ref = doc(db,"usuarios",uid,"pontos",iso);
-    await updateDoc(ref, { ...valores, updatedAt:serverTimestamp() });
+    await updateDoc(ref, { ...valores, updatedAt: serverTimestamp() });
   }
 
-  // Carrega somente documentos do mês selecionado
-  async function carregarMes(mes0, ano){
+  /* ===== CONSULTA DO MÊS (filtra por string yyyy-mm) ===== */
+  async function carregarMes(mes, ano){
     const col = collection(db,"usuarios",uid,"pontos");
     const qy  = query(col, orderBy("data","asc"));
     const snaps = await getDocs(qy);
+
+    const alvoPrefix = `${ano}-${pad2(mes+1)}-`; // ex: 2025-11-
     const lista = [];
     snaps.forEach(s=>{
-      const d = s.data();
-      const [Y,M] = d.data.split("-").map(Number); // YYYY, MM(1–12)
-      if(Y===ano && (M-1)===mes0) lista.push(d);
+      const d = s.data().data; // string 'YYYY-MM-DD'
+      if(typeof d === "string" && d.startsWith(alvoPrefix)){
+        lista.push(s.data());
+      }
     });
     return lista;
   }
 
+  /* ===== EXTRAS ===== */
   function horasExtras(reg){
-    const ini=reg?.inicio, fim=reg?.fim;
-    if(!ini||!fim) return "—";
-    const [ih,im,is]=ini.split(":").map(Number);
-    const [fh,fm,fs]=fim.split(":").map(Number);
-    const start=new Date(0,0,0,ih,im,is||0);
-    const end  =new Date(0,0,0,fh,fm,fs||0);
-    const h=(end-start)/3600000;
-    if(isNaN(h)||h<=0) return "—";
-    return Math.max(0,h-8).toFixed(2);
+    const ini = reg?.inicio, fim = reg?.fim;
+    if(!ini || !fim) return "—";
+    const [ih,im,is] = ini.split(':').map(Number);
+    const [fh,fm,fs] = fim.split(':').map(Number);
+    const start = new Date(0,0,0,ih,im,is||0);
+    const end   = new Date(0,0,0,fh,fm,fs||0);
+    let h = (end - start)/3600000;
+    if(isNaN(h) || h<=0) return "—";
+    const extras = Math.max(0, h - 8);
+    return extras.toFixed(2);
   }
 
+  /* ===== TABELA ===== */
   async function renderTabela(){
-    const mes = parseInt($('mesSelect').value);  // 0–11
+    const mes = parseInt($('mesSelect').value);
     const ano = new Date().getFullYear();
+    const qtdDias = diasNoMes(ano, mes);
 
     const registros = await carregarMes(mes, ano);
-    const map = {}; registros.forEach(r=> map[r.data]=r);
+    const map = {}; registros.forEach(r => map[r.data] = r);
 
     const tbody = $('tableRegistros').querySelector('tbody');
     tbody.innerHTML = '';
 
-    // gera as datas do mês em UTC
-    const dias = daysOfMonthUTC(ano, mes);
-    dias.forEach(iso=>{
+    for(let dia=1; dia<=qtdDias; dia++){
+      const iso = `${ano}-${pad2(mes+1)}-${pad2(dia)}`;
       const r = map[iso] || {};
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${fromISOtoBR(iso)}</td>
-        <td>${r.inicio||''}</td>
-        <td>${r.intervalo||''}</td>
-        <td>${r.reinicio||''}</td>
-        <td>${r.fim||''}</td>
+        <td>${r.inicio || ''}</td>
+        <td>${r.intervalo || ''}</td>
+        <td>${r.reinicio || ''}</td>
+        <td>${r.fim || ''}</td>
         <td>${horasExtras(r)}</td>
-        <td><button class="edit" data-iso="${iso}">Editar</button></td>`;
+        <td><button class="edit" data-iso="${iso}">Editar</button></td>
+      `;
       tbody.appendChild(tr);
-    });
+    }
 
     tbody.querySelectorAll('.edit').forEach(btn=>{
       btn.onclick = async ()=>{
         const iso = btn.dataset.iso;
         const r = map[iso] || {};
-        const campos=['inicio','intervalo','reinicio','fim'];
-        const novos={};
+        const campos = ['inicio','intervalo','reinicio','fim'];
+        const novos = {};
         for(const c of campos){
           const novo = prompt(`Editar ${c} (${fromISOtoBR(iso)}). Formato HH:MM:SS`, r[c] || '');
-          if(novo===null) continue;
-          novos[c] = novo.trim()==='' ? null : novo.trim();
+          if(novo === null) continue;
+          novos[c] = novo.trim() === '' ? null : novo.trim();
         }
         const existe = await getDocDia(iso);
-        if(existe) await editarDia(iso, novos);
-        else await setDoc(doc(db,"usuarios",uid,"pontos",iso), { data:iso, inicio:null, intervalo:null, reinicio:null, fim:null, ...novos, createdAt:serverTimestamp() });
+        if(existe){
+          await editarDia(iso, novos);
+        }else{
+          await setDoc(doc(db,"usuarios",uid,"pontos",iso), {
+            data: iso, inicio:null, intervalo:null, reinicio:null, fim:null,
+            ...novos, createdAt: serverTimestamp()
+          });
+        }
         renderTabela();
       };
     });
   }
 
-  // === PDF usa a mesma lista de dias em UTC ===
+  /* ===== PDF ===== */
   $('exportPdfBtn').onclick = async ()=>{
     const { jsPDF } = window.jspdf;
     const docpdf = new jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
@@ -247,48 +295,60 @@
     const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
     const w = docpdf.internal.pageSize.getWidth();
+
     docpdf.setFontSize(18); docpdf.setFont(undefined,'bold');
     docpdf.text('Motorista Plus — Registro de Ponto', w/2, 32, { align:'center' });
 
     docpdf.setFontSize(10); docpdf.setFont(undefined,'normal');
-    docpdf.text(`Motorista: ${perfil?.nome||'—'}`, 40, 55);
-    docpdf.text(`Telefone: ${perfil?.telefone||'—'}`, 250, 55);
+    docpdf.text(`Motorista: ${perfil?.nome || '—'}`, 40, 55);
+    docpdf.text(`Telefone: ${perfil?.telefone || '—'}`, 250, 55);
     docpdf.text(`Mês: ${meses[mes]} / ${ano}`, w-140, 55);
 
     const lista = await carregarMes(mes, ano);
-    const map = {}; lista.forEach(r=> map[r.data]=r);
+    const map = {}; lista.forEach(r=> map[r.data] = r);
 
+    const dias = diasNoMes(ano, mes);
     const rows = [];
-    daysOfMonthUTC(ano, mes).forEach(iso=>{
+    for(let d=1; d<=dias; d++){
+      const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
       const r = map[iso] || {};
-      rows.push([fromISOtoBR(iso), r.inicio||'', r.intervalo||'', r.reinicio||'', r.fim||'', horasExtras(r)]);
-    });
+      rows.push([
+        fromISOtoBR(iso),
+        r.inicio || '',
+        r.intervalo || '',
+        r.reinicio || '',
+        r.fim || '',
+        horasExtras(r)
+      ]);
+    }
 
     docpdf.autoTable({
-      startY:65,
+      startY: 65,
       head:[['Data','Início','Intervalo','Reinício','Fim','Extras']],
-      body:rows, theme:'grid',
-      styles:{halign:'center',fontSize:7,cellPadding:1.5,overflow:'linebreak',minCellHeight:8},
-      headStyles:{fillColor:[243,146,32],fontSize:8},
-      margin:{top:5,bottom:5,left:5,right:5},
-      tableWidth:'auto', pageBreak:'avoid'
+      body: rows,
+      theme:'grid',
+      styles:{ halign:'center', fontSize:7, cellPadding:1.5, overflow:'linebreak', minCellHeight:8 },
+      headStyles:{ fillColor:[243,146,32], fontSize:8 },
+      margin:{ top:5, bottom:5, left:5, right:5 },
+      tableWidth:'auto',
+      pageBreak:'avoid'
     });
 
     docpdf.save(`ponto_${meses[mes]}_${ano}.pdf`);
   };
 
-  // Botões principais
+  /* ===== EVENTOS ===== */
   document.querySelectorAll('button[data-tipo]').forEach(b=> b.onclick = ()=> marcar(b.dataset.tipo));
   $('toggleHistorico').onclick = ()=>{
-    const t=$('tableRegistros');
+    const t = $('tableRegistros');
     if(t.style.display==='none'){ t.style.display='table'; $('toggleHistorico').textContent='Ocultar Histórico'; }
     else{ t.style.display='none'; $('toggleHistorico').textContent='Mostrar Histórico'; }
   };
-
-  // >>> Atualiza histórico quando trocar o mês <<<
+  // ✅ Atualiza histórico quando o mês for trocado
   $('mesSelect').addEventListener('change', renderTabela);
 
-  onAuthStateChanged(auth, async user=>{
+  /* ===== AUTH ===== */
+  onAuthStateChanged(auth, async (user)=>{
     if(!user){ window.location.href='login.html'; return; }
     uid = user.uid;
     await carregarPerfil();
@@ -296,6 +356,5 @@
     await renderTabela();
   });
 </script>
-
 </body>
 </html>
