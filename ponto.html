@@ -51,7 +51,8 @@
     transition: box-shadow .2s ease, transform .06s ease, background .2s ease, border-color .2s ease;
   }
   input:focus,select:focus{box-shadow:0 0 0 3px rgba(243,146,32,.15); border-color:var(--primary)}
-  select{appearance:none;-webkit-appearance:none;-moz-appearance:none}
+  select{appearance:none;
+  }
   select option{background:#0f141a;color:#fff}
 
   .btn{background:var(--primary); border:none; color:#fff; font-weight:700; cursor:pointer; transition:.25s ease}
@@ -87,6 +88,7 @@
 </header>
 
 <main>
+
   <section class="card">
     <h2>Dados do Motorista</h2>
     <div id="dadosUsuarioCard" class="muted">Carregando...</div>
@@ -131,11 +133,13 @@
       <tbody></tbody>
     </table>
   </section>
+
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
 
 <!-- ========================= SCRIPT ========================= -->
+
 <script type="module">
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -150,6 +154,7 @@
     authDomain: "motorista-plus-c53f4.firebaseapp.com",
     projectId: "motorista-plus-c53f4",
   });
+
   const auth = getAuth(app);
   const db = getFirestore(app);
 
@@ -162,10 +167,13 @@
   let uid = null;
   let perfil = null;
 
+  /* ====================== PERFIL ====================== */
   async function carregarPerfil(){
     const snap = await getDoc(doc(db,"usuarios",uid));
     if(!snap.exists()){ $('dadosUsuarioCard').textContent = 'Perfil não encontrado.'; return; }
+
     perfil = snap.data();
+
     $('dadosUsuarioCard').innerHTML = `
       <div class="item"><strong>Motorista</strong>${perfil.nome || '—'}</div>
       <div class="item"><strong>Telefone</strong>${perfil.telefone || '—'}</div>
@@ -175,6 +183,7 @@
     `;
   }
 
+  /* ====================== CRUD DOS PONTOS ====================== */
   async function getDocDia(iso){
     const ref = doc(db,"usuarios",uid,"pontos",iso);
     const snap = await getDoc(ref);
@@ -202,22 +211,29 @@
     await updateDoc(ref, { ...valores, updatedAt: serverTimestamp() });
   }
 
+  /* ====================== CARREGAR MÊS (CORREÇÃO COMPLETA) ====================== */
   async function carregarMes(mes, ano){
     const col = collection(db,"usuarios",uid,"pontos");
     const qy = query(col, orderBy("data","asc"));
     const snaps = await getDocs(qy);
 
     const lista = [];
+
     snaps.forEach(s=>{
+
       const d = s.data();
-      const dt = new Date(d.data);
-      if(dt.getMonth()===mes && dt.getFullYear()===ano){
+
+      const [Y, M] = d.data.split("-").map(Number);
+
+      if(Y === ano && (M - 1) === mes){
         lista.push(d);
       }
     });
+
     return lista;
   }
 
+  /* ====================== CÁLCULO DE EXTRAS ====================== */
   function horasExtras(reg){
     const ini = reg?.inicio, fim = reg?.fim;
     if(!ini || !fim) return "—";
@@ -231,6 +247,7 @@
     return extras.toFixed(2);
   }
 
+  /* ====================== TABELA ====================== */
   async function renderTabela(){
     const mes = parseInt($('mesSelect').value);
     const ano = new Date().getFullYear();
@@ -246,6 +263,7 @@
       const iso = `${ano}-${pad2(mes+1)}-${pad2(dia)}`;
       const r = map[iso] || {};
       const tr = document.createElement('tr');
+
       tr.innerHTML = `
         <td>${fromISOtoBR(iso)}</td>
         <td>${r.inicio || ''}</td>
@@ -255,6 +273,7 @@
         <td>${horasExtras(r)}</td>
         <td><button class="edit" data-iso="${iso}">Editar</button></td>
       `;
+
       tbody.appendChild(tr);
     }
 
@@ -262,15 +281,19 @@
       btn.onclick = async ()=>{
         const iso = btn.dataset.iso;
         const r = map[iso] || {};
+
         const campos = ['inicio','intervalo','reinicio','fim'];
         const novos = {};
+
         for(const c of campos){
           const novo = prompt(`Editar ${c} (${fromISOtoBR(iso)}). Formato HH:MM:SS`, r[c] || '');
           if(novo === null) continue;
           novos[c] = novo.trim() === '' ? null : novo.trim();
         }
-        const existente = await getDocDia(iso);
-        if(existente){
+
+        const existe = await getDocDia(iso);
+
+        if(existe){
           await editarDia(iso, novos);
         }else{
           await setDoc(doc(db,"usuarios",uid,"pontos",iso), {
@@ -278,13 +301,15 @@
             ...novos, createdAt: serverTimestamp()
           });
         }
+
         renderTabela();
       };
     });
   }
 
-  /* ========================= PDF (AJUSTADO PARA 1 PÁGINA) ========================= */
+  /* ====================== PDF — CABE TODOS OS DIAS EM UMA PÁGINA ====================== */
   $('exportPdfBtn').onclick = async ()=>{
+
     const { jsPDF } = window.jspdf;
     const docpdf = new jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
 
@@ -306,12 +331,14 @@
 
     const lista = await carregarMes(mes, ano);
     const map = {}; lista.forEach(r=> map[r.data] = r);
-    const dias = new Date(ano, mes+1, 0).getDate();
 
+    const dias = new Date(ano, mes+1, 0).getDate();
     const rows = [];
+
     for(let d=1; d<=dias; d++){
       const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
       const r = map[iso] || {};
+
       rows.push([
         fromISOtoBR(iso),
         r.inicio || '',
@@ -322,23 +349,26 @@
       ]);
     }
 
+    /* ======== TABELA AJUSTADA PARA CABER 31 DIAS EM UMA PÁGINA ======== */
     docpdf.autoTable({
-      startY: 70,
+      startY: 65,
       head:[['Data','Início','Intervalo','Reinício','Fim','Extras']],
       body: rows,
       theme:'grid',
 
-      styles:{ 
+      styles:{
         halign:'center',
-        fontSize:8,
-        cellPadding:2,
-        overflow:'linebreak'
+        fontSize:7,
+        cellPadding:1.5,
+        overflow:'linebreak',
+        minCellHeight:8
       },
       headStyles:{
         fillColor:[243,146,32],
-        fontSize:9
+        fontSize:8
       },
-      margin:{ top:10, bottom:10, left:10, right:10 },
+
+      margin:{ top:5, bottom:5, left:5, right:5 },
       tableWidth:'auto',
       pageBreak:'avoid'
     });
@@ -346,20 +376,33 @@
     docpdf.save(`ponto_${meses[mes]}_${ano}.pdf`);
   };
 
+  /* ====================== EVENTOS ====================== */
   document.querySelectorAll('button[data-tipo]').forEach(b=> b.onclick = ()=> marcar(b.dataset.tipo));
+
   $('toggleHistorico').onclick = ()=>{
     const t = $('tableRegistros');
-    if(t.style.display==='none'){ t.style.display='table'; $('toggleHistorico').textContent='Ocultar Histórico'; }
-    else{ t.style.display='none'; $('toggleHistorico').textContent='Mostrar Histórico'; }
+    if(t.style.display==='none'){ 
+      t.style.display='table'; 
+      $('toggleHistorico').textContent='Ocultar Histórico'; 
+    }
+    else{ 
+      t.style.display='none'; 
+      $('toggleHistorico').textContent='Mostrar Histórico'; 
+    }
   };
 
+  /* ====================== AUTH ====================== */
   onAuthStateChanged(auth, async (user)=>{
     if(!user){ window.location.href='login.html'; return; }
+
     uid = user.uid;
     await carregarPerfil();
+
     $('mesSelect').value = String(new Date().getMonth());
+
     await renderTabela();
   });
+
 </script>
 
 </body>
