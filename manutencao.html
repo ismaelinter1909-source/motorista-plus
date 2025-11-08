@@ -10,7 +10,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    /* ===== Tema Motorista Plus ===== */
     :root{
       --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
       --primary:#f39220; --primary-700:#d47e16;
@@ -20,461 +19,353 @@
     *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
     body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
 
-    /* Botão voltar fixo (como abastecimentos.html) */
     #voltarPainel{
-      position:fixed; top:12px; left:12px;
-      width:auto; padding:8px 14px; z-index:9999;
+      position:fixed;top:12px;left:12px;z-index:9999;
+      padding:8px 14px;border-radius:8px;
       background:rgba(255,255,255,.08);
-      color:#fff; border-radius:8px; border:1px solid rgba(255,255,255,.25);
-      cursor:pointer; font-size:14px; backdrop-filter:blur(4px);
-      transition: background .2s ease, transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+      border:1px solid rgba(255,255,255,.25);
+      color:#fff;cursor:pointer;
+      backdrop-filter:blur(4px);
     }
-    #voltarPainel:hover{background:rgba(255,255,255,.16)}
-    #voltarPainel:active{transform:translateY(1px)}
 
     header{
-      background: linear-gradient(180deg, rgba(0,0,0,.3), rgba(0,0,0,.6));
-      padding:30px 16px; text-align:center; border-bottom:1px solid var(--outline);
+      background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
+      padding:30px 16px;text-align:center;border-bottom:1px solid var(--outline)
     }
     header h1{font-size:clamp(20px,4vw,30px);font-weight:800}
-    header .plus{color:var(--primary)}
+    .plus{color:var(--primary)}
 
-    main{width:94%;max-width:1100px;margin:18px auto 40px;display:grid;gap:14px;flex:1}
-    .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px)}
+    main{width:94%;max-width:1100px;margin:18px auto;flex:1;display:grid;gap:14px}
+
+    .card{
+      background:var(--card);
+      padding:16px;border-radius:12px;
+      border:1px solid var(--outline);
+      backdrop-filter:blur(6px)
+    }
+
     h2{color:var(--primary);margin-bottom:8px;font-size:1.15rem}
+
     label{display:block;font-size:13px;margin-top:8px;color:#e8e8e8}
 
-    input,select,textarea,button{
-      width:100%;padding:12px;border-radius:10px;border:1px solid var(--outline);
-      background:rgba(255,255,255,.08);color:#fff;font-size:14px;outline:none;
-      transition: background .2s ease, transform .08s ease, box-shadow .2s ease, border-color .2s ease;
-    }
-    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(243,146,32,.15);border-color:var(--primary)}
-    textarea{resize:vertical;min-height:90px}
-
-    /* Select visível */
-    select{
-      -webkit-appearance:none;-moz-appearance:none;appearance:none;
-      background-image:linear-gradient(45deg,transparent 50%, #fff 50%),
-                       linear-gradient(135deg, #fff 50%, transparent 50%),
-                       linear-gradient(to right, transparent, transparent);
-      background-position:calc(100% - 18px) calc(50% - 3px),
-                          calc(100% - 13px) calc(50% - 3px),
-                          calc(100% - 2.2em) 0.6em;
-      background-size:5px 5px, 5px 5px, 1px 1.6em;
-      background-repeat:no-repeat;
+    input,textarea,button{
+      width:100%;padding:12px;border-radius:10px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--outline);
+      color:#fff;font-size:14px;
     }
 
-    .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-
-    .btn{background:var(--primary);border:none;font-weight:700;color:#fff;cursor:pointer}
+    textarea{min-height:90px;resize:vertical}
+    .btn{background:var(--primary);border:none;font-weight:700;cursor:pointer}
     .btn:hover{background:var(--primary-700)}
-    .btn:active{transform:translateY(1px)}
-    .btn-green{background:var(--green)}
-    .btn-green:hover{filter:brightness(1.05)}
     .btn-red{background:var(--red)}
     .btn-red:hover{filter:brightness(1.05)}
     .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
-    .btn-info{background:var(--info)}
-    .btn-info:hover{filter:brightness(1.05)}
 
-    /* Dados do usuário */
-    #dadosUsuarioCard{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:10px;
-    }
-    #dadosUsuarioCard .item{
-      background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px;text-align:center;
-    }
-    #dadosUsuarioCard .item strong{display:block;color:var(--primary);margin-bottom:4px}
-
-    /* Lista de manutenções */
-    ul{list-style:none;padding-left:0;margin-top:8px}
+    ul{list-style:none;margin-top:8px;padding:0}
     li{
       background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px;margin:6px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap
+      padding:10px;border-radius:10px;
+      margin-bottom:8px;display:flex;justify-content:space-between;
+      flex-wrap:wrap;gap:10px
     }
-    .tag{font-size:12px;color:var(--muted)}
 
-    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
+    footer{text-align:center;color:var(--muted);padding:12px;margin-top:20px}
   </style>
 </head>
+
 <body>
 
-  <button id="voltarPainel" onclick="window.location.href='painel.html'">← Voltar</button>
+<button id="voltarPainel" onclick="location.href='painel.html'">← Voltar</button>
 
-  <header>
-    <h1>Manutenção — Motorista<span class="plus">Plus</span></h1>
-  </header>
+<header>
+  <h1>Manutenção — Motorista<span class="plus">Plus</span></h1>
+</header>
 
-  <main>
-    <!-- Dados do motorista -->
-    <section class="card">
-      <h2>Dados do Motorista</h2>
-      <div id="dadosUsuarioCard">Carregando...</div>
-    </section>
+<main>
 
-    <!-- Período de folga -->
-    <section class="card">
-      <h2>Folga (cálculo automático)</h2>
-      <div class="grid2">
-        <div>
-          <label for="inicioManutencao">Data de Início</label>
-          <input type="date" id="inicioManutencao">
-        </div>
-        <div>
-          <label for="fimManutencao">Data de Fim</label>
-          <input type="date" id="fimManutencao">
-        </div>
-        <div>
-          <label for="diasFolga">Dias de Folga Calculados</label>
-          <input type="text" id="diasFolga" readonly>
-        </div>
-        <div>
-          <label for="retornoFolga">Retorno da Folga</label>
-          <input type="text" id="retornoFolga" readonly>
-        </div>
+  <!-- Perfil -->
+  <section class="card">
+    <h2>Dados do Motorista</h2>
+    <div id="dadosUsuarioCard">Carregando...</div>
+  </section>
+
+  <!-- Folga -->
+  <section class="card">
+    <h2>Folga (cálculo automático)</h2>
+
+    <label>Data de Início</label>
+    <input type="date" id="inicioFolga">
+
+    <label>Data de Fim</label>
+    <input type="date" id="fimFolga">
+
+    <label>Dias de Folga Calculados</label>
+    <input type="text" id="diasFolga" readonly>
+
+    <label>Retorno da Folga</label>
+    <input type="text" id="retornoFolga" readonly>
+
+    <button class="btn" id="calcFolga">Calcular</button>
+    <button class="btn-ghost" id="limparFolga">Limpar</button>
+  </section>
+
+  <!-- Registrar manutenção -->
+  <section class="card">
+    <h2>Registrar Manutenção</h2>
+
+    <label>Data</label>
+    <input type="date" id="dataManutencao">
+
+    <label>Descrição Cavalo</label>
+    <textarea id="descCavalo"></textarea>
+
+    <label>Descrição Reboque</label>
+    <textarea id="descReboque"></textarea>
+
+    <button class="btn" id="salvar">Salvar</button>
+    <button class="btn-ghost" id="cancelarEdicao" style="display:none">Cancelar Edição</button>
+    <button class="btn-red" id="apagarTodos">Apagar TODOS</button>
+
+    <p id="status" style="color:#ccc;margin-top:6px"></p>
+  </section>
+
+  <!-- Lista -->
+  <section class="card">
+    <h2>Lista de Manutenções</h2>
+    <ul id="lista"></ul>
+  </section>
+
+  <!-- Export -->
+  <section class="card" style="text-align:center">
+    <button class="btn" id="pdfCompleto">Gerar PDF Completo</button>
+  </section>
+
+</main>
+
+<footer>© 2025 Motorista Plus</footer>
+
+<!-- SCRIPT ATUALIZADO -->
+<script type="module">
+
+/* ========= Firebase NOVO projeto motorista-plus-c53f4 ========= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc,
+  collection, getDocs, query, orderBy, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain: "motorista-plus-c53f4.firebaseapp.com",
+  projectId: "motorista-plus-c53f4",
+  storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+  messagingSenderId: "766097061342",
+  appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
+  measurementId: "G-CBT2D0CXPN"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = (id)=>document.getElementById(id);
+
+let uid = null;
+let manutencoes = [];
+let editId = null;
+
+/* ========= Formatações ========= */
+const fmtBR = d => {
+  const x = new Date(d);
+  return `${String(x.getDate()).padStart(2,'0')}/${String(x.getMonth()+1).padStart(2,'0')}/${x.getFullYear()}`
+};
+
+/* ========= Carregar perfil ========= */
+async function carregarPerfil(){
+  const snap = await getDoc(doc(db,"usuarios",uid));
+  if(!snap.exists()) return;
+
+  const p = snap.data();
+
+  $('dadosUsuarioCard').innerHTML = `
+    <div class="item"><strong>Motorista</strong>${p.nome}</div>
+    <div class="item"><strong>Telefone</strong>${p.telefone}</div>
+    <div class="item"><strong>Cavalo</strong>${p.placaCavalo}</div>
+    <div class="item"><strong>Reboque</strong>${p.placaReboque}</div>
+    <div class="item"><strong>Email</strong>${p.email}</div>
+  `;
+}
+
+/* ========= Stream das manutenções ========= */
+function iniciarStream(){
+  const qRef = query(
+    collection(db,"usuarios",uid,"manutencoes"),
+    orderBy("criadoEm","desc")
+  );
+
+  onSnapshot(qRef, snap=>{
+    manutencoes = snap.docs.map(d=>({
+      id: d.id,
+      data: d.data().data,
+      cavalo: d.data().cavalo,
+      reboque: d.data().reboque
+    }));
+    renderLista();
+  });
+}
+
+/* ========= Render Lista ========= */
+function renderLista(){
+  if(manutencoes.length === 0){
+    $('lista').innerHTML = `<li>(nenhuma manutenção)</li>`;
+    return;
+  }
+
+  $('lista').innerHTML = manutencoes.map(m=>`
+    <li>
+      <div style="flex:1;min-width:240px">
+        <div style="font-weight:700">Manutenção — ${fmtBR(m.data)}</div>
+        <div class="tag">Cavalo: ${m.cavalo || '—'}</div>
+        <div class="tag">Reboque: ${m.reboque || '—'}</div>
       </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-green" id="calcularFolgaBtn" style="flex:1 1 200px">Calcular Folga</button>
-        <button class="btn btn-ghost" id="limparFolgaBtn" style="flex:1 1 200px">Limpar</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" data-id="${m.id}" data-act="edit">Editar</button>
+        <button class="btn-red" data-id="${m.id}" data-act="del">Remover</button>
       </div>
-    </section>
+    </li>
+  `).join('');
 
-    <!-- Registrar manutenção -->
-    <section class="card">
-      <h2>Registrar Manutenção</h2>
-      <div class="grid2">
-        <div>
-          <label for="dataManutencao">Data</label>
-          <input type="date" id="dataManutencao">
-        </div>
-        <div style="grid-column:1/-1">
-          <label for="manutencaoCavalo">Descrição Cavalo</label>
-          <textarea id="manutencaoCavalo" placeholder="Descreva a manutenção do cavalo..."></textarea>
-        </div>
-        <div style="grid-column:1/-1">
-          <label for="manutencaoReboque">Descrição Reboque</label>
-          <textarea id="manutencaoReboque" placeholder="Descreva a manutenção do reboque..."></textarea>
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="salvarManutencao" class="btn btn-green" style="flex:1 1 200px">Salvar</button>
-        <button id="cancelarEdicao" class="btn btn-ghost" style="flex:1 1 200px;display:none">Cancelar edição</button>
-        <button id="apagarTodos" class="btn btn-red" style="flex:1 1 200px">Apagar TODOS</button>
-      </div>
-      <p id="statusEdicao" class="tag" style="margin-top:6px"></p>
-    </section>
+  document.querySelectorAll("button[data-act]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const act = btn.dataset.act;
 
-    <!-- Filtro por data -->
-    <section class="card">
-      <h2>Filtro de Período</h2>
-      <div class="grid2">
-        <div>
-          <label for="filtroInicio">Data de Início</label>
-          <input type="date" id="filtroInicio">
-        </div>
-        <div>
-          <label for="filtroFim">Data de Fim</label>
-          <input type="date" id="filtroFim">
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="aplicarFiltro" class="btn" style="flex:1 1 200px">Filtrar</button>
-        <button id="limparFiltro" class="btn btn-ghost" style="flex:1 1 200px">Limpar Filtro</button>
-        <button id="pdfPeriodo" class="btn btn-green" style="flex:1 1 220px">Gerar PDF do Período</button>
-      </div>
-    </section>
-
-    <!-- Lista -->
-    <section class="card">
-      <h2>Lista de Manutenções</h2>
-      <ul id="listaManutencoes"></ul>
-    </section>
-
-    <!-- Exportação -->
-    <section class="card" style="text-align:center">
-      <button id="pdfCompleto" class="btn btn-green" style="width:220px">Gerar PDF Completo</button>
-    </section>
-  </main>
-
-  <footer>© 2025 Motorista Plus</footer>
-
-  <!-- ====================== SCRIPT ====================== -->
-  <script type="module">
-    /* ===== Firebase ===== */
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-      collection, addDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-    const app = initializeApp({
-      apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
-      authDomain: "motorista-plus-dc909.firebaseapp.com",
-      projectId: "motorista-plus-dc909"
-    });
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const $ = (id) => document.getElementById(id);
-
-    let uid = null;
-    let perfil = null;
-    let manutencoes = [];          // {id, data, cavalo, reboque, criadoEm}
-    let editId = null;
-    let filtroAtivo = null;        // {inicio: Date|null, fim: Date|null}
-
-    /* ===== Utils ===== */
-    const fmtBR = (iso) => {
-      const d = new Date(iso);
-      if (isNaN(d)) return "";
-      return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-    };
-    const asDateOnly = (v) => {
-      if (!v) return "";
-      const d = new Date(v);
-      if (!isNaN(d)) return d.toISOString().slice(0,10);
-      return String(v).slice(0,10);
-    };
-
-    /* ===== Perfil ===== */
-    async function carregarPerfil(){
-      const snap = await getDoc(doc(db, "usuarios", uid));
-      if (!snap.exists()) return;
-      perfil = snap.data();
-      $('dadosUsuarioCard').innerHTML = `
-        <div class="item"><strong>Motorista</strong>${perfil.nome || "—"}</div>
-        <div class="item"><strong>Telefone</strong>${perfil.telefone || "—"}</div>
-        <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || "—"}</div>
-        <div class="item"><strong>Reboque</strong>${perfil.placaReboque || "—"}</div>
-        <div class="item"><strong>Email</strong>${perfil.email || "—"}</div>
-      `;
-    }
-
-    /* ===== Stream de manutenções ===== */
-    function iniciarStream(){
-      const qRef = query(collection(db, "usuarios", uid, "manutencoes"), orderBy("criadoEm","desc"));
-      onSnapshot(qRef, (snap)=>{
-        manutencoes = snap.docs.map(d=>{
-          const data = d.data();
-          return {
-            id: d.id,
-            data: asDateOnly(data.data),
-            cavalo: data.cavalo || "",
-            reboque: data.reboque || "",
-            criadoEm: data.criadoEm?.toDate?.() || null
-          }
-        });
-        renderLista();
-      });
-    }
-
-    /* ===== Render lista ===== */
-    function renderLista(){
-      const ul = $('listaManutencoes');
-      let items = [...manutencoes];
-
-      if (filtroAtivo){
-        items = items.filter(m=>{
-          const d = new Date(m.data);
-          const okI = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
-          const okF = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
-          return okI && okF;
-        });
+      if(act === "edit"){
+        const m = manutencoes.find(x=>x.id===id);
+        $('dataManutencao').value = m.data;
+        $('descCavalo').value = m.cavalo;
+        $('descReboque').value = m.reboque;
+        editId = id;
+        $('cancelarEdicao').style.display = 'block';
       }
 
-      if (items.length === 0){
-        ul.innerHTML = `<li class="tag">(nenhuma manutenção)</li>`;
-        return;
-      }
-
-      ul.innerHTML = items.map(m=>`
-        <li>
-          <div style="flex:1;min-width:260px">
-            <div style="font-weight:700">Manutenção — ${fmtBR(m.data)}</div>
-            <div class="tag">Cavalo: ${m.cavalo || '—'}</div>
-            <div class="tag">Reboque: ${m.reboque || '—'}</div>
-          </div>
-          <div class="row" style="gap:8px">
-            <button class="btn" data-act="edit" data-id="${m.id}">Editar</button>
-            <button class="btn-red" data-act="del" data-id="${m.id}">Remover</button>
-          </div>
-        </li>
-      `).join("");
-
-      ul.querySelectorAll("button").forEach(b=>{
-        b.onclick = async ()=>{
-          const id = b.dataset.id;
-          const act = b.dataset.act;
-          if (act === "edit"){
-            const m = manutencoes.find(x=>x.id===id);
-            if (!m) return;
-            $('dataManutencao').value = m.data;
-            $('manutencaoCavalo').value = m.cavalo;
-            $('manutencaoReboque').value = m.reboque;
-            editId = id;
-            $('statusEdicao').textContent = "Editando registro ("+fmtBR(m.data)+")";
-            $('cancelarEdicao').style.display = 'inline-block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else if (act === "del"){
-            if (!confirm("Deseja remover este registro?")) return;
-            await deleteDoc(doc(db, "usuarios", uid, "manutencoes", id));
-          }
+      if(act === "del"){
+        if(confirm("Excluir este registro?")){
+          await deleteDoc(doc(db,"usuarios",uid,"manutencoes",id));
         }
-      });
-    }
-
-    /* ===== Folga ===== */
-    function formatDataBR(d){
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-    }
-
-    $('calcularFolgaBtn').onclick = ()=>{
-      const i = $('inicioManutencao').value;
-      const f = $('fimManutencao').value;
-      if (!i || !f || new Date(f) < new Date(i)){ alert('Selecione datas válidas.'); return; }
-      const ini = new Date(i), fim = new Date(f);
-      const diasTotais = Math.floor((fim - ini)/(1000*60*60*24)) + 1;
-      const folga = Math.ceil(diasTotais / 7);
-      const retorno = new Date(fim.getTime() + (folga + 2)*24*60*60*1000);
-      $('diasFolga').value = folga;
-      $('retornoFolga').value = formatDataBR(retorno);
-    };
-    $('limparFolgaBtn').onclick = ()=>{
-      ['inicioManutencao','fimManutencao','diasFolga','retornoFolga'].forEach(id=>{$(id).value='';});
-    };
-
-    /* ===== Salvar / Atualizar ===== */
-    $('salvarManutencao').onclick = async ()=>{
-      const dataStr = $('dataManutencao').value;
-      const cavalo = $('manutencaoCavalo').value.trim();
-      const reboque = $('manutencaoReboque').value.trim();
-      if (!dataStr || (!cavalo && !reboque)){
-        alert("Informe a data e pelo menos uma descrição."); return;
       }
-      const registro = { data: dataStr, cavalo, reboque, criadoEm: serverTimestamp() };
-
-      if (editId){
-        await updateDoc(doc(db, "usuarios", uid, "manutencoes", editId), registro);
-        $('statusEdicao').textContent = "Registro atualizado.";
-      } else {
-        await addDoc(collection(db, "usuarios", uid, "manutencoes"), registro);
-        $('statusEdicao').textContent = "Registro adicionado.";
-      }
-
-      editId = null;
-      $('cancelarEdicao').style.display = 'none';
-      $('dataManutencao').value = '';
-      $('manutencaoCavalo').value = '';
-      $('manutencaoReboque').value = '';
-    };
-
-    $('cancelarEdicao').onclick = ()=>{
-      editId = null;
-      $('statusEdicao').textContent = "";
-      $('cancelarEdicao').style.display = 'none';
-      $('dataManutencao').value = '';
-      $('manutencaoCavalo').value = '';
-      $('manutencaoReboque').value = '';
-    };
-
-    /* ===== Apagar todos ===== */
-    $('apagarTodos').onclick = async ()=>{
-      if (!confirm("Excluir TODOS os registros de manutenção?")) return;
-      const snap = await getDocs(collection(db, "usuarios", uid, "manutencoes"));
-      const promises = [];
-      snap.forEach(d=>promises.push(deleteDoc(d.ref)));
-      await Promise.all(promises);
-    };
-
-    /* ===== Filtro ===== */
-    $('aplicarFiltro').onclick = ()=>{
-      const i = $('filtroInicio').value;
-      const f = $('filtroFim').value;
-      filtroAtivo = {
-        inicio: i ? new Date(i) : null,
-        fim: f ? new Date(f) : null
-      };
-      renderLista();
-    };
-    $('limparFiltro').onclick = ()=>{
-      filtroAtivo = null;
-      $('filtroInicio').value = "";
-      $('filtroFim').value = "";
-      renderLista();
-    };
-
-    /* ===== PDF ===== */
-    function linhasPDF(arr){
-      return arr.map(m => [
-        fmtBR(m.data),
-        m.cavalo || '—',
-        m.reboque || '—'
-      ]);
     }
+  });
+}
 
-    async function gerarPDF(registros, tituloExtra=""){
-      const { jsPDF } = window.jspdf;
-      const docpdf = new jsPDF({ unit:'pt', format:'a4' });
+/* ========= Folga ========= */
+$('calcFolga').onclick = ()=>{
+  const i = $('inicioFolga').value;
+  const f = $('fimFolga').value;
 
-      const startX = 40; let y = 40;
-      docpdf.setFontSize(16);
-      docpdf.text(`Relatório de Manutenções — Motorista Plus ${tituloExtra}`, startX, y);
-      y += 24;
+  if(!i || !f){ alert("Selecione início e fim."); return; }
 
-      docpdf.setFontSize(11);
-      docpdf.text(`Motorista: ${perfil?.nome || "—"}`, startX, y);
-      docpdf.text(`Placas: ${perfil?.placaCavalo || "—"} / ${perfil?.placaReboque || "—"}`, startX + 260, y);
-      y += 18;
-      if ($('diasFolga').value){
-        docpdf.text(`Folga: ${$('diasFolga').value} dia(s) — Retorno: ${$('retornoFolga').value || '—'}`, startX, y);
-        y += 14;
-      }
+  const ini = new Date(i);
+  const fim = new Date(f);
+  const dias = Math.floor((fim-ini)/(1000*60*60*24)) + 1;
+  const folga = Math.ceil(dias/7);
+  const retorno = new Date(fim.getTime() + (folga + 2)*24*60*60*1000);
 
-      const corpo = linhasPDF(registros);
-      docpdf.autoTable({
-        startY: y + 6,
-        head: [["Data","Descrição Cavalo","Descrição Reboque"]],
-        body: corpo,
-        headStyles:{ fillColor:[243,146,32] },
-        styles:{ fontSize:10 },
-        margin:{ left:startX, right:startX }
-      });
+  $('diasFolga').value = folga;
+  $('retornoFolga').value = fmtBR(retorno);
+};
 
-      docpdf.save("manutencoes.pdf");
-    }
+$('limparFolga').onclick = ()=>{
+  $('inicioFolga').value = "";
+  $('fimFolga').value = "";
+  $('diasFolga').value = "";
+  $('retornoFolga').value = "";
+};
 
-    $('pdfPeriodo').onclick = ()=>{
-      let itens = [...manutencoes];
-      if (filtroAtivo){
-        itens = itens.filter(m=>{
-          const d = new Date(m.data);
-          const okI = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
-          const okF = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
-          return okI && okF;
-        });
-      }
-      const tExtra = (filtroAtivo?.inicio || filtroAtivo?.fim)
-        ? `(${filtroAtivo?.inicio ? fmtBR(filtroAtivo.inicio.toISOString()) : '…'} a ${filtroAtivo?.fim ? fmtBR(filtroAtivo.fim.toISOString()) : '…'})`
-        : "";
-      gerarPDF(itens, tExtra);
-    };
+/* ========= Salvar manutenção ========= */
+$('salvar').onclick = async ()=>{
+  const data = $('dataManutencao').value;
+  const cavalo = $('descCavalo').value.trim();
+  const reboque = $('descReboque').value.trim();
 
-    $('pdfCompleto').onclick = ()=>{
-      gerarPDF(manutencoes, "(Completo)");
-    };
+  if(!data || (!cavalo && !reboque)){
+    alert("Preencha a data e pelo menos uma descrição.");
+    return;
+  }
 
-    /* ===== Auth ===== */
-    onAuthStateChanged(auth, async (user)=>{
-      if (!user) return window.location.href = "login.html";
-      uid = user.uid;
-      await carregarPerfil();
-      iniciarStream();
-    });
-  </script>
+  const registro = {
+    data, cavalo, reboque,
+    criadoEm: serverTimestamp()
+  };
+
+  if(editId){
+    await updateDoc(doc(db,"usuarios",uid,"manutencoes",editId), registro);
+    $('status').textContent = "Registro atualizado.";
+    editId = null;
+    $('cancelarEdicao').style.display = 'none';
+  }else{
+    await addDoc(collection(db,"usuarios",uid,"manutencoes"), registro);
+    $('status').textContent = "Registro salvo.";
+  }
+
+  $('dataManutencao').value = "";
+  $('descCavalo').value = "";
+  $('descReboque').value = "";
+};
+
+/* ========= Cancelar edição ========= */
+$('cancelarEdicao').onclick = ()=>{
+  editId = null;
+  $('cancelarEdicao').style.display = 'none';
+  $('dataManutencao').value = "";
+  $('descCavalo').value = "";
+  $('descReboque').value = "";
+  $('status').textContent = "";
+};
+
+/* ========= Apagar TODOS ========= */
+$('apagarTodos').onclick = async ()=>{
+  if(!confirm("Excluir TODAS as manutenções?")) return;
+
+  const all = await getDocs(collection(db,"usuarios",uid,"manutencoes"));
+  const jobs = [];
+  all.forEach(d=> jobs.push(deleteDoc(d.ref)));
+  await Promise.all(jobs);
+};
+
+/* ========= PDF ========= */
+$('pdfCompleto').onclick = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({ unit:'pt', format:'a4' });
+
+  docPDF.setFontSize(16);
+  docPDF.text("Relatório de Manutenções — Motorista Plus", 40, 40);
+
+  docPDF.autoTable({
+    startY: 60,
+    head: [["Data","Cavalo","Reboque"]],
+    body: manutencoes.map(m=>[
+      fmtBR(m.data),
+      m.cavalo || "—",
+      m.reboque || "—"
+    ]),
+    styles:{ fontSize:10 },
+    headStyles:{ fillColor:[243,146,32] }
+  });
+
+  docPDF.save("manutencoes.pdf");
+};
+
+/* ========= Auth ========= */
+onAuthStateChanged(auth, async user=>{
+  if(!user){ location.href = "login.html"; return; }
+  uid = user.uid;
+  await carregarPerfil();
+  iniciarStream();
+});
+
+</script>
+
 </body>
 </html>

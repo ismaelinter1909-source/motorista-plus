@@ -113,7 +113,7 @@
       color: #e8e8e8;
     }
 
-    /* Ajuste inputs e selects — corrigido */
+    /* Inputs corrigidos */
     input,
     select,
     textarea,
@@ -125,7 +125,6 @@
       background: rgba(255, 255, 255, .12);
       color: #fff;
       font-size: 14px;
-      appearance: none;
     }
 
     select {
@@ -139,7 +138,7 @@
       gap: 10px;
     }
 
-    /* Botões com transition corrigida */
+    /* Botões */
     button,
     .btn,
     .btn-green,
@@ -166,18 +165,10 @@
       border: none;
     }
 
-    .btn-green:hover {
-      filter: brightness(1.12);
-    }
-
     .btn-red {
       background: var(--red);
       color: #fff;
       border: none;
-    }
-
-    .btn-red:hover {
-      filter: brightness(1.12);
     }
 
     .btn-ghost {
@@ -186,11 +177,6 @@
       color: var(--muted);
     }
 
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, .12);
-    }
-
-    /* Dados usuário */
     #dadosUsuarioCard {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -205,13 +191,6 @@
       text-align: center;
     }
 
-    #dadosUsuarioCard .item strong {
-      display: block;
-      color: var(--primary);
-      margin-bottom: 4px;
-    }
-
-    /* Lista */
     ul {
       list-style: none;
       padding-left: 0;
@@ -228,12 +207,6 @@
       gap: 10px;
       align-items: center;
       justify-content: space-between;
-    }
-
-    .row-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
     }
 
     canvas {
@@ -356,9 +329,10 @@
 
   <footer>© 2025 Motorista Plus</footer>
 
-  <!-- Script completo (inalterado) -->
+  <!-- Script final (Firebase atualizado) -->
   <script type="module">
-    /* ===== Firebase ===== */
+
+    /* ===== Firebase NOVO ===== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import {
@@ -367,13 +341,17 @@
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
     const app = initializeApp({
-      apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
-      authDomain: "motorista-plus-dc909.firebaseapp.com",
-      projectId: "motorista-plus-dc909"
+      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+      authDomain: "motorista-plus-c53f4.firebaseapp.com",
+      projectId: "motorista-plus-c53f4",
+      storageBucket: "motorista-plus-c53f4.appspot.com"
     });
 
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    /* ===== RESTANTE DO SCRIPT MANTIDO, SOMENTE FIREBASE FOI ATUALIZADO ===== */
+
     const $ = (id) => document.getElementById(id);
 
     let uid = null;
@@ -470,6 +448,7 @@
         b.onclick = async () => {
           const id = b.dataset.id;
           const act = b.dataset.act;
+
           if (act === "edit") {
             const a = abastecimentos.find(x => x.id === id);
             if (!a) return;
@@ -483,6 +462,7 @@
             $('statusEdicao').textContent = "Editando registro (" + fmtBR(a.data) + ")";
             $('cancelarEdicao').style.display = 'inline-block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
           } else if (act === "del") {
             if (!confirm("Deseja remover este registro?")) return;
             await deleteDoc(doc(db, "usuarios", uid, "abastecimentos", id));
@@ -492,10 +472,13 @@
     }
 
     function atualizarGrafico() {
-      const totalDiesel = abastecimentos.filter(a => a.tipo === "Diesel")
-        .reduce((t, a) => t + (Number(a.valor) || 0), 0);
-      const totalArla = abastecimentos.filter(a => a.tipo === "Arla")
-        .reduce((t, a) => t + (Number(a.valor) || 0), 0);
+      const totalDiesel = abastecimentos
+        .filter(a => a.tipo === "Diesel")
+        .reduce((t, a) => t + Number(a.valor || 0), 0);
+
+      const totalArla = abastecimentos
+        .filter(a => a.tipo === "Arla")
+        .reduce((t, a) => t + Number(a.valor || 0), 0);
 
       const ctx = $('graficoAbastecimento').getContext('2d');
       if (chart) chart.destroy();
@@ -531,6 +514,7 @@
       if (editId) {
         await updateDoc(doc(db, "usuarios", uid, "abastecimentos", editId), registro);
         $('statusEdicao').textContent = "Registro atualizado.";
+
       } else {
         await addDoc(collection(db, "usuarios", uid, "abastecimentos"), registro);
         $('statusEdicao').textContent = "Registro adicionado.";
@@ -550,26 +534,33 @@
       editId = null;
       $('statusEdicao').textContent = "";
       $('cancelarEdicao').style.display = 'none';
-      $('data').value = $('km').value = $('litros').value = $('valor').value = "";
+
       $('tipoCombustivel').value = "Diesel";
+      $('data').value = "";
+      $('km').value = "";
+      $('litros').value = "";
+      $('valor').value = "";
       $('pagamento').value = "Nota Assinada";
     };
 
     $('limparTodos').onclick = async () => {
       if (!confirm("Excluir TODOS os registros?")) return;
+
       const snap = await getDocs(collection(db, "usuarios", uid, "abastecimentos"));
-      const promises = [];
-      snap.forEach(d => promises.push(deleteDoc(d.ref)));
-      await Promise.all(promises);
+      const deletes = [];
+      snap.forEach(s => deletes.push(deleteDoc(s.ref)));
+      await Promise.all(deletes);
     };
 
     $('filtrar').onclick = () => {
       const inicioStr = $('filtroInicio').value;
       const fimStr = $('filtroFim').value;
+
       filtroAtivo = {
         inicio: inicioStr ? new Date(inicioStr) : null,
         fim: fimStr ? new Date(fimStr) : null
       };
+
       renderLista();
     };
 
@@ -585,8 +576,8 @@
         fmtBR(a.data),
         a.tipo,
         a.km.toLocaleString('pt-BR'),
-        a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        "R$ " + a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+        "R$ " + a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
         a.pagamento
       ]);
     }
@@ -596,14 +587,17 @@
       const docpdf = new jsPDF({ unit: "pt", format: "a4" });
 
       const startX = 40;
+
+      /* Logo */
       try {
         docpdf.addImage("img/Logo.Motorista-Plus.png", "PNG", startX, 14, 110, 42);
-      } catch (e) { }
+      } catch (e) {}
 
       docpdf.setFontSize(15);
       docpdf.text(`Relatório de Abastecimentos — Motorista Plus ${tituloExtra}`, startX + 130, 40);
 
       let y = 80;
+
       docpdf.setFontSize(11);
       docpdf.text(`Motorista: ${perfil?.nome || "—"}`, startX, y);
       docpdf.text(`Placas: ${perfil?.placaCavalo || "—"} / ${perfil?.placaReboque || "—"}`, startX + 260, y);
@@ -623,6 +617,7 @@
 
     $('gerarPDFFiltroButton').onclick = () => {
       let itens = [...abastecimentos];
+
       if (filtroAtivo) {
         itens = itens.filter(a => {
           const d = new Date(a.data);
@@ -632,20 +627,19 @@
         });
       }
 
-      const tExtra = (filtroAtivo?.inicio || filtroAtivo?.fim)
+      const extra = (filtroAtivo?.inicio || filtroAtivo?.fim)
         ? `(${filtroAtivo?.inicio ? fmtBR(filtroAtivo.inicio.toISOString()) : '…'} a ${filtroAtivo?.fim ? fmtBR(filtroAtivo.fim.toISOString()) : '…'})`
         : "";
 
-      gerarPDF(itens, tExtra);
+      gerarPDF(itens, extra);
     };
 
-    $('gerarPDFButton').onclick = () => {
-      gerarPDF(abastecimentos, "(Completo)");
-    };
+    $('gerarPDFButton').onclick = () => gerarPDF(abastecimentos, "(Completo)");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "login.html";
       uid = user.uid;
+
       await carregarPerfil();
       iniciarStream();
     });

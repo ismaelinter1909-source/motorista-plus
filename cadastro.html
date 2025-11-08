@@ -94,12 +94,16 @@
       color:white;
       cursor:pointer;
     }
+    button:hover{
+      background:var(--mp-primary-700);
+    }
 
     a{
       display:block;
       margin-top:14px;
       text-align:center;
       color:#ffd9ad;
+      text-decoration:none;
     }
 
     footer{
@@ -149,6 +153,7 @@
 <footer>© 2025 Motorista Plus</footer>
 
 <script type="module">
+  /* ✅ Firebase v11 — PROJETO motoristaa-plus-c53f4 */
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
     getAuth,
@@ -160,46 +165,68 @@
     setDoc
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  const app = initializeApp({
-    apiKey: "AIzaSyCJDj5XVOoNN8XxGb8znGlnek3tyP52o-U",
-    authDomain: "motorista-plus-dc909.firebaseapp.com",
-    projectId: "motorista-plus-dc909"
-  });
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+    authDomain: "motorista-plus-c53f4.firebaseapp.com",
+    projectId: "motorista-plus-c53f4",
+    storageBucket: "motorista-plus-c53f4.appspot.com",
+    messagingSenderId: "766097061342",
+    appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+  };
 
+  const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   document.getElementById("btnCadastrar").addEventListener("click", async ()=>{
-    
-    const nome = nome.value.trim();
-    const telefone = telefone.value.trim();
-    const email = email.value.trim();
-    const senha = senha.value.trim();
-    const placaCavalo = placaCavalo.value.trim();
-    const placaReboque = placaReboque.value.trim();
 
-    if(!nome || !telefone || !email || !senha){
-      alert("Preencha todos os campos.");
+    const nomeValor = nome.value.trim();
+    const telefoneValor = telefone.value.trim();
+    const emailValor = email.value.trim();
+    const senhaValor = senha.value.trim();
+    const cavaloValor = placaCavalo.value.trim();
+    const reboqueValor = placaReboque.value.trim();
+
+    if(!nomeValor || !telefoneValor || !emailValor || !senhaValor){
+      alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
     try{
-      const cred = await createUserWithEmailAndPassword(auth, email, senha);
+      const cred = await createUserWithEmailAndPassword(auth, emailValor, senhaValor);
 
+      // ✅ Salvar os dados no Firestore
       await setDoc(doc(db, "usuarios", cred.user.uid), {
-        nome, telefone, email, placaCavalo, placaReboque
+        nome: nomeValor,
+        telefone: telefoneValor,
+        email: emailValor,
+        placaCavalo: cavaloValor || "",
+        placaReboque: reboqueValor || "",
+        foto: "" // reservado para upload no painel
       });
 
       alert("Cadastro realizado com sucesso!");
       window.location.href = "login.html";
 
     }catch(e){
-      if(e.code === "auth/email-already-in-use"){
-        alert("Este email já está em uso. Faça login.");
-      }else{
-        alert("Erro ao cadastrar: " + e.message);
+      switch(e.code){
+        case "auth/email-already-in-use":
+          alert("Email já está em uso.");
+          break;
+
+        case "auth/invalid-email":
+          alert("Email inválido.");
+          break;
+
+        case "auth/weak-password":
+          alert("A senha deve ter pelo menos 6 caracteres.");
+          break;
+
+        default:
+          alert("Erro ao cadastrar: " + e.message);
       }
     }
+
   });
 
 </script>
