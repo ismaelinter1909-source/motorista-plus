@@ -213,8 +213,9 @@
   </main>
 
   <footer>© 2025 Motorista Plus</footer>
-<!-- SCRIPT COMPLETO -->
-/*********************  PDF — FORMATO EXCEL (PAISAGEM)  *********************/
+<script
+
+```javascript
 $('gerarPDF').onclick = () => {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'landscape' });
@@ -269,8 +270,11 @@ $('gerarPDF').onclick = () => {
   }
 
   /* ========================== CÁLCULOS ========================== */
-
-  const bonus = +(totalDiarias * 4.28).toFixed(2);
+  
+  // Verifique se totalDiarias está definido e é um número
+  const diarias = Number(totalDiarias) || 0; // Garantir que seja um número
+  const bonus = +(diarias * 4.28).toFixed(2);
+  
   const totalG = +gastos.reduce((s, g) => s + (Number(g.valor) || 0), 0).toFixed(2);
   const totalV = +vales.reduce((s, v) => s + (Number(v.valor) || 0), 0).toFixed(2);
 
@@ -290,7 +294,7 @@ $('gerarPDF').onclick = () => {
   tabelaPDF(
     ['Tipo', 'Quantidade', 'Descrição', 'Valor (R$)'],
     [
-      ['Bônus', totalDiarias, '(Valor diário de 4,28)', bonus.toFixed(2)]
+      ['Bônus', diarias, '(Valor diário de 4,28)', bonus.toFixed(2)]
     ],
     [120, 100, 260, 120]
   );
@@ -334,5 +338,7 @@ $('gerarPDF').onclick = () => {
   /* ========================== SALVAR ========================== */
   doc.save('relatorio_financeiro.pdf');
 };
+
+</script>
 </body>
 </html>

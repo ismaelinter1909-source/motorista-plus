@@ -115,276 +115,79 @@
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
+<script>
+  $('exportPdfBtn').onclick = async () => {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
 
-<script type="module">
-  /* ======================= FIREBASE ======================= */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, updateDoc,
-    collection, getDocs, query, orderBy, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  const mes = parseInt($('mesSelect').value);
+  const ano = new Date().getFullYear();
+  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto",
+                 "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-  const app = initializeApp({
-    apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-    authDomain:"motorista-plus-c53f4.firebaseapp.com",
-    projectId:"motorista-plus-c53f4"
+  const dias = diasNoMes(ano, mes);
+  const lista = await carregarMes(mes, ano); // Carrega os registros do mês selecionado
+  const map = {}; 
+  lista.forEach(r => map[r.data] = r);
+
+  const rows = [];
+  for (let d = 1; d <= dias; d++) {
+    const iso = `${ano}-${pad2(mes + 1)}-${pad2(d)}`;
+    const r = map[iso] || {};
+
+    rows.push([
+      fromISOtoBR(iso),
+      r.inicio || "Folga",
+      r.intervalo || "Folga",
+      r.reinicio || "Folga",
+      r.fim || "Folga",
+      horasExtras(r)
+    ]);
+  }
+
+  const w = pdf.internal.pageSize.getWidth();
+
+  pdf.setFontSize(18);
+  pdf.text("Motorista Plus — Registro de Ponto", w / 2, 32, { align: "center" });
+
+  pdf.setFontSize(10);
+  pdf.text(`Motorista: ${perfil.nome}`, 40, 55);
+  pdf.text(`Telefone: ${perfil.telefone}`, 250, 55);
+  pdf.text(`Mês: ${meses[mes]} / ${ano}`, w - 140, 55);
+
+  pdf.autoTable({
+    startY: 65,
+    head: [["Data", "Início", "Intervalo", "Reinício", "Fim", "Extras"]],
+    body: rows,
+    theme: "grid",
+    styles: { fontSize: 7, halign: "center" },
+    headStyles: { fillColor: [243, 146, 32] }
   });
 
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  pdf.save(`ponto_${meses[mes]}_${ano}.pdf`);
+};
 
-  const $ = id => document.getElementById(id);
-  const pad2 = n => String(n).padStart(2,"0");
+// Adiciona um evento para carregar registros ao mudar o mês
+$('mesSelect').addEventListener("change", async () => {
+  await renderTabela(); // Atualiza a tabela ao mudar o mês
+});
 
-  /* =========== FORMATOS =========== */
+// Carrega os registros do mês selecionado
+async function carregarMes(mes, ano) {
+  const col = collection(db, "usuarios", uid, "pontos");
+  const qy = query(col, orderBy("data", "asc"));
+  const snaps = await getDocs(qy);
 
-  const fromISOtoBR = iso => {
-    if (!iso) return "";
-    const [y,m,d] = iso.split("-");
-    return `${d}/${m}/${y}`;
-  };
-
-  const hojeISO = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-  };
-
-  const diasNoMes = (ano,mes)=>{
-    const padrao=[31,28,31,30,31,30,31,31,30,31,30,31];
-    const biss = (ano%4===0 && ano%100!==0) || ano%400===0;
-    return mes===1 ? padrao[1] + (biss?1:0) : padrao[mes];
-  };
-
-  const timeNow = ()=>new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-
-  let uid=null;
-  let perfil=null;
-
-  /* ========== PERFIL ========== */
-
-  async function carregarPerfil(){
-    const snap = await getDoc(doc(db,"usuarios",uid));
-    if(!snap.exists()){ $('dadosUsuarioCard').textContent="Perfil não encontrado."; return; }
-
-    perfil = snap.data();
-    $('dadosUsuarioCard').innerHTML = `
-      <div class="item"><strong>Motorista</strong>${perfil.nome}</div>
-      <div class="item"><strong>Telefone</strong>${perfil.telefone}</div>
-      <div class="item"><strong>Email</strong>${perfil.email}</div>
-      <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo}</div>
-      <div class="item"><strong>Reboque</strong>${perfil.placaReboque}</div>
-    `;
-  }
-
-  /* ========== CRUD ========== */
-
-  async function getDocDia(iso){
-    const ref = doc(db,"usuarios",uid,"pontos",iso);
-    const snap = await getDoc(ref);
-    return snap.exists() ? snap.data() : null;
-  }
-
-  async function marcar(tipo){
-    const iso = hojeISO();
-    const ref = doc(db,"usuarios",uid,"pontos",iso);
-    const atual = await getDocDia(iso);
-    const agora = timeNow();
-
-    const base = { data: iso };
-
-    if(atual){
-      await updateDoc(ref,{...base,[tipo]:agora,updatedAt:serverTimestamp()});
-    } else {
-      await setDoc(ref,{
-        ...base,inicio:null,intervalo:null,reinicio:null,fim:null,
-        [tipo]:agora,createdAt:serverTimestamp()
-      });
-    }
-
-    $('status').textContent = `Registrado ${tipo} às ${agora}`;
-    renderTabela();
-  }
-
-  /* ========== FILTRO PRECISO (YYYY-MM-) ========== */
-
-  async function carregarMes(mes,ano){
-    const col = collection(db,"usuarios",uid,"pontos");
-    const qy = query(col,orderBy("data","asc"));
-    const snaps = await getDocs(qy);
-
-    const prefix = `${ano}-${pad2(mes+1)}-`;
-
-    const lista=[];
-    snaps.forEach(s=>{
-      const d=s.data().data;
-      if(d.startsWith(prefix)) lista.push(s.data());
-    });
-
-    return lista;
-  }
-
-  /* ========== CÁLCULO HORAS EXTRAS ========== */
-
-  function horasExtras(reg){
-    if(!reg.inicio || !reg.fim) return "Folga";
-    const [ih,im,is] = reg.inicio.split(":").map(Number);
-    const [fh,fm,fs] = reg.fim.split(":").map(Number);
-
-    const start = new Date(0,0,0,ih,im,is||0);
-    const end   = new Date(0,0,0,fh,fm,fs||0);
-
-    const h = (end-start)/3600000;
-    if(h<=0 || isNaN(h)) return "Folga";
-
-    return Math.max(0,h-8).toFixed(2);
-  }
-
-  /* ========== TABELA ========== */
-
-  async function renderTabela(){
-    const mes = parseInt($('mesSelect').value);
-    const ano = new Date().getFullYear();
-    const dias = diasNoMes(ano,mes);
-
-    const registros = await carregarMes(mes,ano);
-
-    const map={};
-    registros.forEach(r=> map[r.data] = r);
-
-    const tbody = $('tableRegistros').querySelector('tbody');
-    tbody.innerHTML="";
-
-    for(let d=1; d<=dias; d++){
-      const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
-      const r = map[iso] || {};
-
-      const inicio    = r.inicio    || "Folga";
-      const intervalo = r.intervalo || "Folga";
-      const reinicio  = r.reinicio  || "Folga";
-      const fim       = r.fim       || "Folga";
-      const extras    = horasExtras(r);
-
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${fromISOtoBR(iso)}</td>
-        <td>${inicio}</td>
-        <td>${intervalo}</td>
-        <td>${reinicio}</td>
-        <td>${fim}</td>
-        <td>${extras}</td>
-        <td><button class="edit" data-iso="${iso}">Editar</button></td>
-      `;
-      tbody.appendChild(tr);
-    }
-
-    /* editar */
-    tbody.querySelectorAll(".edit").forEach(btn=>{
-      btn.onclick = async ()=>{
-        const iso = btn.dataset.iso;
-        const reg = map[iso] || {};
-
-        const campos=["inicio","intervalo","reinicio","fim"];
-        const novos={};
-
-        for(const c of campos){
-          const v = prompt(`Editar ${c} (${fromISOtoBR(iso)}):`, reg[c] || "");
-          if(v===null) continue;
-          novos[c] = v.trim()==="" ? null : v.trim();
-        }
-
-        const ref = doc(db,"usuarios",uid,"pontos",iso);
-        const existe = await getDocDia(iso);
-
-        if(existe){
-          await updateDoc(ref,{...novos,updatedAt:serverTimestamp()});
-        } else {
-          await setDoc(ref,{
-            data:iso,inicio:null,intervalo:null,reinicio:null,fim:null,
-            ...novos,createdAt:serverTimestamp()
-          });
-        }
-
-        renderTabela();
-      };
-    });
-
-  }
-
-  /* ========== PDF ========== */
-
-  $('exportPdfBtn').onclick = async ()=>{
-    const {jsPDF}=window.jspdf;
-    const pdf = new jsPDF({unit:"pt",format:"a4",orientation:"landscape"});
-
-    const mes = parseInt($('mesSelect').value);
-    const ano = new Date().getFullYear();
-    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto",
-                   "Setembro","Outubro","Novembro","Dezembro"];
-
-    const dias = diasNoMes(ano,mes);
-
-    const lista = await carregarMes(mes,ano);
-    const map={}; lista.forEach(r=> map[r.data]=r);
-
-    const rows=[];
-    for(let d=1; d<=dias; d++){
-      const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
-      const r = map[iso] || {};
-
-      rows.push([
-        fromISOtoBR(iso),
-        r.inicio    || "Folga",
-        r.intervalo || "Folga",
-        r.reinicio  || "Folga",
-        r.fim       || "Folga",
-        horasExtras(r)
-      ]);
-    }
-
-    const w = pdf.internal.pageSize.getWidth();
-
-    pdf.setFontSize(18);
-    pdf.text("Motorista Plus — Registro de Ponto", w/2, 32, {align:"center"});
-
-    pdf.setFontSize(10);
-    pdf.text(`Motorista: ${perfil.nome}`,40,55);
-    pdf.text(`Telefone: ${perfil.telefone}`,250,55);
-    pdf.text(`Mês: ${meses[mes]} / ${ano}`, w-140,55);
-
-    pdf.autoTable({
-      startY:65,
-      head:[["Data","Início","Intervalo","Reinício","Fim","Extras"]],
-      body:rows,
-      theme:"grid",
-      styles:{fontSize:7,halign:"center"},
-      headStyles:{fillColor:[243,146,32]}
-    });
-
-    pdf.save(`ponto_${meses[mes]}_${ano}.pdf`);
-  };
-
-  /* ========== EVENTOS ========== */
-
-  $('toggleHistorico').onclick = ()=>{
-    const t = $('tableRegistros');
-    t.style.display = t.style.display==="none" ? "table" : "none";
-  };
-
-  $('mesSelect').addEventListener("change",renderTabela);
-
-  /* ========== AUTH ========== */
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ window.location.href="login.html"; return; }
-
-    uid = user.uid;
-    await carregarPerfil();
-    $('mesSelect').value = new Date().getMonth();
-    await renderTabela();
+  const prefix = `${ano}-${pad2(mes + 1)}-`;
+  const lista = [];
+  snaps.forEach(s => {
+    const d = s.data().data;
+    if (d.startsWith(prefix)) lista.push(s.data());
   });
+
+  return lista; // Retorna a lista de registros do mês
+}
 
 </script>
-
 </body>
 </html>
