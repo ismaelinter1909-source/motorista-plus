@@ -213,466 +213,292 @@
   </main>
 
   <footer>© 2025 Motorista Plus</footer>
+<!-- SCRIPT COMPLETO -->
+<script type="module">
+  /* ================= Firebase (motorista-plus-c53f4) ================= */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { 
+    getAuth, onAuthStateChanged 
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc,
+    collection, addDoc, updateDoc, deleteDoc,
+    query, orderBy, onSnapshot, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  <!-- SCRIPT COMPLETO -->
-  <script type="module">
-    /* ================= Firebase (motorista-plus-c53f4) ================= */
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { 
-      getAuth, onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc,
-      collection, addDoc, updateDoc, deleteDoc,
-      query, orderBy, onSnapshot, getDocs, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  const app = initializeApp({
+    apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+    authDomain: "motorista-plus-c53f4.firebaseapp.com",
+    projectId: "motorista-plus-c53f4",
+    storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+    messagingSenderId: "766097061342",
+    appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
+    measurementId: "G-CBT2D0CXPN"
+  });
 
-    const app = initializeApp({
-      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-      authDomain: "motorista-plus-c53f4.firebaseapp.com",
-      projectId: "motorista-plus-c53f4",
-      storageBucket: "motorista-plus-c53f4.firebasestorage.app",
-      messagingSenderId: "766097061342",
-      appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
-      measurementId: "G-CBT2D0CXPN"
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  /* ================= Constantes/UI ================= */
+  const $ = (id)=>document.getElementById(id);
+  const DIARIA_VALOR = 4.28;
+  let totalDiarias = 0;
+
+  let uid = null;
+  let perfil = null;
+  let gastos = []; 
+  let vales  = []; 
+
+  let editGastoId = null;
+  let editValeId  = null;
+  let chart = null;
+
+  const fmtBR = (isoLike)=>{
+    const d = new Date(isoLike);
+    if(isNaN(d)) return "";
+    return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+  };
+
+  /* ================= Perfil ================= */
+  async function carregarPerfil(){
+    const snap = await getDoc(doc(db,"usuarios", uid));
+    if(!snap.exists()) return;
+    perfil = snap.data();
+    $('dadosUsuario').innerHTML = `
+      <div><b>Motorista:</b> ${perfil.nome || '—'}</div>
+      <div><b>Cavalo:</b> ${perfil.placaCavalo || '—'}</div>
+      <div><b>Reboque:</b> ${perfil.placaReboque || '—'}</div>
+      <div><b>Email:</b> ${perfil.email || '—'}</div>
+      <div><b>Telefone:</b> ${perfil.telefone || '—'}</div>
+    `;
+  }
+
+  /* ================= Streams (tempo real) ================= */
+  function iniciarStreams(){
+    // gastos
+    const qG = query(collection(db,"usuarios",uid,"gastos"), orderBy("criadoEm","desc"));
+    onSnapshot(qG, (snap)=>{
+      gastos = snap.docs.map(d=>{
+        const x = d.data();
+        return {
+          id:d.id,
+          date: (typeof x.date==='string')? x.date : (x.date?.toDate?.()? x.date.toDate().toISOString().slice(0,10):""),
+          motivo: x.motivo||"",
+          local:  x.local||"",
+          valor:  Number(x.valor||0),
+          aut:    x.aut||""
+        };
+      });
+      renderGastos();
+      atualizarResumo();
     });
 
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
-    /* ================= Constantes/UI ================= */
-    const $ = (id)=>document.getElementById(id);
-    const DIARIA_VALOR = 4.28;
-    let totalDiarias = 0;
-
-    let uid = null;
-    let perfil = null;
-    let gastos = []; // {id,date,motivo,local,valor,aut}
-    let vales  = []; // {id,date,motivo,valor}
-    let editGastoId = null;
-    let editValeId  = null;
-    let chart = null;
-
-    const fmtBR = (isoLike)=>{
-      const d = new Date(isoLike);
-      if(isNaN(d)) return "";
-      return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-    };
-
-    /* ================= Perfil ================= */
-    async function carregarPerfil(){
-      const snap = await getDoc(doc(db,"usuarios", uid));
-      if(!snap.exists()) return;
-      perfil = snap.data();
-      $('dadosUsuario').innerHTML = `
-        <div><b>Motorista:</b> ${perfil.nome || '—'}</div>
-        <div><b>Cavalo:</b> ${perfil.placaCavalo || '—'}</div>
-        <div><b>Reboque:</b> ${perfil.placaReboque || '—'}</div>
-        <div><b>Email:</b> ${perfil.email || '—'}</div>
-        <div><b>Telefone:</b> ${perfil.telefone || '—'}</div>
-      `;
-    }
-
-    /* ================= Streams (tempo real) ================= */
-    function iniciarStreams(){
-      // gastos
-      const qG = query(collection(db,"usuarios",uid,"gastos"), orderBy("criadoEm","desc"));
-      onSnapshot(qG, (snap)=>{
-        gastos = snap.docs.map(d=>{
-          const x = d.data();
-          return {
-            id:d.id,
-            date: (typeof x.date==='string')? x.date : (x.date?.toDate?.()? x.date.toDate().toISOString().slice(0,10):""),
-            motivo: x.motivo||"",
-            local:  x.local||"",
-            valor:  Number(x.valor||0),
-            aut:    x.aut||""
-          };
-        });
-        renderGastos();
-        atualizarResumo();
-      });
-
-      // vales
-      const qV = query(collection(db,"usuarios",uid,"vales"), orderBy("criadoEm","desc"));
-      onSnapshot(qV, (snap)=>{
-        vales = snap.docs.map(d=>{
-          const x = d.data();
-          return {
-            id:d.id,
-            date: (typeof x.date==='string')? x.date : (x.date?.toDate?.()? x.date.toDate().toISOString().slice(0,10):""),
-            motivo: x.motivo||"",
-            valor:  Number(x.valor||0)
-          };
-        });
-        renderVales();
-        atualizarResumo();
-      });
-    }
-
-    /* ================= Render Listas ================= */
-    function renderGastos(){
-      const ul = $('listaGastos');
-      if(!gastos.length){ ul.innerHTML = '<li class="tag">(nenhum)</li>'; return; }
-      ul.innerHTML = gastos.map(g=>`
-        <li>
-          <div style="flex:1;min-width:240px">
-            <div style="font-weight:700">Gasto — ${fmtBR(g.date)}</div>
-            <div class="tag">${g.motivo} / ${g.local} — Aut.: ${g.aut}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="font-weight:700">R$ ${g.valor.toFixed(2)}</div>
-            <div class="row-actions">
-              <button class="btn" data-type="g" data-act="edit" data-id="${g.id}">Editar</button>
-              <button class="btn-red" data-type="g" data-act="del" data-id="${g.id}">Remover</button>
-            </div>
-          </div>
-        </li>
-      `).join('');
-
-      ul.querySelectorAll('button').forEach(b=>{
-        b.onclick = async ()=>{
-          const id  = b.dataset.id;
-          const tp  = b.dataset.type;
-          const act = b.dataset.act;
-
-          if(tp==='g' && act==='edit'){
-            const g = gastos.find(x=>x.id===id);
-            if(!g) return;
-            $('gastoDate').value   = g.date;
-            $('gastoMotivo').value = g.motivo;
-            $('gastoLocal').value  = g.local;
-            $('gastoValor').value  = g.valor;
-            $('gastoAut').value    = g.aut || 'Francisco';
-            editGastoId = id;
-            $('cancelarEditGasto').style.display = 'inline-block';
-            $('gastoMotivo').focus();
-          }
-          if(tp==='g' && act==='del'){
-            if(!confirm('Remover este gasto?')) return;
-            await deleteDoc(doc(db,"usuarios",uid,"gastos",id));
-          }
+    // vales
+    const qV = query(collection(db,"usuarios",uid,"vales"), orderBy("criadoEm","desc"));
+    onSnapshot(qV, (snap)=>{
+      vales = snap.docs.map(d=>{
+        const x = d.data();
+        return {
+          id:d.id,
+          date: (typeof x.date==='string')? x.date : (x.date?.toDate?.()? x.date.toDate().toISOString().slice(0,10):""),
+          motivo: x.motivo||"",
+          valor:  Number(x.valor||0)
         };
       });
-    }
-
-    function renderVales(){
-      const ul = $('listaVales');
-      if(!vales.length){ ul.innerHTML = '<li class="tag">(nenhum)</li>'; return; }
-      ul.innerHTML = vales.map(v=>`
-        <li>
-          <div style="flex:1;min-width:240px">
-            <div style="font-weight:700">Vale — ${fmtBR(v.date)}</div>
-            <div class="tag">${v.motivo || '—'}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="font-weight:700">R$ ${v.valor.toFixed(2)}</div>
-            <div class="row-actions">
-              <button class="btn" data-type="v" data-act="edit" data-id="${v.id}">Editar</button>
-              <button class="btn-red" data-type="v" data-act="del" data-id="${v.id}">Remover</button>
-            </div>
-          </div>
-        </li>
-      `).join('');
-
-      ul.querySelectorAll('button').forEach(b=>{
-        b.onclick = async ()=>{
-          const id  = b.dataset.id;
-          const tp  = b.dataset.type;
-          const act = b.dataset.act;
-
-          if(tp==='v' && act==='edit'){
-            const v = vales.find(x=>x.id===id);
-            if(!v) return;
-            $('valeDate').value   = v.date;
-            $('valeMotivo').value = v.motivo || '';
-            $('valeValor').value  = v.valor;
-            editValeId = id;
-            $('cancelarEditVale').style.display = 'inline-block';
-            $('valeMotivo').focus();
-          }
-          if(tp==='v' && act==='del'){
-            if(!confirm('Remover este vale?')) return;
-            await deleteDoc(doc(db,"usuarios",uid,"vales",id));
-          }
-        };
-      });
-    }
-
-    /* ================= Resumo / Gráfico ================= */
-    function atualizarResumo(){
-      const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
-      const totalG = +gastos.reduce((s,g)=>s + (Number(g.valor)||0), 0).toFixed(2);
-      const totalV = +vales.reduce((s,v)=>s + (Number(v.valor)||0), 0).toFixed(2);
-
-      $('totalDiariasText').textContent =
-        `Total de diárias: ${totalDiarias} — Valor total: R$ ${bonus.toFixed(2)}`;
-
-      // Regra definida: compara (bônus + gastos) com (vales)
-      const base = bonus + totalG;
-      const diff = Math.abs(base - totalV).toFixed(2);
-      const motoristaDeve = base > totalV; // se base maior, motorista deve
-
-      $('saldoTexto').textContent = motoristaDeve
-        ? `Saldo: O motorista deve à empresa R$ ${diff}`
-        : `Saldo: A empresa deve ao motorista R$ ${diff}`;
-
-      const ctx = $('chartResumo').getContext('2d');
-      if(chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type:'pie',
-        data:{
-          labels:['Bônus','Gastos','Vales'],
-          datasets:[{ data:[bonus,totalG,totalV] }]
-        },
-        options:{ plugins:{ legend:{ position:'bottom' } } }
-      });
-    }
-
-    /* ================= Diárias ================= */
-    $('calcDiarias').onclick = ()=>{
-      const s = $('tripStart').value;
-      const e = $('tripEnd').value;
-      if(!s || !e || new Date(e) < new Date(s)){
-        alert('Selecione datas válidas.'); return;
-      }
-      totalDiarias = Math.floor((new Date(e)-new Date(s))/(1000*60*60*24)) + 1;
+      renderVales();
       atualizarResumo();
-    };
-    $('clearDiarias').onclick = ()=>{
-      totalDiarias = 0;
-      $('tripStart').value = '';
-      $('tripEnd').value   = '';
-      atualizarResumo();
-    };
+    });
+  }
 
-    /* ================= CRUD GASTOS ================= */
-    $('addGasto').onclick = async ()=>{
-      const d = $('gastoDate').value;
-      const m = $('gastoMotivo').value.trim();
-      const l = $('gastoLocal').value.trim();
-      const v = parseFloat($('gastoValor').value || 0);
-      const a = $('gastoAut').value;
+  /* ================= Render Listas ================= */
+  function renderGastos(){
+    const ul = $('listaGastos');
+    if(!gastos.length){ ul.innerHTML = '<li class="tag">(nenhum)</li>'; return; }
+    ul.innerHTML = gastos.map(g=>`
+      <li>
+        <div style="flex:1;min-width:240px">
+          <div style="font-weight:700">Gasto — ${fmtBR(g.date)}</div>
+          <div class="tag">${g.motivo} / ${g.local} — Aut.: ${g.aut}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-weight:700">R$ ${g.valor.toFixed(2)}</div>
+          <div class="row-actions">
+            <button class="btn" data-type="g" data-act="edit" data-id="${g.id}">Editar</button>
+            <button class="btn-red" data-type="g" data-act="del" data-id="${g.id}">Remover</button>
+          </div>
+        </div>
+      </li>
+    `).join('');
+  }
 
-      if(!d || !m || !l || !(v>0)){
-        alert('Preencha todos os campos e valor > 0'); return;
-      }
+  function renderVales(){
+    const ul = $('listaVales');
+    if(!vales.length){ ul.innerHTML = '<li class="tag">(nenhum)</li>'; return; }
+    ul.innerHTML = vales.map(v=>`
+      <li>
+        <div style="flex:1;min-width:240px">
+          <div style="font-weight:700">Vale — ${fmtBR(v.date)}</div>
+          <div class="tag">${v.motivo || '—'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-weight:700">R$ ${v.valor.toFixed(2)}</div>
+          <div class="row-actions">
+            <button class="btn" data-type="v" data-act="edit" data-id="${v.id}">Editar</button>
+            <button class="btn-red" data-type="v" data-act="del" data-id="${v.id}">Remover</button>
+          </div>
+        </div>
+      </li>
+    `).join('');
+  }
 
-      const payload = { date:d, motivo:m, local:l, valor:v, aut:a, criadoEm:serverTimestamp() };
+  /* ================= Resumo / Gráfico (LÓGICA CORRIGIDA) ================= */
+  function atualizarResumo(){
+    const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
+    const totalG = +gastos.reduce((s,g)=>s + (Number(g.valor)||0), 0).toFixed(2);
+    const totalV = +vales.reduce((s,v)=>s + (Number(v.valor)||0), 0).toFixed(2);
 
-      if(editGastoId){
-        await updateDoc(doc(db,"usuarios",uid,"gastos",editGastoId), payload);
-        editGastoId = null;
-        $('cancelarEditGasto').style.display = 'none';
-      }else{
-        await addDoc(collection(db,"usuarios",uid,"gastos"), payload);
-      }
+    $('totalDiariasText').textContent =
+      `Total de diárias: ${totalDiarias} — Valor total: R$ ${bonus.toFixed(2)}`;
 
-      $('gastoDate').value = '';
-      $('gastoMotivo').value = '';
-      $('gastoLocal').value = '';
-      $('gastoValor').value = '';
-      $('gastoAut').value   = 'Francisco';
-    };
+    // ✅ Lógica corrigida
+    const somaBG = bonus + totalG;     // bônus + gastos
+    const diff   = Math.abs(somaBG - totalV).toFixed(2);
 
-    $('cancelarEditGasto').onclick = ()=>{
+    // ✅ Regra correta:
+    // Se vales > (bônus + gastos) → motorista deve
+    // Se (bônus + gastos) > vales → empresa deve
+    const valesMaior = totalV > somaBG;
+
+    $('saldoTexto').textContent = valesMaior
+      ? `Saldo: O motorista deve à empresa R$ ${diff}`
+      : `Saldo: A empresa deve ao motorista R$ ${diff}`;
+
+    // gráfico
+    const ctx = $('chartResumo').getContext('2d');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type:'pie',
+      data:{
+        labels:['Bônus','Gastos','Vales'],
+        datasets:[{ data:[bonus,totalG,totalV] }]
+      },
+      options:{ plugins:{ legend:{ position:'bottom' } } }
+    });
+  }
+
+  /* ================= Diárias ================= */
+  $('calcDiarias').onclick = ()=>{
+    const s = $('tripStart').value;
+    const e = $('tripEnd').value;
+    if(!s || !e || new Date(e) < new Date(s)){
+      alert('Selecione datas válidas.'); return;
+    }
+    totalDiarias = Math.floor((new Date(e)-new Date(s))/(1000*60*60*24)) + 1;
+    atualizarResumo();
+  };
+
+  $('clearDiarias').onclick = ()=>{
+    totalDiarias = 0;
+    $('tripStart').value = '';
+    $('tripEnd').value   = '';
+    atualizarResumo();
+  };
+
+  /* ================= CRUD GASTOS ================= */
+  $('addGasto').onclick = async ()=>{
+    const d = $('gastoDate').value;
+    const m = $('gastoMotivo').value.trim();
+    const l = $('gastoLocal').value.trim();
+    const v = parseFloat($('gastoValor').value || 0);
+    const a = $('gastoAut').value;
+
+    if(!d || !m || !l || !(v>0)){
+      alert('Preencha todos os campos e valor > 0'); return;
+    }
+
+    const payload = { date:d, motivo:m, local:l, valor:v, aut:a, criadoEm:serverTimestamp() };
+
+    if(editGastoId){
+      await updateDoc(doc(db,"usuarios",uid,"gastos",editGastoId), payload);
       editGastoId = null;
       $('cancelarEditGasto').style.display = 'none';
-      $('gastoDate').value = $('gastoMotivo').value = $('gastoLocal').value = $('gastoValor').value = '';
-      $('gastoAut').value = 'Francisco';
-    };
-
-    $('clearGasto').onclick = ()=>{
-      $('gastoDate').value = $('gastoMotivo').value = $('gastoLocal').value = $('gastoValor').value = '';
-      $('gastoAut').value = 'Francisco';
-    };
-
-    /* ================= CRUD VALES ================= */
-    $('addVale').onclick = async ()=>{
-      const d = $('valeDate').value;
-      const v = parseFloat($('valeValor').value || 0);
-      const m = $('valeMotivo').value.trim();
-
-      if(!d || !(v>0)){
-        alert('Preencha data e valor > 0'); return;
-      }
-
-      const payload = { date:d, motivo:m, valor:v, criadoEm:serverTimestamp() };
-
-      if(editValeId){
-        await updateDoc(doc(db,"usuarios",uid,"vales",editValeId), payload);
-        editValeId = null;
-        $('cancelarEditVale').style.display = 'none';
-      }else{
-        await addDoc(collection(db,"usuarios",uid,"vales"), payload);
-      }
-
-      $('valeDate').value = '';
-      $('valeValor').value = '';
-      $('valeMotivo').value = '';
-    };
-
-    $('cancelarEditVale').onclick = ()=>{
-      editValeId = null;
-      $('cancelarEditVale').style.display = 'none';
-      $('valeDate').value = $('valeValor').value = $('valeMotivo').value = '';
-    };
-
-    $('clearVale').onclick = ()=>{
-      $('valeDate').value = $('valeValor').value = $('valeMotivo').value = '';
-    };
-
-    /* ================= Ações gerais ================= */
-    $('clearAll').onclick = async ()=>{
-      if(!confirm('Excluir TODOS os gastos e vales?')) return;
-      const colG = await getDocs(collection(db,"usuarios",uid,"gastos"));
-      const colV = await getDocs(collection(db,"usuarios",uid,"vales"));
-      const jobs = [];
-      colG.forEach(d=> jobs.push(deleteDoc(d.ref)));
-      colV.forEach(d=> jobs.push(deleteDoc(d.ref)));
-      await Promise.all(jobs);
-    };
-
-    /* ================= PDF (SEM LOGO) ================= */
-    function tabelaPDF(doc, startX, startY, headers, rows, colWidths){
-      let y = startY;
-      const rh = 20;
-      const col = (i)=> colWidths.slice(0,i).reduce((a,b)=>a+b,0);
-
-      // header
-      headers.forEach((h,i)=>{ doc.rect(startX+col(i), y, colWidths[i], rh); });
-      headers.forEach((h,i)=>{ doc.text(h, startX+col(i)+6, y+rh-6); });
-      y += rh;
-
-      // rows
-      rows.forEach(r=>{
-        r.forEach((cell,i)=>{
-          doc.rect(startX+col(i), y, colWidths[i], rh);
-          doc.text(String(cell), startX+col(i)+6, y+rh-6);
-        });
-        y += rh;
-      });
-
-      return y+10;
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"gastos"), payload);
     }
 
-    $('gerarPDF').onclick = ()=>{
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit:'pt', format:'a4' });
+    $('gastoDate').value = '';
+    $('gastoMotivo').value = '';
+    $('gastoLocal').value = '';
+    $('gastoValor').value = '';
+    $('gastoAut').value   = 'Francisco';
+  };
 
-      const startX = 40;
-      let y = 44;
+  $('cancelarEditGasto').onclick = ()=>{
+    editGastoId = null;
+    $('cancelarEditGasto').style.display = 'none';
+    $('gastoDate').value = $('gastoMotivo').value = $('gastoLocal').value = $('gastoValor').value = '';
+    $('gastoAut').value = 'Francisco';
+  };
 
-      doc.setFontSize(16);
-      doc.text('Relatório Financeiro — Motorista Plus', startX, y); 
-      y += 24;
+  $('clearGasto').onclick = ()=>{
+    $('gastoDate').value = $('gastoMotivo').value = $('gastoLocal').value = $('gastoValor').value = '';
+    $('gastoAut').value = 'Francisco';
+  };
 
-      doc.setFontSize(11);
-      const uInfo = [
-        ['Motorista', perfil?.nome || '—'],
-        ['Cavalo',    perfil?.placaCavalo || '—'],
-        ['Reboque',   perfil?.placaReboque || '—'],
-        ['E-mail',    perfil?.email || '—']
-      ];
-      uInfo.forEach(r=>{ doc.text(`${r[0]}: ${r[1]}`, startX, y); y += 18; });
-      y += 6;
+  /* ================= CRUD VALES ================= */
+  $('addVale').onclick = async ()=>{
+    const d = $('valeDate').value;
+    const v = parseFloat($('valeValor').value || 0);
+    const m = $('valeMotivo').value.trim();
 
-      // Diárias / Bônus — descrição exigida
-      const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
-      y = tabelaPDF(
-        doc, startX, y,
-        ['Tipo','Quantidade','Descrição','Valor (R$)'],
-        [['Bônus', totalDiarias, '(Valor diário de 4,28)', bonus.toFixed(2)]],
-        [120,100,220,120]
-      );
+    if(!d || !(v>0)){
+      alert('Preencha data e valor > 0'); return;
+    }
 
-      // Gastos
-      const gRows = gastos.length
-        ? gastos.map(g=>['Gasto', fmtBR(g.date), `${g.motivo} / ${g.local} — Aut.: ${g.aut}`, g.valor.toFixed(2)])
-        : [['Gasto','—','—','0,00']];
-      y = tabelaPDF(
-        doc, startX, y,
-        ['Tipo','Data','Motivo / Local','Valor (R$)'],
-        gRows,
-        [120,100,220,120]
-      );
+    const payload = { date:d, motivo:m, valor:v, criadoEm:serverTimestamp() };
 
-      // Vales (com data/descrição/valor)
-      const vRows = vales.length
-        ? vales.map(v=>['Vale', fmtBR(v.date), (v.motivo||'—'), v.valor.toFixed(2)])
-        : [['Vale','—','—','0,00']];
-      y = tabelaPDF(
-        doc, startX, y,
-        ['Tipo','Data','Descrição','Valor (R$)'],
-        vRows,
-        [120,100,220,120]
-      );
+    if(editValeId){
+      await updateDoc(doc(db,"usuarios",uid,"vales",editValeId), payload);
+      editValeId = null;
+      $('cancelarEditVale').style.display = 'none';
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"vales"), payload);
+    }
 
-      // Saldo final (regra solicitada)
-      const totalG = +gastos.reduce((s,g)=>s + (Number(g.valor)||0), 0).toFixed(2);
-      const totalV = +vales.reduce((s,v)=>s + (Number(v.valor)||0), 0).toFixed(2);
-      const base   = bonus + totalG;
-      const diff   = Math.abs(base - totalV).toFixed(2);
-      const motoristaDeve = base > totalV;
+    $('valeDate').value = '';
+    $('valeValor').value = '';
+    $('valeMotivo').value = '';
+  };
 
-      doc.setFontSize(12);
-      doc.text(
-        motoristaDeve
-          ? `Saldo Final: R$ ${diff} — O motorista deve à empresa`
-          : `Saldo Final: R$ ${diff} — A empresa deve ao motorista`,
-        startX, y
-      );
+  $('cancelarEditVale').onclick = ()=>{
+    editValeId = null;
+    $('cancelarEditVale').style.display = 'none';
+    $('valeDate').value = $('valeValor').value = $('valeMotivo').value = '';
+  };
 
-      doc.save('relatorio_financeiro.pdf');
-    };
+  $('clearVale').onclick = ()=>{
+    $('valeDate').value = $('valeValor').value = $('valeMotivo').value = '';
+  };
 
-    /* ================= Excel ================= */
-    $('exportExcel').onclick = ()=>{
-      const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
-      const totalG = +gastos.reduce((s,g)=>s + (Number(g.valor)||0), 0).toFixed(2);
-      const totalV = +vales.reduce((s,v)=>s + (Number(v.valor)||0), 0).toFixed(2);
-      const base   = bonus + totalG;
-      const diff   = Math.abs(base - totalV).toFixed(2);
-      const motoristaDeve = base > totalV;
+  /* ================= Apagar TODOS ================= */
+  $('clearAll').onclick = async ()=>{
+    if(!confirm('Excluir TODOS os gastos e vales?')) return;
+    const gs = await getDocs(collection(db,"usuarios",uid,"gastos"));
+    const vs = await getDocs(collection(db,"usuarios",uid,"vales"));
+    const jobs = [];
+    gs.forEach(d=> jobs.push(deleteDoc(d.ref)));
+    vs.forEach(d=> jobs.push(deleteDoc(d.ref)));
+    await Promise.all(jobs);
+  };
 
-      const ws_data = [
-        ['Relatório Financeiro — Motorista Plus'],
-        ['Motorista', perfil?.nome || '—'],
-        ['Cavalo', perfil?.placaCavalo || '—'],
-        ['Reboque', perfil?.placaReboque || '—'],
-        [],
-        ['Tipo','Quantidade/Data','Descrição','Valor (R$)'],
-        ['Bônus', totalDiarias, '(Valor diário de 4,28)', bonus.toFixed(2)],
-        ...gastos.map(g=>['Gasto', fmtBR(g.date), `${g.motivo} / ${g.local} — Aut.: ${g.aut}`, g.valor.toFixed(2)]),
-        ...vales.map(v=>['Vale', fmtBR(v.date), v.motivo||'—', v.valor.toFixed(2)]),
-        [],
-        ['Saldo Final', '', motoristaDeve ? 'Motorista deve' : 'Empresa deve', diff]
-      ];
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(ws_data);
-      XLSX.utils.book_append_sheet(wb, ws, 'Resumo');
-      XLSX.writeFile(wb, 'resumo_financeiro.xlsx');
-    };
-
-    /* ================= Apagar TODOS ================= */
-    $('clearAll').onclick = async ()=>{
-      if(!confirm('Excluir TODOS os gastos e vales?')) return;
-      const gs = await getDocs(collection(db,"usuarios",uid,"gastos"));
-      const vs = await getDocs(collection(db,"usuarios",uid,"vales"));
-      const jobs = [];
-      gs.forEach(d=> jobs.push(deleteDoc(d.ref)));
-      vs.forEach(d=> jobs.push(deleteDoc(d.ref)));
-      await Promise.all(jobs);
-    };
-
-    /* ================= Auth bootstrap ================= */
-    onAuthStateChanged(auth, async (user)=>{
-      if(!user){ window.location.href='login.html'; return; }
-      uid = user.uid;
-      await carregarPerfil();
-      iniciarStreams();
-      atualizarResumo();
-    });
-  </script>
+  /* ================= Auth ================= */
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ window.location.href='login.html'; return; }
+    uid = user.uid;
+    await carregarPerfil();
+    iniciarStreams();
+    atualizarResumo();
+  });
+</script>
 </body>
 </html>
