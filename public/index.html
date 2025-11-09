@@ -3,28 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abertura - Motorista Plus</title>
+    <title>Motorista Plus</title>
 
-    <!-- FAVICON + PWA ICONS -->
+    <!-- FAVICONS -->
     <link rel="icon" href="favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
     <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
 
-    <!-- MANIFESTO -->
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Ícones PNG gerados -->
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-
-    <meta name="theme-color" content="#0b0f14">
+    <meta name="theme-color" content="#000000">
 
     <style>
         body {
             margin: 0;
             height: 100vh;
-            background: #000000; /* fundo preto */
+            background: #000000;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,26 +29,26 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition:
-                transform 6s ease-in-out,
-                opacity 2s ease-in-out;
             opacity: 1;
-            transform: scale(0.2) rotate(0deg);
+            transform: scale(0.15) rotate(0deg);
+            transition:
+                transform 5.2s ease-in-out,
+                opacity 1.8s ease-in-out;
         }
 
         .logo {
-            width: 160px;
+            width: 170px;
             animation: pulse 2.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
-            0%   { transform: scale(1); }
-            50%  { transform: scale(1.06); }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.07); }
             100% { transform: scale(1); }
         }
 
         .expand {
-            transform: scale(var(--final-scale)) rotate(var(--rotate-final));
+            transform: scale(var(--final-scale)) rotate(var(--final-rotation));
         }
 
         .fade-out {
@@ -70,47 +64,41 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-
             const wrapper = document.getElementById("wrapper");
             const logo = document.getElementById("logo");
 
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
 
-            // Detectar celular
-            const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-            // Tamanho inicial real da imagem
             const initialWidth = logo.clientWidth;
 
-            // Tamanho final da animação
-            let targetSize;
+            // base (PC)
+            let targetSize = Math.min(screenW, screenH) * 0.85;
+
+            // ✅ Aumentar mais em CELULAR
+            const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
             if (isMobile) {
-                targetSize = Math.min(screenW, screenH) * 0.95; // celular → ocupa quase toda a tela
-            } else {
-                targetSize = Math.min(screenW, screenH) * 0.80; // PC → menor
+                targetSize = Math.min(screenW, screenH) * 0.95;  // estava 0.85 → agora 0.95
             }
 
             let finalScale = targetSize / initialWidth;
-            if (finalScale > 14) finalScale = 14;
 
-            // Rotação final
+            // limite de segurança
+            if (finalScale > 18) finalScale = 18;
+
+            // ✅ Rotação diferente em celular
             const finalRotation = isMobile ? "90deg" : "0deg";
 
-            // Aplicar valores CSS
             document.documentElement.style.setProperty("--final-scale", finalScale);
-            document.documentElement.style.setProperty("--rotate-final", finalRotation);
+            document.documentElement.style.setProperty("--final-rotation", finalRotation);
 
-            const growTime = 6000;
-            const exitDelay = 2200;
+            const growTime = 5200;
+            const exitDelay = 2000;
 
-            // Início da animação
-            setTimeout(() => wrapper.classList.add("expand"), 400);
+            setTimeout(() => wrapper.classList.add("expand"), 300);
 
-            // Fade-out
             setTimeout(() => wrapper.classList.add("fade-out"), growTime);
 
-            // Ir para login
             setTimeout(() => window.location.href = "login.html", growTime + exitDelay);
         });
     </script>
