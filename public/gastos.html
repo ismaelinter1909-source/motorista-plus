@@ -217,9 +217,7 @@
 <script type="module">
   /* ================= Firebase (motorista-plus-c53f4) ================= */
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { 
-    getAuth, onAuthStateChanged 
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import {
     getFirestore, doc, getDoc,
     collection, addDoc, updateDoc, deleteDoc,
@@ -241,14 +239,13 @@
 
   /* ================= Constantes/UI ================= */
   const $ = (id)=>document.getElementById(id);
-  const DIARIA_VALOR = 4.28;
-  let totalDiarias = 0;
+  const DIARIA_VALOR = 4.28; // mantém seu valor atual nessa página
+  let totalDiarias = 0;      // persiste via localStorage
 
   let uid = null;
   let perfil = null;
-  let gastos = []; 
-  let vales  = []; 
-
+  let gastos = [];
+  let vales  = [];
   let editGastoId = null;
   let editValeId  = null;
   let chart = null;
@@ -258,6 +255,45 @@
     if(isNaN(d)) return "";
     return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
   };
+  const onlyISO = (d)=> new Date(d).toISOString().slice(0,10);
+  const inRange = (dateStr, startISO, endISO)=>{
+    if(!dateStr) return false;
+    const x = dateStr;
+    const s = startISO || "0000-01-01";
+    const e = endISO   || "9999-12-31";
+    return (x >= s && x <= e);
+  };
+
+  const lsKey = (suffix)=> `mp:${uid}:${suffix}`;
+  const saveLocal = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
+  const loadLocal = (k, def=null)=>{
+    try{ const v = JSON.parse(localStorage.getItem(k)); return v ?? def; }catch{ return def; }
+  };
+  const removeLocal = (k)=> localStorage.removeItem(k);
+
+  /* ================= Cria inputs de resumo (Bônus+Gastos / Vales) ================= */
+  function ensureResumoInputs(){
+    const host = document.querySelector('#chartResumo')?.parentElement;
+    if(!host) return;
+    if(!document.getElementById('inpTotalBonusGastos')){
+      const i1 = document.createElement('input');
+      i1.id = 'inpTotalBonusGastos';
+      i1.readOnly = true;
+      i1.style.margin = '8px auto';
+      i1.style.maxWidth = '360px';
+      i1.placeholder = 'Bônus + Gastos';
+      host.appendChild(i1);
+    }
+    if(!document.getElementById('inpTotalVales')){
+      const i2 = document.createElement('input');
+      i2.id = 'inpTotalVales';
+      i2.readOnly = true;
+      i2.style.margin = '8px auto';
+      i2.style.maxWidth = '360px';
+      i2.placeholder = 'Total de Vales';
+      host.appendChild(i2);
+    }
+  }
 
   /* ================= Perfil ================= */
   async function carregarPerfil(){
@@ -311,6 +347,44 @@
   }
 
   /* ================= Render Listas ================= */
+  function bindRowButtons(listElem, tipo){
+    listElem.querySelectorAll('button').forEach(b=>{
+      b.onclick = async ()=>{
+        const id  = b.dataset.id;
+        const act = b.dataset.act;
+        if(tipo==='g'){
+          if(act==='edit'){
+            const g = gastos.find(x=>x.id===id);
+            if(!g) return;
+            $('gastoDate').value   = g.date;
+            $('gastoMotivo').value = g.motivo;
+            $('gastoLocal').value  = g.local;
+            $('gastoValor').value  = g.valor;
+            $('gastoAut').value    = g.aut || 'Francisco';
+            editGastoId = id;
+            $('cancelarEditGasto').style.display = 'inline-block';
+          }else if(act==='del'){
+            if(!confirm('Remover este gasto?')) return;
+            await deleteDoc(doc(db,"usuarios",uid,"gastos",id));
+          }
+        }else if(tipo==='v'){
+          if(act==='edit'){
+            const v = vales.find(x=>x.id===id);
+            if(!v) return;
+            $('valeDate').value   = v.date;
+            $('valeMotivo').value = v.motivo || '';
+            $('valeValor').value  = v.valor;
+            editValeId = id;
+            $('cancelarEditVale').style.display = 'inline-block';
+          }else if(act==='del'){
+            if(!confirm('Remover este vale?')) return;
+            await deleteDoc(doc(db,"usuarios",uid,"vales",id));
+          }
+        }
+      };
+    });
+  }
+
   function renderGastos(){
     const ul = $('listaGastos');
     if(!gastos.length){ ul.innerHTML = '<li class="tag">(nenhum)</li>'; return; }
@@ -329,6 +403,7 @@
         </div>
       </li>
     `).join('');
+    bindRowButtons(ul, 'g');
   }
 
   function renderVales(){
@@ -349,10 +424,13 @@
         </div>
       </li>
     `).join('');
+    bindRowButtons(ul, 'v');
   }
 
-  /* ================= Resumo / Gráfico (LÓGICA CORRIGIDA) ================= */
+  /* ================= Resumo / Gráfico (mantendo sua lógica) ================= */
   function atualizarResumo(){
+    ensureResumoInputs();
+
     const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
     const totalG = +gastos.reduce((s,g)=>s + (Number(g.valor)||0), 0).toFixed(2);
     const totalV = +vales.reduce((s,v)=>s + (Number(v.valor)||0), 0).toFixed(2);
@@ -360,33 +438,51 @@
     $('totalDiariasText').textContent =
       `Total de diárias: ${totalDiarias} — Valor total: R$ ${bonus.toFixed(2)}`;
 
-    // ✅ Lógica corrigida
-    const somaBG = bonus + totalG;     // bônus + gastos
+    const somaBG = bonus + totalG;
     const diff   = Math.abs(somaBG - totalV).toFixed(2);
-
-    // ✅ Regra correta:
-    // Se vales > (bônus + gastos) → motorista deve
-    // Se (bônus + gastos) > vales → empresa deve
     const valesMaior = totalV > somaBG;
 
     $('saldoTexto').textContent = valesMaior
       ? `Saldo: O motorista deve à empresa R$ ${diff}`
       : `Saldo: A empresa deve ao motorista R$ ${diff}`;
 
+    // atualiza inputs extras
+    const iBG = document.getElementById('inpTotalBonusGastos');
+    const iV  = document.getElementById('inpTotalVales');
+    if(iBG) iBG.value = `Bônus + Gastos: R$ ${(somaBG).toFixed(2)}`;
+    if(iV)  iV.value  = `Vales: R$ ${totalV.toFixed(2)}`;
+
     // gráfico
     const ctx = $('chartResumo').getContext('2d');
     if(chart) chart.destroy();
     chart = new Chart(ctx, {
       type:'pie',
-      data:{
-        labels:['Bônus','Gastos','Vales'],
-        datasets:[{ data:[bonus,totalG,totalV] }]
-      },
+      data:{ labels:['Bônus','Gastos','Vales'], datasets:[{ data:[bonus,totalG,totalV] }] },
       options:{ plugins:{ legend:{ position:'bottom' } } }
     });
   }
 
-  /* ================= Diárias ================= */
+  /* ================= Diárias (persistentes) ================= */
+  function loadDiariasFromLocal(){
+    const t = loadLocal(lsKey('totalDiarias'), 0);
+    const s = loadLocal(lsKey('tripStart'), '');
+    const e = loadLocal(lsKey('tripEnd'), '');
+    totalDiarias = Number(t)||0;
+    if(s) $('tripStart').value = s;
+    if(e) $('tripEnd').value   = e;
+  }
+  function saveDiariasToLocal(){
+    saveLocal(lsKey('totalDiarias'), totalDiarias);
+    saveLocal(lsKey('tripStart'), $('tripStart').value || '');
+    saveLocal(lsKey('tripEnd'),   $('tripEnd').value   || '');
+  }
+  function clearDiariasLocal(){
+    totalDiarias = 0;
+    removeLocal(lsKey('totalDiarias'));
+    removeLocal(lsKey('tripStart'));
+    removeLocal(lsKey('tripEnd'));
+  }
+
   $('calcDiarias').onclick = ()=>{
     const s = $('tripStart').value;
     const e = $('tripEnd').value;
@@ -394,13 +490,15 @@
       alert('Selecione datas válidas.'); return;
     }
     totalDiarias = Math.floor((new Date(e)-new Date(s))/(1000*60*60*24)) + 1;
+    saveDiariasToLocal();
     atualizarResumo();
   };
 
   $('clearDiarias').onclick = ()=>{
-    totalDiarias = 0;
     $('tripStart').value = '';
     $('tripEnd').value   = '';
+    clearDiariasLocal();
+    $('totalDiariasText').textContent = 'Total de diárias: 0 — Valor total: R$ 0,00';
     atualizarResumo();
   };
 
@@ -480,6 +578,79 @@
     $('valeDate').value = $('valeValor').value = $('valeMotivo').value = '';
   };
 
+  /* ================= PDF (sem logo) ================= */
+  $('gerarPDF').onclick = ()=>{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+
+    const startX = 40;
+    let y = 44;
+
+    // Cabeçalho
+    doc.setFontSize(16);
+    doc.text('Relatório — Gastos & Diárias', startX, y);
+    y += 22;
+
+    // Período (usa as datas das diárias)
+    const s = $('tripStart').value ? onlyISO($('tripStart').value) : '';
+    const e = $('tripEnd').value   ? onlyISO($('tripEnd').value)   : '';
+    const periodoTxt = (s && e) ? `${fmtBR(s)} a ${fmtBR(e)}` : 'Sem período definido';
+    doc.setFontSize(11);
+    doc.text(`Período: ${periodoTxt}`, startX, y); y += 16;
+
+    // Dados do motorista
+    doc.text(`Motorista: ${perfil?.nome || '—'}`, startX, y);
+    doc.text(`Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`, startX+260, y); y += 16;
+    doc.text(`E-mail: ${perfil?.email || '—'}`, startX, y);
+    doc.text(`Telefone: ${perfil?.telefone || '—'}`, startX+260, y); y += 22;
+
+    // Totais
+    const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
+    const totalG = +gastos.reduce((s2,g)=>s2 + (Number(g.valor)||0), 0).toFixed(2);
+    const totalV = +vales.reduce((s2,v)=>s2 + (Number(v.valor)||0), 0).toFixed(2);
+    const somaBG = bonus + totalG;
+    const diff   = Math.abs(somaBG - totalV).toFixed(2);
+    const valesMaior = totalV > somaBG;
+
+    doc.text(`Diárias: ${totalDiarias} × R$ ${DIARIA_VALOR.toFixed(2)} = R$ ${bonus.toFixed(2)}`, startX, y); y += 16;
+    doc.text(`Total Gastos: R$ ${totalG.toFixed(2)}`, startX, y); y += 16;
+    doc.text(`Total Vales: R$ ${totalV.toFixed(2)}`, startX, y); y += 16;
+    doc.text(valesMaior
+      ? `Saldo: O motorista deve à empresa R$ ${diff}`
+      : `Saldo: A empresa deve ao motorista R$ ${diff}`, startX, y); y += 22;
+
+    // Listas (filtradas pelo período, se houver)
+    const sISO = s || "0000-01-01";
+    const eISO = e || "9999-12-31";
+
+    // Gastos
+    doc.setFontSize(12); doc.text('Gastos', startX, y); y += 14;
+    doc.setFontSize(10);
+    const gFiltrados = gastos.filter(g=> inRange(g.date, sISO, eISO));
+    if(!gFiltrados.length){ doc.text('(nenhum)', startX, y); y += 14; }
+    else{
+      gFiltrados.forEach(g=>{
+        const linha = `${fmtBR(g.date)} — ${g.motivo} / ${g.local} — Aut.: ${g.aut} — R$ ${g.valor.toFixed(2)}`;
+        doc.text(linha, startX, y); y += 14;
+      });
+    }
+    y += 10;
+
+    // Vales
+    doc.setFontSize(12); doc.text('Vales', startX, y); y += 14;
+    doc.setFontSize(10);
+    const vFiltrados = vales.filter(v=> inRange(v.date, sISO, eISO));
+    if(!vFiltrados.length){ doc.text('(nenhum)', startX, y); y += 14; }
+    else{
+      vFiltrados.forEach(v=>{
+        const linha = `${fmtBR(v.date)} — ${v.motivo || '—'} — R$ ${v.valor.toFixed(2)}`;
+        doc.text(linha, startX, y); y += 14;
+      });
+    }
+
+    doc.save('gastos_diarias.pdf');
+  };
+
   /* ================= Apagar TODOS ================= */
   $('clearAll').onclick = async ()=>{
     if(!confirm('Excluir TODOS os gastos e vales?')) return;
@@ -495,9 +666,13 @@
   onAuthStateChanged(auth, async (user)=>{
     if(!user){ window.location.href='login.html'; return; }
     uid = user.uid;
+
+    loadDiariasFromLocal();     // restaura diárias e período
+    ensureResumoInputs();       // garante inputs extras
+
     await carregarPerfil();
-    iniciarStreams();
-    atualizarResumo();
+    iniciarStreams();           // popula gastos/vales em tempo real
+    atualizarResumo();          // calcula com o que já tem carregado
   });
 </script>
 </body>
