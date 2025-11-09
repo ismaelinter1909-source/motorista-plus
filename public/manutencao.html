@@ -21,7 +21,8 @@
 
     #voltarPainel{
       position:fixed;top:12px;left:12px;z-index:9999;
-      padding:8px 14px;border-radius:8px;
+      padding:8px 14px;
+      width: auto;border-radius:8px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.25);
       color:#fff;cursor:pointer;
@@ -178,7 +179,7 @@ let editId = null;
 /* ========= Formatações ========= */
 const fmtBR = d => {
   const x = new Date(d);
-  return `${String(x.getDate()).padStart(2,'0')}/${String(x.getMonth()+1).padStart(2,'0')}/${x.getFullYear()}`
+  return `${String(x.getDate()).padStart(2,'0')}/${String(x.getMonth()+1).padStart(2,'0')}/${x.getFullYear()}`;
 };
 
 /* ========= Carregar perfil ========= */
@@ -255,7 +256,7 @@ function renderLista(){
           await deleteDoc(doc(db,"usuarios",uid,"manutencoes",id));
         }
       }
-    }
+    };
   });
 }
 
@@ -269,6 +270,7 @@ $('calcFolga').onclick = ()=>{
   const ini = new Date(i);
   const fim = new Date(f);
   const dias = Math.floor((fim-ini)/(1000*60*60*24)) + 1;
+
   const folga = Math.ceil(dias/7);
   const retorno = new Date(fim.getTime() + (folga + 2)*24*60*60*1000);
 
@@ -294,10 +296,7 @@ $('salvar').onclick = async ()=>{
     return;
   }
 
-  const registro = {
-    data, cavalo, reboque,
-    criadoEm: serverTimestamp()
-  };
+  const registro = { data, cavalo, reboque, criadoEm: serverTimestamp() };
 
   if(editId){
     await updateDoc(doc(db,"usuarios",uid,"manutencoes",editId), registro);
@@ -334,16 +333,49 @@ $('apagarTodos').onclick = async ()=>{
   await Promise.all(jobs);
 };
 
-/* ========= PDF ========= */
+/* ========= PDF COMPLETO COM DADOS DA FOLGA + PERFIL ========= */
 $('pdfCompleto').onclick = ()=>{
   const { jsPDF } = window.jspdf;
   const docPDF = new jsPDF({ unit:'pt', format:'a4' });
 
-  docPDF.setFontSize(16);
-  docPDF.text("Relatório de Manutenções — Motorista Plus", 40, 40);
+  const startX = 40;
+  let y = 40;
 
+  /* TÍTULO */
+  docPDF.setFontSize(16).setFont(undefined,'bold');
+  docPDF.text("Relatório de Manutenções — Motorista Plus", startX, y);
+  y += 28;
+
+  /* ====== DADOS DO MOTORISTA ====== */
+  docPDF.setFontSize(12).setFont(undefined,'bold');
+  docPDF.text("Dados do Motorista:", startX, y);
+  y += 18;
+
+  const perfilCampos = document.querySelectorAll("#dadosUsuarioCard .item");
+
+  perfilCampos.forEach(c=>{
+    const txt = c.innerText.replace(/\n/g," - ");
+    docPDF.setFontSize(11).setFont(undefined,'normal');
+    docPDF.text(txt, startX, y);
+    y += 16;
+  });
+
+  y += 12;
+
+  /* ========== DADOS DA FOLGA ========== */
+  docPDF.setFontSize(12).setFont(undefined,'bold');
+  docPDF.text("Dados da Folga:", startX, y);
+  y += 18;
+
+  docPDF.setFontSize(11).setFont(undefined,'normal');
+  docPDF.text(`Início da folga: ${$('inicioFolga').value || "—"}`, startX, y); y+=16;
+  docPDF.text(`Fim da folga: ${$('fimFolga').value || "—"}`, startX, y); y+=16;
+  docPDF.text(`Dias de folga: ${$('diasFolga').value || "—"}`, startX, y); y+=16;
+  docPDF.text(`Retorno: ${$('retornoFolga').value || "—"}`, startX, y); y+=26;
+
+  /* ========== TABELA ========== */
   docPDF.autoTable({
-    startY: 60,
+    startY: y,
     head: [["Data","Cavalo","Reboque"]],
     body: manutencoes.map(m=>[
       fmtBR(m.data),
@@ -351,8 +383,16 @@ $('pdfCompleto').onclick = ()=>{
       m.reboque || "—"
     ]),
     styles:{ fontSize:10 },
-    headStyles:{ fillColor:[243,146,32] }
+    headStyles:{ fillColor:[243,146,32] },
+    margin:{ left:startX, right:startX }
   });
+
+  const endY = docPDF.autoTable.previous.finalY + 40;
+  const pageWidth = docPDF.internal.pageSize.getWidth();
+
+  /* ========== ASSINATURA ========== */
+  docPDF.line(pageWidth/2 - 120, endY, pageWidth/2 + 120, endY);
+  docPDF.text('Assinatura do Motorista', pageWidth/2, endY + 16, { align:'center' });
 
   docPDF.save("manutencoes.pdf");
 };
