@@ -115,24 +115,238 @@
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
-<script>
-  $('exportPdfBtn').onclick = async () => {
+       <script type="module">
+
+/* =========================================================
+   ✅ Firebase (Motorista Plus)
+   ========================================================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { 
+  getAuth, onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, getDocs, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+import "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+import "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain: "motorista-plus-c53f4.firebaseapp.com",
+  projectId: "motorista-plus-c53f4",
+});
+
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* =========================================================
+   ✅ Funções Utilitárias
+   ========================================================= */
+const pad2 = n => String(n).padStart(2, "0");
+
+// ✅ NÃO usa Date() para evitar fuso
+const fromISOtoBR = iso => {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+};
+
+const hojeISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+
+function diasNoMes(ano, mes) {
+  const comum = [31,28,31,30,31,30,31,31,30,31,30,31];
+  const bissexto = (ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0);
+  if (mes === 1) return comum[1] + (bissexto ? 1 : 0);
+  return comum[mes];
+}
+
+const timeNow = () => 
+  new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+
+let uid = null;
+let perfil = null;
+
+/* =========================================================
+   ✅ Carregar Perfil
+   ========================================================= */
+async function carregarPerfil() {
+  const snap = await getDoc(doc(db, "usuarios", uid));
+  if (!snap.exists()) return;
+
+  perfil = snap.data();
+
+  document.getElementById("dadosUsuarioCard").innerHTML = `
+    <div class="item"><strong>Motorista</strong>${perfil.nome}</div>
+    <div class="item"><strong>Telefone</strong>${perfil.telefone}</div>
+    <div class="item"><strong>Email</strong>${perfil.email}</div>
+    <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo}</div>
+    <div class="item"><strong>Reboque</strong>${perfil.placaReboque}</div>
+  `;
+}
+
+/* =========================================================
+   ✅ CRUD do Ponto
+   ========================================================= */
+async function getDocDia(iso) {
+  const ref = doc(db, "usuarios", uid, "pontos", iso);
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data() : null;
+}
+
+async function marcar(tipo) {
+  const iso = hojeISO();
+  const ref = doc(db, "usuarios", uid, "pontos", iso);
+  const atual = await getDocDia(iso);
+
+  const agora = timeNow();
+  const base = { data: iso };
+
+  if (atual) {
+    await updateDoc(ref, { ...base, [tipo]: agora, updatedAt: serverTimestamp() });
+  } else {
+    await setDoc(ref, {
+      ...base,
+      inicio: null,
+      intervalo: null,
+      reinicio: null,
+      fim: null,
+      [tipo]: agora,
+      createdAt: serverTimestamp()
+    });
+  }
+
+  document.getElementById("status").textContent = 
+    `Registrado ${tipo} às ${agora}`;
+
+  renderTabela();
+}
+
+/* =========================================================
+   ✅ Carregar Registros do Mês (CORRETO)
+   ========================================================= */
+async function carregarMes(mes, ano) {
+  const col = collection(db, "usuarios", uid, "pontos");
+  const snaps = await getDocs(query(col, orderBy("data", "asc")));
+
+  const prefix = `${ano}-${pad2(mes+1)}-`;
+
+  const lista = [];
+  snaps.forEach(s => {
+    const d = s.data().data; // sempre string YYYY-MM-DD
+    if (typeof d === "string" && d.startsWith(prefix)) {
+      lista.push(s.data());
+    }
+  });
+
+  return lista;
+}
+
+/* =========================================================
+   ✅ Cálculo de Horas Extras
+   ========================================================= */
+function horasExtras(reg) {
+  const ini = reg?.inicio;
+  const fim = reg?.fim;
+  if (!ini || !fim) return "—";
+
+  const [ih, im] = ini.split(":").map(Number);
+  const [fh, fm] = fim.split(":").map(Number);
+
+  const start = new Date(0,0,0,ih,im);
+  const end   = new Date(0,0,0,fh,fm);
+
+  let h = (end - start) / 3600000;
+  if (h <= 0) return "—";
+
+  return Math.max(0, h - 8).toFixed(2);
+}
+
+/* =========================================================
+   ✅ Renderizar Tabela
+   ========================================================= */
+async function renderTabela() {
+  const mes = parseInt(document.getElementById("mesSelect").value);
+  const ano = new Date().getFullYear();
+  const qtdDias = diasNoMes(ano, mes);
+
+  const registros = await carregarMes(mes, ano);
+  const map = {}; registros.forEach(r => map[r.data] = r);
+
+  const tbody = document.querySelector("#tableRegistros tbody");
+  tbody.innerHTML = "";
+
+  for (let d = 1; d <= qtdDias; d++) {
+    const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
+    const r = map[iso] || {}; // sem registro → folga
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${fromISOtoBR(iso)}</td>
+      <td>${r.inicio || "Folga"}</td>
+      <td>${r.intervalo || "Folga"}</td>
+      <td>${r.reinicio || "Folga"}</td>
+      <td>${r.fim || "Folga"}</td>
+      <td>${horasExtras(r)}</td>
+      <td><button class="edit" data-iso="${iso}">Editar</button></td>
+    `;
+
+    tbody.appendChild(tr);
+  }
+
+  document.querySelectorAll(".edit").forEach(btn => {
+    btn.onclick = async () => {
+      const iso = btn.dataset.iso;
+      const r = map[iso] || {};
+
+      const campos = ["inicio","intervalo","reinicio","fim"];
+      const novos = {};
+
+      for (const c of campos) {
+        const novo = prompt(`Editar ${c}`, r[c] || "");
+        if (novo === null) continue;
+        novos[c] = novo.trim() === "" ? null : novo.trim();
+      }
+
+      const ref = doc(db, "usuarios", uid, "pontos", iso);
+      await setDoc(ref, {
+        data: iso,
+        inicio: null,
+        intervalo: null,
+        reinicio: null,
+        fim: null,
+        ...novos,
+        updatedAt: serverTimestamp()
+      });
+
+      renderTabela();
+    };
+  });
+}
+
+/* =========================================================
+   ✅ PDF — Inclui Folga
+   ========================================================= */
+document.getElementById("exportPdfBtn").onclick = async () => {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
 
-  const mes = parseInt($('mesSelect').value);
+  const mes = parseInt(mesSelect.value);
   const ano = new Date().getFullYear();
-  const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto",
-                 "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const qtdDias = diasNoMes(ano, mes);
 
-  const dias = diasNoMes(ano, mes);
-  const lista = await carregarMes(mes, ano); // Carrega os registros do mês selecionado
-  const map = {}; 
-  lista.forEach(r => map[r.data] = r);
+  const registros = await carregarMes(mes, ano);
+  const map = {}; registros.forEach(r => map[r.data] = r);
 
   const rows = [];
-  for (let d = 1; d <= dias; d++) {
-    const iso = `${ano}-${pad2(mes + 1)}-${pad2(d)}`;
+
+  for (let d = 1; d <= qtdDias; d++) {
+    const iso = `${ano}-${pad2(mes+1)}-${pad2(d)}`;
     const r = map[iso] || {};
 
     rows.push([
@@ -145,48 +359,36 @@
     ]);
   }
 
-  const w = pdf.internal.pageSize.getWidth();
-
   pdf.setFontSize(18);
-  pdf.text("Motorista Plus — Registro de Ponto", w / 2, 32, { align: "center" });
-
-  pdf.setFontSize(10);
-  pdf.text(`Motorista: ${perfil.nome}`, 40, 55);
-  pdf.text(`Telefone: ${perfil.telefone}`, 250, 55);
-  pdf.text(`Mês: ${meses[mes]} / ${ano}`, w - 140, 55);
+  pdf.text("Motorista Plus — Registro de Ponto", 420, 30, { align:"center" });
 
   pdf.autoTable({
-    startY: 65,
-    head: [["Data", "Início", "Intervalo", "Reinício", "Fim", "Extras"]],
+    startY: 60,
+    head: [["Data","Início","Intervalo","Reinício","Fim","Extras"]],
     body: rows,
     theme: "grid",
-    styles: { fontSize: 7, halign: "center" },
-    headStyles: { fillColor: [243, 146, 32] }
+    styles: { fontSize: 8, halign:"center" },
+    headStyles: { fillColor:[243,146,32], textColor:"#fff" }
   });
 
-  pdf.save(`ponto_${meses[mes]}_${ano}.pdf`);
+  pdf.save(`ponto_${mes+1}-${ano}.pdf`);
 };
 
-// Adiciona um evento para carregar registros ao mudar o mês
-$('mesSelect').addEventListener("change", async () => {
-  await renderTabela(); // Atualiza a tabela ao mudar o mês
+/* =========================================================
+   ✅ Eventos
+   ========================================================= */
+mesSelect.addEventListener("change", renderTabela);
+
+/* =========================================================
+   ✅ Auth
+   ========================================================= */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = "login.html"; return; }
+  uid = user.uid;
+  await carregarPerfil();
+  mesSelect.value = String(new Date().getMonth());
+  await renderTabela();
 });
-
-// Carrega os registros do mês selecionado
-async function carregarMes(mes, ano) {
-  const col = collection(db, "usuarios", uid, "pontos");
-  const qy = query(col, orderBy("data", "asc"));
-  const snaps = await getDocs(qy);
-
-  const prefix = `${ano}-${pad2(mes + 0)}-`;
-  const lista = [];
-  snaps.forEach(s => {
-    const d = s.data().data;
-    if (d.startsWith(prefix)) lista.push(s.data());
-  });
-
-  return lista; // Retorna a lista de registros do mês
-}
 
 </script>
 </body>
