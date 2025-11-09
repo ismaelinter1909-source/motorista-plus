@@ -12,86 +12,239 @@
 
   <style>
     :root{
-      --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
-      --primary:#f39220; --primary-700:#d47e16;
-      --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
-      --green:#2b9348; --red:#dc3545; --info:#0077b6;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
+  --primary:#f39220; --primary-700:#d47e16;
+  --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
+  --green:#2b9348; --red:#dc3545; --info:#0077b6;
+}
 
-    /* Voltar no topo */
-    #voltarPainelTopo{
-      position:fixed; top:12px; left:12px; z-index:9999;
-      width:auto; padding:8px 14px;
-      background:rgba(255,255,255,.08); color:#fff;
-      border-radius:8px; border:1px solid rgba(255,255,255,.25);
-      cursor:pointer; font-size:14px; backdrop-filter:blur(4px);
-      transition:.3s ease;
-    }
-    #voltarPainelTopo:hover{ background:rgba(255,255,255,.16) }
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:system-ui,Arial,sans-serif
+}
 
-    header{
-      background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
-      padding:28px 16px; text-align:center; border-bottom:1px solid var(--outline)
-    }
-    header h1{font-weight:800;font-size:clamp(20px,4vw,30px)}
-    header .plus{color:var(--primary)}
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow-x:hidden;
+}
 
-    .wrap{width:94%;max-width:1100px;margin:18px auto;flex:1;display:grid;gap:14px}
+/* BOTÃO VOLTAR */
+#voltarPainelTopo{
+  position:fixed; top:12px; left:12px; z-index:9999;
+  padding:8px 14px;
+  width: auto;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.25);
+  cursor:pointer;
+  font-size:14px;
+  backdrop-filter:blur(4px);
+  transition:.3s ease;
+}
+#voltarPainelTopo:hover{
+  background:rgba(255,255,255,.16)
+}
 
-    .card{
-      background:var(--card); border:1px solid var(--outline);
-      padding:16px; border-radius:12px; backdrop-filter:blur(6px)
-    }
+/* HEADER */
+header{
+  background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
+  padding:28px 16px;
+  text-align:center;
+  border-bottom:1px solid var(--outline)
+}
+header h1{
+  font-weight:800;
+  font-size:clamp(20px,4vw,30px)
+}
+header .plus{ color:var(--primary); }
 
-    .dados{display:flex;gap:10px;flex-wrap:wrap}
-    .dados div{min-width:180px;background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px}
-    .dados div b{color:var(--primary)}
+/* CONTEÚDO */
+.wrap{
+  width:94%;
+  max-width:1100px;
+  margin:18px auto;
+  flex:1;
+  display:grid;
+  gap:14px;
+}
 
-    h2{color:var(--primary);font-size:1.15rem;margin-bottom:8px}
-    label{display:block;font-size:13px;margin-top:8px;color:#e8e8e8}
+/* CARD */
+.card{
+  background:var(--card);
+  border:1px solid var(--outline);
+  padding:16px;
+  border-radius:12px;
+  backdrop-filter:blur(6px);
+}
 
-    input,select,textarea,button{
-      width:100%;padding:12px;border-radius:10px;border:1px solid var(--outline);
-      background:rgba(255,255,255,.08);color:#fff;font-size:14px;outline:none;
-      transition:box-shadow .2s ease, transform .08s ease, background .2s ease, border-color .2s ease;
-    }
-    input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(243,146,32,.15);border-color:var(--primary)}
+/* DADOS DO MOTORISTA */
+.dados{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.dados div{
+  min-width:160px;
+  flex:1;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--outline);
+  padding:10px;
+  border-radius:10px;
+}
+.dados div b{
+  color:var(--primary);
+  display:block;
+  margin-bottom:2px;
+}
 
-    select{
-      -webkit-appearance:none;-moz-appearance:none;appearance:none;
-      background-image:linear-gradient(45deg,transparent 50%, #fff 50%),
-                       linear-gradient(135deg, #fff 50%, transparent 50%),
-                       linear-gradient(to right, transparent, transparent);
-      background-position:calc(100% - 18px) calc(50% - 3px),
-                          calc(100% - 13px) calc(50% - 3px),
-                          calc(100% - 2.2em) 0.6em;
-      background-size:5px 5px, 5px 5px, 1px 1.6em;
-      background-repeat:no-repeat;
-    }
+/* LABELS */
+label{
+  display:block;
+  color:#e8e8e8;
+  margin:6px 0 4px;
+  font-size:13px;
+}
 
-    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+/* INPUTS / SELECT / TEXTAREA / BUTTONS */
+input,select,textarea,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  font-size:15px;
+  outline:none;
+  transition:.25s;
+}
+input:focus,select:focus,textarea:focus{
+  box-shadow:0 0 0 3px rgba(243,146,32,.15);
+  border-color:var(--primary)
+}
 
-    .btn{background:var(--primary);border:none;font-weight:700;color:#fff;cursor:pointer;transition:.25s}
-    .btn:hover{background:var(--primary-700);transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn-green{background:var(--green)} .btn-green:hover{filter:brightness(1.05)}
-    .btn-red{background:var(--red)} .btn-red:hover{filter:brightness(1.05)}
-    .btn-info{background:var(--info)} .btn-info:hover{filter:brightness(1.05)}
-    .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
+select{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  background-image:
+    linear-gradient(45deg,transparent 50%, #fff 50%),
+    linear-gradient(135deg, #fff 50%, transparent 50%),
+    linear-gradient(to right, transparent, transparent);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 13px) calc(50% - 3px),
+    calc(100% - 2.2em) 0.6em;
+  background-size:5px 5px, 5px 5px, 1px 1.6em;
+  background-repeat:no-repeat;
+}
 
-    ul{list-style:none;padding-left:0;margin-top:8px;max-height:260px;overflow:auto}
-    li{background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px;margin:6px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
-    .tag{font-size:12px;color:var(--muted)}
-    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* BOTÕES */
+.btn{
+  background:var(--primary);
+  border:none;
+  font-weight:700;
+  cursor:pointer;
+  color:#fff;
+  transition:.25s;
+}
+.btn:hover{ background:var(--primary-700); transform:translateY(-1px); }
+.btn:active{ transform:translateY(0) }
 
-    canvas{display:block;margin:10px auto;max-width:420px}
-    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
+.btn-green{ background:var(--green); }
+.btn-green:hover{ filter:brightness(1.05); }
+
+.btn-red{ background:var(--red); }
+.btn-red:hover{ filter:brightness(1.05); }
+
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--outline);
+  color:var(--muted);
+}
+
+/* GRID 2 (Gastos / Vales) */
+.grid2{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+
+/* MOBILE — quebra para 1 coluna */
+@media(max-width:900px){
+  .grid2{
+    grid-template-columns:1fr;
+  }
+}
+
+/* LISTAS */
+ul{
+  list-style:none;
+  padding-left:0;
+  margin-top:8px;
+  max-height:260px;
+  overflow-y:auto;
+}
+li{
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--outline);
+  padding:12px;
+  border-radius:10px;
+  margin:6px 0;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.tag{
+  font-size:12px;
+  color:var(--muted)
+}
+.row-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+/* GRÁFICO */
+canvas{
+  display:block;
+  margin:10px auto;
+  max-width:100%;
+}
+
+/* FOOTER */
+footer{
+  padding:12px;
+  text-align:center;
+  color:var(--muted);
+  border-top:1px solid var(--outline);
+}
+
+/* MELHORIA EXTRA PARA TELAS MENORES QUE 420px */
+@media(max-width:420px){
+  input,select,textarea{
+    font-size:16px; /* evita zoom automático no iOS/Android */
+  }
+  li{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .row-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  button{
+    padding:14px;
+  }
+}
   </style>
 </head>
 <body>
