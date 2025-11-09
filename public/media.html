@@ -1,526 +1,553 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Média — Motorista Plus</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Média — Motorista Plus</title>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- jsPDF + AutoTable -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF + AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-    <style>
-        :root {
-            --mp-bg: #0b0f14;
-            --mp-bg2: #10161d;
-            --mp-card-alpha: rgba(16, 22, 29, .85);
-            --mp-primary: #f39220;
-            --mp-primary-700: #d47e16;
-            --mp-outline: #2b3a49;
-            --mp-text: white;
-            --mp-muted: #b5bcc7;
-        }
+  <style>
+    :root{
+      --mp-bg:#0b0f14; --mp-bg2:#10161d; --mp-card:rgba(16,22,29,.86);
+      --mp-primary:#f39220; --mp-primary-700:#d47e16; --mp-outline:#2b3a49;
+      --mp-text:#fff; --mp-muted:#b5bcc7;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, Arial, sans-serif
-        }
+    body{background:var(--mp-bg);color:var(--mp-text);min-height:100vh}
 
-        body {
-            background: var(--mp-bg);
-            color: var(--mp-text);
-            min-height: 100vh;
-        }
+    #backBtn{
+      position:fixed;top:10px;left:10px;z-index:9999;
+      background:rgba(255,255,255,.10);color:#fff;padding:6px 12px;border-radius:10px;
+      border:1px solid rgba(255,255,255,.25);font-size:14px;cursor:pointer;backdrop-filter:blur(4px)
+    }
 
-        #backBtn {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.10);
-            color: #fff;
-            padding: 5px 10px;
-            width: auto;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            font-size: 14px;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            transition: .2s;
-        }
+    header.hero{
+      text-align:center;padding:46px 20px 24px;
+      background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.85)),
+                 url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+      border-bottom:1px solid var(--mp-outline)
+    }
+    header.hero h1{font-size:clamp(26px,5.5vw,44px);font-weight:800}
+    header.hero .plus{color:var(--mp-primary)}
 
-        #backBtn:hover {
-            background: rgba(255, 255, 255, 0.18);
-        }
+    main.container{
+      width:95%;max-width:1200px;margin:18px auto 40px;display:grid;gap:14px
+    }
 
-        header.hero {
-            text-align: center;
-            padding: 46px 20px 24px;
-            background:
-                linear-gradient(180deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .85) 100%),
-                url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
-            border-bottom: 1px solid var(--mp-outline);
-        }
+    .card{
+      background:var(--mp-card);border:1px solid var(--mp-outline);
+      padding:16px;border-radius:14px;backdrop-filter:blur(6px)
+    }
+    .card h2{margin:0 0 12px;color:var(--mp-primary);text-align:center;font-size:1.2rem}
 
-        header.hero h1 {
-            font-size: clamp(26px, 5.5vw, 44px);
-            font-weight: 800;
-        }
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+    #dadosUsuarioCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+    #dadosUsuarioCard .item{background:rgba(255,255,255,.06);border:1px solid var(--mp-outline);border-radius:10px;padding:10px;text-align:center}
+    #dadosUsuarioCard .item strong{display:block;color:var(--mp-primary);margin-bottom:4px}
 
-        header.hero .plus {
-            color: var(--mp-primary);
-        }
+    input,select,textarea,button{
+      width:100%;padding:12px;border-radius:10px;border:1px solid var(--mp-outline);
+      background:#0f141a;color:#fff;margin-top:8px;font-size:14px
+    }
+    textarea{min-height:70px;resize:vertical}
+    button{background:var(--mp-primary);font-weight:700;cursor:pointer}
+    button:hover{background:var(--mp-primary-700)}
 
-        main.container {
-            width: 95%;
-            max-width: 1200px;
-            margin: 18px auto 40px;
-            display: grid;
-            gap: 14px;
-        }
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{border-bottom:1px solid var(--mp-outline);padding:10px;text-align:center;vertical-align:middle}
+    th{background:var(--mp-primary);color:#fff}
 
-        .card {
-            background: var(--mp-card-alpha);
-            padding: 16px;
-            border-radius: 14px;
-            border: 1px solid var(--mp-outline);
-            backdrop-filter: blur(6px);
-            box-shadow: 0 10px 26px rgba(0, 0, 0, .28);
-        }
+    td button{padding:6px 10px;font-size:12px;border-radius:8px}
+    .btn-gray{background:#444}
 
-        .card h2 {
-            margin: 0 0 12px;
-            color: var(--mp-primary);
-            text-align: center;
-            font-size: 1.25rem;
-        }
+    .obs-cell{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-        input,
-        button,
-        select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--mp-outline);
-            background: #0f141a;
-            color: #fff;
-            margin-top: 8px;
-            font-size: 14px;
-        }
+    canvas{
+      height:220px !important;max-height:220px;background:#0f141a;border-radius:14px;padding:10px;margin-top:8px
+    }
 
-        button {
-            background: var(--mp-primary);
-            font-weight: 700;
-            cursor: pointer;
-            transition: .2s;
-        }
-
-        button:hover {
-            background: var(--mp-primary-700);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-        }
-
-        #dadosUsuarioCard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        #dadosUsuarioCard .item {
-            background: rgba(255, 255, 255, .06);
-            border: 1px solid var(--mp-outline);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        #dadosUsuarioCard .item strong {
-            display: block;
-            color: var(--mp-primary);
-            margin-bottom: 4px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        th,
-        td {
-            border-bottom: 1px solid var(--mp-outline);
-            padding: 10px;
-            text-align: center;
-        }
-
-        th {
-            background: var(--mp-primary);
-            color: #fff;
-        }
-
-        canvas {
-            background: #0f141a;
-            border-radius: 14px;
-            padding: 10px;
-            margin-top: 8px;
-        }
-
-        .muted {
-            color: var(--mp-muted);
-        }
-
-        footer {
-            text-align: center;
-            padding: 12px;
-            color: var(--mp-muted);
-            border-top: 1px solid var(--mp-outline);
-        }
-    </style>
+    .muted{color:var(--mp-muted)}
+    .row-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .controls-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  </style>
 </head>
-
 <body>
 
-    <button id="backBtn" onclick="window.location.href='painel.html'">← Voltar</button>
+  <button id="backBtn" onclick="window.location.href='painel.html'">← Voltar</button>
 
-    <header class="hero">
-        <h1>Média — Motorista<span class="plus">Plus</span></h1>
-    </header>
+  <header class="hero">
+    <h1>Média — Motorista<span class="plus">Plus</span></h1>
+  </header>
 
-    <main class="container">
+  <main class="container">
+    <!-- Dados do motorista -->
+    <section class="card">
+      <h2>Dados do Motorista</h2>
+      <div id="dadosUsuarioCard" class="muted">Carregando...</div>
+    </section>
 
-        <section class="card">
-            <h2>Dados do Motorista</h2>
-            <div id="dadosUsuarioCard" class="muted">Carregando...</div>
-        </section>
+    <!-- Formulário de abastecimento -->
+    <section class="card">
+      <h2>Registrar Abastecimento</h2>
+      <div class="grid">
+        <div>
+          <label>Data</label>
+          <input type="date" id="data">
+        </div>
+        <div>
+          <label>Local</label>
+          <input type="text" id="local" placeholder="Posto / Cidade">
+        </div>
+        <div>
+          <label>KM</label>
+          <input type="number" id="quilometragem" placeholder="Ex: 120000">
+        </div>
+        <div>
+          <label>Litros</label>
+          <input type="number" id="litros" step="0.01" placeholder="Ex: 150.00">
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Observação (opcional)</label>
+          <textarea id="observacao" placeholder="Ex: Diesel S10, nota fiscal, rota, etc."></textarea>
+        </div>
+      </div>
 
-        <section class="card">
-            <h2>Registrar Abastecimento</h2>
-            <div class="grid">
-                <div>
-                    <label>Data</label>
-                    <input type="date" id="data">
-                </div>
-                <div>
-                    <label>Local</label>
-                    <input type="text" id="local" placeholder="Posto / Cidade">
-                </div>
-                <div>
-                    <label>KM</label>
-                    <input type="number" id="quilometragem" placeholder="Ex: 120000">
-                </div>
-                <div>
-                    <label>Litros</label>
-                    <input type="number" id="litros" step="0.01" placeholder="Ex: 150.00">
-                </div>
+      <div class="controls-row" style="margin-top:8px">
+        <button id="addBtn">Salvar</button>
+        <button id="cancelarEdicao" class="btn-gray" style="display:none">Cancelar Edição</button>
+      </div>
+    </section>
+
+    <!-- Período e PDF -->
+    <section class="card">
+      <h2>Período & PDF</h2>
+      <div class="grid">
+        <div><label>Início</label><input type="date" id="filterInicio"></div>
+        <div><label>Fim</label><input type="date" id="filterFim"></div>
+        <div><label>Aprovado por (opcional)</label><input type="text" id="aprovadoPor" placeholder="Nome de quem aprovou"></div>
+      </div>
+      <div class="controls-row" style="margin-top:8px">
+        <button id="exportPdfBtn">Gerar PDF (filtrado)</button>
+        <button id="limparPagina" class="btn-gray">Limpar Página</button>
+      </div>
+    </section>
+
+    <!-- Histórico -->
+    <section class="card">
+      <h2>Histórico de Abastecimentos</h2>
+      <div style="overflow-x:auto">
+        <table id="tableRegistros">
+          <thead>
+          <tr>
+            <th>Data</th>
+            <th>Local</th>
+            <th>KM</th>
+            <th>Litros</th>
+            <th>Média (km/L)</th>
+            <th>Obs.</th>
+            <th>Ações</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="resultado" style="margin-top:10px;font-weight:700;"></p>
+    </section>
+
+    <!-- Gráfico -->
+    <section class="card">
+      <h2>Gráfico de Desempenho</h2>
+      <canvas id="chart"></canvas>
+    </section>
+  </main>
+
+  <footer>© 2025 Motorista Plus</footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc,
+      collection, addDoc, updateDoc, deleteDoc,
+      query, orderBy, getDocs, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    /* ✅ motorista-plus-c53f4 */
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+      authDomain: "motorista-plus-c53f4.firebaseapp.com",
+      projectId: "motorista-plus-c53f4",
+      storageBucket: "motorista-plus-c53f4.appspot.com",
+      messagingSenderId: "766097061342",
+      appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const $ = id => document.getElementById(id);
+
+    let uid = null;
+    let perfil = null;
+    let abastecimentos = [];
+    let chart;
+    let editId = null; // modo edição
+
+    const pad2 = n => String(n).padStart(2,'0');
+    function fmtBR(iso){
+      const d = new Date(iso);
+      return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
+
+    function renderUsuario(){
+      $('dadosUsuarioCard').innerHTML = `
+        <div class="item"><strong>Motorista</strong>${perfil?.nome || '—'}</div>
+        <div class="item"><strong>E-mail</strong>${perfil?.email || '—'}</div>
+        <div class="item"><strong>Telefone</strong>${perfil?.telefone || '—'}</div>
+        <div class="item"><strong>Placa Cavalo</strong>${perfil?.placaCavalo || '—'}</div>
+        <div class="item"><strong>Placa Reboque</strong>${perfil?.placaReboque || '—'}</div>
+      `;
+    }
+
+    async function carregarPerfil(){
+      const snap = await getDoc(doc(db, "usuarios", uid));
+      if (snap.exists()) perfil = snap.data();
+      renderUsuario();
+    }
+
+    async function carregarAbastecimentos(){
+      const col = collection(db, "usuarios", uid, "abastecimentos");
+      const qy  = query(col, orderBy("data","asc"));
+      const snaps = await getDocs(qy);
+      abastecimentos = [];
+      snaps.forEach(s=>{
+        const d = s.data();
+        abastecimentos.push({
+          id: s.id,
+          data: d.data, // YYYY-MM-DD
+          local: String(d.local || ''),
+          quilometragem: Number(d.quilometragem || 0),
+          litros: Number(d.litros || 0),
+          observacao: String(d.observacao || ''),
+          createdAt: d.createdAt || null
+        });
+      });
+    }
+
+    async function adicionarAbastecimento(obj){
+      await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
+        ...obj,
+        createdAt: serverTimestamp()
+      });
+    }
+    async function atualizarAbastecimento(id, obj){
+      await updateDoc(doc(db,"usuarios",uid,"abastecimentos",id), {
+        ...obj,
+        updatedAt: serverTimestamp()
+      });
+    }
+    async function removerAbastecimento(id){
+      await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
+    }
+
+    // ===== Filtros e cálculos =====
+    function filtrar(arr, inicioISO, fimISO){
+      const ini = inicioISO ? new Date(inicioISO) : null;
+      const fim = fimISO ? new Date(fimISO) : null;
+      return arr.filter(r=>{
+        const d = new Date(r.data);
+        if(ini && d < ini) return false;
+        if(fim && d > fim) return false;
+        return true;
+      });
+    }
+
+    // Média por abastecimento (entre registro i e i-1 usando litros de i)
+    function mediasPorAbastecimento(arr){
+      const out = [];
+      for(let i=0;i<arr.length;i++){
+        if(i===0){ out.push('--'); continue; }
+        const kmDif = Number(arr[i].quilometragem) - Number(arr[i-1].quilometragem);
+        const litros = Number(arr[i].litros);
+        const med = (kmDif > 0 && litros > 0) ? (kmDif / litros) : 0;
+        out.push(med ? med.toFixed(2) : '--');
+      }
+      return out;
+    }
+
+    // Média do período (km total / litros totais)
+    function mediaPeriodo(arr){
+      if(arr.length < 2) return '--';
+      const kmIni = Number(arr[0].quilometragem);
+      const kmFim = Number(arr[arr.length - 1].quilometragem);
+      const litrosTot = arr.reduce((s,r)=> s + Number(r.litros||0), 0);
+      if(litrosTot <= 0) return '--';
+      return ((kmFim - kmIni) / litrosTot).toFixed(2);
+    }
+
+    function atualizarTabelaEGrafico(){
+      const inicio = $('filterInicio').value || null;
+      const fim    = $('filterFim').value || null;
+
+      const filtrados = filtrar(abastecimentos, inicio, fim);
+      const mediasLinhas = mediasPorAbastecimento(filtrados);
+
+      // Tabela
+      const tbody = $('tableRegistros').querySelector('tbody');
+      tbody.innerHTML = '';
+      filtrados.forEach((r,idx)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.data}</td>
+          <td>${r.local}</td>
+          <td>${r.quilometragem}</td>
+          <td>${r.litros.toFixed(2)}</td>
+          <td>${mediasLinhas[idx]}</td>
+          <td class="obs-cell" title="${r.observacao || ''}">${r.observacao || '—'}</td>
+          <td>
+            <div class="row-actions">
+              <button data-act="edit" data-id="${r.id}">Editar</button>
+              <button data-act="del"  data-id="${r.id}" class="btn-gray">Excluir</button>
             </div>
-            <button id="addBtn">Adicionar</button>
-        </section>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
 
-        <section class="card">
-            <h2>Período & PDF</h2>
-            <div class="grid">
-                <div><label>Início</label><input type="date" id="filterInicio"></div>
-                <div><label>Fim</label><input type="date" id="filterFim"></div>
-                <div><label>Aprovado por (opcional)</label><input type="text" id="aprovadoPor"
-                        placeholder="Nome de quem aprovou"></div>
-            </div>
-            <button id="exportPdfBtn" style="margin-top:10px;">Gerar PDF (filtrado)</button>
-        </section>
+      // Ações da tabela
+      tbody.querySelectorAll('button').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const id  = btn.dataset.id;
+          const act = btn.dataset.act;
+          const reg = abastecimentos.find(x=> x.id === id);
+          if(!reg) return;
 
-        <section class="card">
-            <h2>Histórico de Abastecimentos</h2>
-            <div style="overflow-x:auto">
-                <table id="tableRegistros">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Local</th>
-                            <th>KM</th>
-                            <th>Litros</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <p id="resultado" style="margin-top:10px;font-weight:700;"></p>
-        </section>
-
-        <section class="card">
-            <h2>Gráfico de Desempenho</h2>
-            <canvas id="chart"></canvas>
-        </section>
-
-    </main>
-
-    <footer>© 2025 Motorista Plus</footer>
-
-     <script type="module">
-
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-        import {
-            getFirestore, doc, getDoc,
-            collection, addDoc, query, orderBy, getDocs, serverTimestamp
-        } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-        /* ✅ CONFIG CORRETA — motorista-plus-c53f4 */
-        const firebaseConfig = {
-            apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-            authDomain: "motorista-plus-c53f4.firebaseapp.com",
-            projectId: "motorista-plus-c53f4",
-            storageBucket: "motorista-plus-c53f4.appspot.com",
-            messagingSenderId: "766097061342",
-            appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+          if(act === 'edit'){
+            editId = id;
+            $('addBtn').textContent = 'Atualizar';
+            $('cancelarEdicao').style.display = 'inline-block';
+            $('data').value = reg.data;
+            $('local').value = reg.local;
+            $('quilometragem').value = reg.quilometragem;
+            $('litros').value = reg.litros;
+            $('observacao').value = reg.observacao || '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          if(act === 'del'){
+            if(!confirm('Excluir este abastecimento?')) return;
+            await removerAbastecimento(id);
+            await carregarAbastecimentos();
+            atualizarTabelaEGrafico();
+          }
         };
+      });
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+      // Gráfico
+      const ctx = $('chart').getContext('2d');
+      const labels = filtrados.map(r=> r.data);
+      const dataVals = mediasLinhas.map((m,i)=> i===0 ? null : (m==='--'? null : Number(m)));
 
-        const $ = (id) => document.getElementById(id);
-        let uid = null;
-        let perfil = null;
-        let abastecimentos = [];
-
-        function pad2(n) { return String(n).padStart(2, '0'); }
-        function fmtBR(iso) {
-            const d = new Date(iso);
-            return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type:'line',
+        data:{
+          labels,
+          datasets:[{
+            label:'Média por abastecimento (km/L)',
+            data:dataVals,
+            borderColor:'#f39220',
+            backgroundColor:'rgba(243,146,32,.25)',
+            spanGaps:true,
+            fill:true,
+            tension:.3
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{ legend:{ labels:{ color:'#fff' } } },
+          scales:{
+            x:{ ticks:{ color:'#fff' } },
+            y:{ beginAtZero:true, ticks:{ color:'#fff' } }
+          }
         }
+      });
 
-        function renderUsuario() {
-            $('dadosUsuarioCard').innerHTML = `
-      <div class="item"><strong>Motorista</strong>${perfil?.nome || '—'}</div>
-      <div class="item"><strong>E-mail</strong>${perfil?.email || '—'}</div>
-      <div class="item"><strong>Telefone</strong>${perfil?.telefone || '—'}</div>
-      <div class="item"><strong>Placa Cavalo</strong>${perfil?.placaCavalo || '—'}</div>
-      <div class="item"><strong>Placa Reboque</strong>${perfil?.placaReboque || '—'}</div>
-    `;
-        }
+      // Resumo (média período e -5%)
+      const mPer = mediaPeriodo(filtrados);
+      let txt = 'Nenhum registro.';
+      if(mPer !== '--'){
+        const mNum   = Number(mPer);
+        const regra5 = (mNum * 0.95).toFixed(2);
+        txt = `Média do período: ${mPer} km/L — Regra da empresa (-5%): ${regra5} km/L`;
+      }
+      $('resultado').textContent = txt;
+    }
 
-        async function carregarPerfil() {
-            const snap = await getDoc(doc(db, "usuarios", uid));
-            if (snap.exists()) perfil = snap.data();
-            renderUsuario();
-        }
+    // PDF (sem logo)
+    function gerarPDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
 
-        async function carregarAbastecimentos() {
-            const col = collection(db, "usuarios", uid, "abastecimentos");
-            const q = query(col, orderBy("data", "asc"));
-            const snaps = await getDocs(q);
-            abastecimentos = [];
-            snaps.forEach(s => {
-                const d = s.data();
-                abastecimentos.push({
-                    id: s.id,
-                    data: d.data,
-                    local: String(d.local || ''),
-                    quilometragem: Number(d.quilometragem || 0),
-                    litros: Number(d.litros || 0),
-                    createdAt: d.createdAt || null
-                });
-            });
-        }
+      let y = 40;
+      const startX = 40;
 
-        async function adicionarAbastecimento(obj) {
-            await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
-                ...obj,
-                createdAt: serverTimestamp()
-            });
-        }
+      // Título
+      doc.setFontSize(16).setFont(undefined,'bold');
+      doc.text('Relatório de Média — Motorista Plus', startX, y);
+      y += 24;
 
-        let chart;
+      // Dados do motorista
+      doc.setFontSize(11).setFont(undefined,'normal');
+      const info = [
+        `Motorista: ${perfil?.nome || '—'}`,
+        `E-mail: ${perfil?.email || '—'}`,
+        `Telefone: ${perfil?.telefone || '—'}`,
+        `Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`
+      ];
+      info.forEach((t,i)=> doc.text(t, startX, y + i*18));
+      y += info.length*18 + 10;
 
-        function filtrar(arr, inicioISO, fimISO) {
-            const ini = inicioISO ? new Date(inicioISO) : null;
-            const fim = fimISO ? new Date(fimISO) : null;
-            return arr.filter(r => {
-                const d = new Date(r.data);
-                if (ini && d < ini) return false;
-                if (fim && d > fim) return false;
-                return true;
-            });
-        }
+      // Período filtrado
+      const inicio = $('filterInicio').value || null;
+      const fim    = $('filterFim').value || null;
+      const filtrados = filtrar(abastecimentos, inicio, fim);
+      const mediasLinhas = mediasPorAbastecimento(filtrados);
 
-        function calcularMedia(arr) {
-            if (arr.length < 2) return '--';
-            const kmIni = Number(arr[0].quilometragem);
-            const kmFim = Number(arr[arr.length - 1].quilometragem);
-            const litrosTot = arr.reduce((s, r) => s + Number(r.litros), 0);
-            return litrosTot > 0 ? ((kmFim - kmIni) / litrosTot).toFixed(2) : '--';
-        }
+      // Tabela (inclui média e observação)
+      const body = filtrados.map((r,idx)=>[
+        r.data,
+        r.local,
+        String(r.quilometragem),
+        r.litros.toFixed(2),
+        String(mediasLinhas[idx]),
+        (r.observacao || '—')
+      ]);
 
-        function atualizarTabelaEGrafico() {
-            const inicio = $('filterInicio').value || null;
-            const fim = $('filterFim').value || null;
+      doc.autoTable({
+        startY: y,
+        head: [['Data','Local','KM','Litros','Média (km/L)','Obs.']],
+        body,
+        theme:'grid',
+        headStyles:{ fillColor:[243,146,32] },
+        styles:{ fontSize:10, halign:'center', cellWidth:'wrap' },
+        columnStyles:{
+          5:{ halign:'left' } // Observação alinhada à esquerda
+        },
+        margin:{ left:startX, right:startX }
+      });
 
-            const filtrados = filtrar(abastecimentos, inicio, fim);
+      y = doc.autoTable.previous.finalY + 16;
 
-            const tbody = $('tableRegistros').querySelector('tbody');
-            tbody.innerHTML = '';
-            filtrados.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${r.data}</td><td>${r.local}</td><td>${r.quilometragem}</td><td>${r.litros.toFixed(2)}</td>`;
-                tbody.appendChild(tr);
-            });
+      // Resumo: média do período e -5%
+      const mPer = mediaPeriodo(filtrados);
+      if(mPer !== '--'){
+        const mNum   = Number(mPer);
+        const regra5 = (mNum * 0.95).toFixed(2);
+        doc.setFont(undefined,'bold');
+        doc.text(`Média do período: ${mPer} km/L`, startX, y); y += 18;
+        doc.text(`Regra da empresa (-5%): ${regra5} km/L`, startX, y); y += 18;
+      }else{
+        doc.text('Sem dados suficientes para média do período.', startX, y); y += 18;
+      }
 
-            const ctx = $('chart').getContext('2d');
-            const labels = filtrados.slice(1).map(r => r.data);
-            const dataVals = [];
+      // Aprovado por (opcional)
+      const aprov = ($('aprovadoPor').value || '').trim();
+      if(aprov){
+        const now = new Date();
+        const iso = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
+        doc.setFont(undefined,'normal');
+        doc.text(`Aprovado por: ${aprov} — Data: ${fmtBR(iso)}`, startX, y); y += 18;
+      }
 
-            for (let i = 1; i < filtrados.length; i++) {
-                const kmDif = filtrados[i].quilometragem - filtrados[i - 1].quilometragem;
-                const med = kmDif > 0 && Number(filtrados[i].litros) > 0 ? (kmDif / filtrados[i].litros).toFixed(2) : 0;
-                dataVals.push(med);
-            }
+      // Assinatura
+      const w = doc.internal.pageSize.getWidth();
+      doc.line(w/2 - 120, y + 40, w/2 + 120, y + 40);
+      doc.text('Assinatura do Motorista', w/2, y + 56, { align:'center' });
 
-            if (chart) chart.destroy();
+      doc.save(`relatorio_media_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
 
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'km/L',
-                        data: dataVals,
-                        borderColor: '#f39220',
-                        backgroundColor: 'rgba(243,146,32,0.25)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: "#fff" } } },
-                    scales: {
-                        x: { ticks: { color: "#fff" } },
-                        y: { beginAtZero: true, ticks: { color: "#fff" } }
-                    }
-                }
-            });
+    // === Eventos ===
+    $('addBtn').addEventListener('click', async ()=>{
+      const data  = ($('data').value || '').trim();
+      const local = ($('local').value || '').trim();
+      const km    = Number(($('quilometragem').value || '').trim());
+      const litros= Number(($('litros').value || '').trim());
+      const obs   = ($('observacao').value || '').trim();
 
-            $('resultado').textContent =
-                filtrados.length ? `Média: ${calcularMedia(filtrados)} km/L` : 'Nenhum registro.';
-        }
+      if(!data || !local || km <= 0 || litros <= 0){
+        alert('Preencha todos os campos corretamente.');
+        return;
+      }
+      if(!uid){ alert('Sessão expirada. Faça login novamente.'); return; }
 
-        function gerarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const payload = { data, local, quilometragem: km, litros, observacao: obs };
 
-            let y = 40;
-            const startX = 40;
+      if(editId){
+        await atualizarAbastecimento(editId, payload);
+        editId = null;
+        $('addBtn').textContent = 'Salvar';
+        $('cancelarEdicao').style.display = 'none';
+      }else{
+        await adicionarAbastecimento(payload);
+      }
 
-            try { doc.addImage('img/Logo.Motorista-Plus.png', 'PNG', startX, y, 110, 42); } catch { }
-            doc.setFontSize(16).setFont(undefined, 'bold');
-            doc.text('Relatório de Média — Motorista Plus', startX + 140, y + 28);
-            y += 60;
+      // Limpa form (não apaga dados do banco)
+      $('data').value=''; $('local').value=''; $('quilometragem').value='';
+      $('litros').value=''; $('observacao').value='';
 
-            doc.setFontSize(11).setFont(undefined, 'normal');
-            const info = [
-                `Motorista: ${perfil?.nome || '—'}`,
-                `E-mail: ${perfil?.email || '—'}`,
-                `Telefone: ${perfil?.telefone || '—'}`,
-                `Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`
-            ];
-            info.forEach((t, i) => {
-                const rowY = y + i * 22;
-                doc.setFillColor(249, 250, 251);
-                doc.setDrawColor(229, 231, 235);
-                doc.rect(startX - 4, rowY - 12, 520, 20, 'FD');
-                doc.text(t, startX, rowY);
-            });
-            y += 100;
+      await carregarAbastecimentos();
+      atualizarTabelaEGrafico();
+      alert('Registro salvo!');
+    });
 
-            const inicio = $('filterInicio').value || null;
-            const fim = $('filterFim').value || null;
-            const filtrados = filtrar(abastecimentos, inicio, fim);
+    $('cancelarEdicao').addEventListener('click', ()=>{
+      editId = null;
+      $('addBtn').textContent = 'Salvar';
+      $('cancelarEdicao').style.display = 'none';
+      $('data').value=''; $('local').value=''; $('quilometragem').value='';
+      $('litros').value=''; $('observacao').value='';
+    });
 
-            const body = filtrados.map(r => [r.data, r.local, String(r.quilometragem), r.litros.toFixed(2)]);
+    $('filterInicio').addEventListener('change', atualizarTabelaEGrafico);
+    $('filterFim').addEventListener('change', atualizarTabelaEGrafico);
+    $('exportPdfBtn').addEventListener('click', gerarPDF);
 
-            doc.autoTable({
-                startY: y,
-                head: [['Data', 'Local', 'KM', 'Litros']],
-                body,
-                theme: 'grid',
-                headStyles: { fillColor: [243, 146, 32] },
-                styles: { fontSize: 10, halign: 'center' },
-                margin: { left: startX, right: startX }
-            });
+    // Limpar Página (apenas UI; não apaga Firestore)
+    $('limparPagina').addEventListener('click', ()=>{
+      $('data').value=''; $('local').value=''; $('quilometragem').value='';
+      $('litros').value=''; $('observacao').value='';
+      $('filterInicio').value=''; $('filterFim').value=''; $('aprovadoPor').value='';
+      // limpa tabela/resultado/gráfico
+      const tbody = $('tableRegistros').querySelector('tbody');
+      tbody.innerHTML = '';
+      $('resultado').textContent = '';
+      if(chart) { chart.destroy(); chart = null; }
+    });
 
-            y = doc.autoTable.previous.finalY + 20;
-
-            doc.setFont(undefined, "bold");
-            doc.text(`Média (km/L): ${calcularMedia(filtrados)}`, startX, y);
-            y += 20;
-
-            const aprov = $('aprovadoPor').value.trim();
-            if (aprov) {
-                doc.setFont(undefined, 'normal');
-                doc.text(`Aprovado por: ${aprov} — Data: ${fmtBR(new Date().toISOString())}`, startX, y);
-                y += 20;
-            }
-
-            try {
-                const img = $('chart').toDataURL('image/png', 1.0);
-                doc.addImage(img, 'PNG', startX, y, 520, 220);
-                y += 240;
-            } catch { }
-
-            const w = doc.internal.pageSize.getWidth();
-            doc.line(w / 2 - 120, y + 40, w / 2 + 120, y + 40);
-            doc.text('Assinatura do Motorista', w / 2, y + 56, { align: 'center' });
-
-            doc.save(`relatorio_media_${new Date().toISOString().slice(0, 10)}.pdf`);
-        }
-
-        $('addBtn').addEventListener('click', async () => {
-            const data = $('data').value.trim();
-            const local = $('local').value.trim();
-            const quilometragem = Number(($('quilometragem').value || '').trim());
-            const litros = Number(($('litros').value || '').trim());
-
-            if (!data || !local || quilometragem <= 0 || litros <= 0) {
-                alert('Preencha todos os campos corretamente.');
-                return;
-            }
-            if (!uid) return alert('Sessão expirada. Faça login novamente.');
-
-            await adicionarAbastecimento({ data, local, quilometragem, litros });
-
-            $('data').value = '';
-            $('local').value = '';
-            $('quilometragem').value = '';
-            $('litros').value = '';
-
-            await carregarAbastecimentos();
-            atualizarTabelaEGrafico();
-            alert('Abastecimento adicionado!');
-        });
-
-        $('filterInicio').addEventListener('change', atualizarTabelaEGrafico);
-        $('filterFim').addEventListener('change', atualizarTabelaEGrafico);
-        $('exportPdfBtn').addEventListener('click', gerarPDF);
-
-        onAuthStateChanged(auth, async (u) => {
-            if (!u) { window.location.href = 'login.html'; return; }
-            uid = u.uid;
-            await carregarPerfil();
-            await carregarAbastecimentos();
-            $('chart').height = 320;
-            atualizarTabelaEGrafico();
-        });
-    </script>
-
+    // Auth
+    onAuthStateChanged(auth, async (u)=>{
+      if(!u){ window.location.href='login.html'; return; }
+      uid = u.uid;
+      await carregarPerfil();
+      await carregarAbastecimentos();
+      // garante cabeçalho (se HTML antigo)
+      const thead = document.querySelector('#tableRegistros thead tr');
+      if(thead && thead.children.length === 6){
+        const thObs = document.createElement('th'); thObs.textContent = 'Obs.';
+        const thAcs = document.createElement('th'); thAcs.textContent = 'Ações';
+        thead.appendChild(thObs); thead.appendChild(thAcs);
+      }
+      atualizarTabelaEGrafico();
+    });
+  </script>
 </body>
 </html>
