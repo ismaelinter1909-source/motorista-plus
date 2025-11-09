@@ -8,9 +8,15 @@
     <!-- FAVICON + PWA ICONS -->
     <link rel="icon" href="favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
-
     <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
-    <link rel="manifest" href="favicon/site.webmanifest">
+
+    <!-- MANIFESTO -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Ícones PNG gerados -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <meta name="theme-color" content="#0b0f14">
 
@@ -18,7 +24,7 @@
         body {
             margin: 0;
             height: 100vh;
-            background: #000000; /* fundo preto - o anterior todo branco deixava o logo apagado */
+            background: #000000; /* fundo preto */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -37,7 +43,7 @@
         }
 
         .logo {
-            width: 160px; /* tamanho inicial */
+            width: 160px;
             animation: pulse 2.5s ease-in-out infinite;
         }
 
@@ -64,45 +70,48 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+
             const wrapper = document.getElementById("wrapper");
             const logo = document.getElementById("logo");
 
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
 
-            // ✅ Usa o tamanho real do LOGO (antes era a .wrapper – errado!)
-            const initialWidth = logo.clientWidth;
-
-            // ✅ Tamanho final ocupa 80% da menor dimensão da tela
-            const targetSize = Math.min(screenW, screenH) * 0.80;
-
-            let finalScale = targetSize / initialWidth;
-
-            if (finalScale > 14) finalScale = 14; // limite para não explodir no PC
-
-            // ✅ Detectar celular
+            // Detectar celular
             const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-            // ✅ Celular → logo termina de lado / PC → termina reto
+            // Tamanho inicial real da imagem
+            const initialWidth = logo.clientWidth;
+
+            // Tamanho final da animação
+            let targetSize;
+            if (isMobile) {
+                targetSize = Math.min(screenW, screenH) * 0.95; // celular → ocupa quase toda a tela
+            } else {
+                targetSize = Math.min(screenW, screenH) * 0.80; // PC → menor
+            }
+
+            let finalScale = targetSize / initialWidth;
+            if (finalScale > 14) finalScale = 14;
+
+            // Rotação final
             const finalRotation = isMobile ? "90deg" : "0deg";
 
+            // Aplicar valores CSS
             document.documentElement.style.setProperty("--final-scale", finalScale);
             document.documentElement.style.setProperty("--rotate-final", finalRotation);
 
             const growTime = 6000;
             const exitDelay = 2200;
 
-            setTimeout(() => {
-                wrapper.classList.add("expand");
-            }, 400);
+            // Início da animação
+            setTimeout(() => wrapper.classList.add("expand"), 400);
 
-            setTimeout(() => {
-                wrapper.classList.add("fade-out");
-            }, growTime);
+            // Fade-out
+            setTimeout(() => wrapper.classList.add("fade-out"), growTime);
 
-            setTimeout(() => {
-                window.location.href = "login.html";
-            }, growTime + exitDelay);
+            // Ir para login
+            setTimeout(() => window.location.href = "login.html", growTime + exitDelay);
         });
     </script>
 
