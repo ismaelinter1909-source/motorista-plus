@@ -8,71 +8,97 @@
     <style>
         body {
             margin: 0;
-            padding: 0;
+            height: 100vh;
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #ffffff;
             overflow: hidden;
         }
 
-        .splash-container {
-            position: absolute;
-            inset: 0;
+        /* Wrapper controla o crescimento + giro */
+        .wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
+            transition:
+                transform 6s ease-in-out,  /* mais lento */
+                opacity 2s ease-in-out;
+            opacity: 1;
+            transform: scale(0.25) rotate(0deg); /* começa pequeno */
         }
 
+        /* Logo com pulsação */
         .logo {
-            width: 30vw;
-            max-width: 180px;            /* tamanho máximo para celular */
-            transition: transform 3.5s ease-in-out;
-            transform: scale(1);
+            width: 35vw;
+            max-width: 190px;
+            animation: pulse 2.5s ease-in-out infinite;
         }
 
+        @keyframes pulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Crescimento + rotação final */
         .expand {
-            transform: scale(var(--scale-target)) rotate(var(--rotate-target));
+            transform: scale(var(--final-scale)) rotate(360deg);
+        }
+
+        /* Fade-out suave */
+        .fade-out {
+            opacity: 0;
         }
     </style>
 </head>
 <body>
 
-    <div class="splash-container">
+    <div class="wrapper" id="wrapper">
         <img src="img/Logo.png" class="logo" alt="Logo Motorista Plus">
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const logo = document.querySelector('.logo');
+        document.addEventListener("DOMContentLoaded", () => {
+            const wrapper = document.getElementById("wrapper");
 
-            const animationDuration = 3500;
-            const holdTime = 5000;
+            /* -------------------------
+               CALCULAR TAMANHO FINAL 
+               ------------------------- */
 
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
 
-            const initialSize = logo.clientWidth;
-            const maxSide = Math.max(screenWidth, screenHeight);
+            /* usar 65% do menor lado da tela */
+            const targetSize = Math.min(screenW, screenH) * 0.65;
 
-            let scaleTarget = maxSide / initialSize;
+            /* pega tamanho inicial do wrapper */
+            const initialWidth = wrapper.clientWidth;
+            let finalScale = targetSize / initialWidth;
 
-            if (scaleTarget > 12) scaleTarget = 12;
+            /* limite de segurança */
+            if (finalScale > 12) finalScale = 12;
 
-            let rotateTarget = "0deg";
-            if (screenWidth < 480) rotateTarget = "360deg";
+            document.documentElement.style.setProperty("--final-scale", finalScale);
 
-            document.documentElement.style.setProperty('--scale-target', scaleTarget);
-            document.documentElement.style.setProperty('--rotate-target', rotateTarget);
+            /* Tempo da animação */
+            const growTime = 6000;  // crescimento + giro super suave
+            const exitDelay = 2000; // saída suave
 
+            /* Iniciar crescimento */
             setTimeout(() => {
-                logo.classList.add('expand');
-            }, 200);
+                wrapper.classList.add("expand");
+            }, 300);
 
+            /* Fade-out */
+            setTimeout(() => {
+                wrapper.classList.add("fade-out");
+            }, growTime);
+
+            /* Ir para login */
             setTimeout(() => {
                 window.location.href = "login.html";
-            }, animationDuration + holdTime + 300);
+            }, growTime + exitDelay);
         });
     </script>
 
