@@ -1,553 +1,667 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Média — Motorista Plus</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Média — Motorista Plus</title>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- jsPDF + AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <style>
+<style>
     :root{
-      --mp-bg:#0b0f14; --mp-bg2:#10161d; --mp-card:rgba(16,22,29,.86);
-      --mp-primary:#f39220; --mp-primary-700:#d47e16; --mp-outline:#2b3a49;
-      --mp-text:#fff; --mp-muted:#b5bcc7;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-
-    body{background:var(--mp-bg);color:var(--mp-text);min-height:100vh}
-
-    #backBtn{
-      position:fixed;top:10px;left:10px;z-index:9999;
-      background:rgba(255,255,255,.10);color:#fff;padding:6px 12px;border-radius:10px;
-      border:1px solid rgba(255,255,255,.25);font-size:14px;cursor:pointer;backdrop-filter:blur(4px)
+        --bg:#0b0f14;
+        --card:#12171e;
+        --primary:#f39220;
+        --outline:#2b3a49;
+        --text:white;
+        --muted:#b5bcc7;
     }
 
-    header.hero{
-      text-align:center;padding:46px 20px 24px;
-      background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.85)),
-                 url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
-      border-bottom:1px solid var(--mp-outline)
+    *{
+        margin:0; padding:0;
+        box-sizing:border-box;
+        font-family:system-ui,Arial;
     }
-    header.hero h1{font-size:clamp(26px,5.5vw,44px);font-weight:800}
-    header.hero .plus{color:var(--mp-primary)}
 
-    main.container{
-      width:95%;max-width:1200px;margin:18px auto 40px;display:grid;gap:14px
+    body{
+        background:var(--bg);
+        color:var(--text);
+        min-height:100vh;
+    }
+
+    /* ================= MOBILE FIRST ================= */
+    .container{
+        width:94%;
+        margin:12px auto 50px;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
     }
 
     .card{
-      background:var(--mp-card);border:1px solid var(--mp-outline);
-      padding:16px;border-radius:14px;backdrop-filter:blur(6px)
+        background:var(--card);
+        border:1px solid var(--outline);
+        border-radius:12px;
+        padding:14px;
     }
-    .card h2{margin:0 0 12px;color:var(--mp-primary);text-align:center;font-size:1.2rem}
 
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-    #dadosUsuarioCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-    #dadosUsuarioCard .item{background:rgba(255,255,255,.06);border:1px solid var(--mp-outline);border-radius:10px;padding:10px;text-align:center}
-    #dadosUsuarioCard .item strong{display:block;color:var(--mp-primary);margin-bottom:4px}
-
-    input,select,textarea,button{
-      width:100%;padding:12px;border-radius:10px;border:1px solid var(--mp-outline);
-      background:#0f141a;color:#fff;margin-top:8px;font-size:14px
+    .card h2{
+        text-align:center;
+        font-size:1.1rem;
+        color:var(--primary);
+        margin-bottom:10px;
     }
-    textarea{min-height:70px;resize:vertical}
-    button{background:var(--mp-primary);font-weight:700;cursor:pointer}
-    button:hover{background:var(--mp-primary-700)}
 
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{border-bottom:1px solid var(--mp-outline);padding:10px;text-align:center;vertical-align:middle}
-    th{background:var(--mp-primary);color:#fff}
+    input,button,textarea{
+        width:100%;
+        padding:12px;
+        border-radius:10px;
+        border:1px solid var(--outline);
+        background:#0f141a;
+        color:white;
+        margin-top:8px;
+        font-size:14px;
+    }
 
-    td button{padding:6px 10px;font-size:12px;border-radius:8px}
-    .btn-gray{background:#444}
+    button{
+        background:var(--primary);
+        font-weight:700;
+    }
 
-    .obs-cell{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    button:hover{
+        filter:brightness(.92);
+    }
 
+    textarea{
+        height:90px;
+        resize:none;
+    }
+
+    /* DADOS USUÁRIO */
+    #dadosUsuarioCard{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    #dadosUsuarioCard .item{
+        background:rgba(255,255,255,.05);
+        padding:10px;
+        border-radius:10px;
+        border:1px solid var(--outline);
+        font-size:14px;
+    }
+
+    #dadosUsuarioCard b{
+        color:var(--primary);
+        display:block;
+        font-size:13px;
+        margin-bottom:2px;
+    }
+
+    /* TABELA MOBILE */
+    table{
+        width:100%;
+        border-collapse:collapse;
+        font-size:14px;
+    }
+
+    th{
+        background:var(--primary);
+        padding:6px;
+        color:white;
+        font-size:13px;
+    }
+
+    td{
+        padding:6px;
+        border-bottom:1px solid var(--outline);
+        text-align:center;
+    }
+
+    td button{
+        padding:4px 8px;
+        border-radius:8px;
+        font-size:12px;
+    }
+
+    .editBtn{ background:#0077b6; }
+    .delBtn{ background:#b00020; }
+
+    /* GRÁFICO */
     canvas{
-      height:220px !important;max-height:220px;background:#0f141a;border-radius:14px;padding:10px;margin-top:8px
+        max-height:180px !important;
+        height:180px !important;
+        background:#0f141a;
+        padding:8px;
+        border-radius:10px;
+        margin-top:8px;
     }
 
-    .muted{color:var(--mp-muted)}
-    .row-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-    .controls-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  </style>
+    #limparPagina{
+        background:#333;
+    }
+
+    footer{
+        text-align:center;
+        padding:14px;
+        margin-top:26px;
+        color:var(--muted);
+        border-top:1px solid var(--outline);
+    }
+</style>
 </head>
+
 <body>
 
-  <button id="backBtn" onclick="window.location.href='painel.html'">← Voltar</button>
+<button id="backBtn" style="
+    position:fixed; top:10px; left:10px; z-index:999;
+    padding:6px 14px; background:#ffffff20; border:1px solid #ffffff30;
+    border-radius:10px; color:white;">← Voltar</button>
 
-  <header class="hero">
-    <h1>Média — Motorista<span class="plus">Plus</span></h1>
-  </header>
+<header style="text-align:center; padding:32px 10px; background:#0004;">
+    <h1 style="font-size:1.8rem; font-weight:800;">
+        Média — Motorista <span style="color:var(--primary)">Plus</span>
+    </h1>
+</header>
 
-  <main class="container">
-    <!-- Dados do motorista -->
-    <section class="card">
-      <h2>Dados do Motorista</h2>
-      <div id="dadosUsuarioCard" class="muted">Carregando...</div>
-    </section>
+<main class="container">
 
-    <!-- Formulário de abastecimento -->
-    <section class="card">
-      <h2>Registrar Abastecimento</h2>
-      <div class="grid">
-        <div>
-          <label>Data</label>
-          <input type="date" id="data">
-        </div>
-        <div>
-          <label>Local</label>
-          <input type="text" id="local" placeholder="Posto / Cidade">
-        </div>
-        <div>
-          <label>KM</label>
-          <input type="number" id="quilometragem" placeholder="Ex: 120000">
-        </div>
-        <div>
-          <label>Litros</label>
-          <input type="number" id="litros" step="0.01" placeholder="Ex: 150.00">
-        </div>
-        <div style="grid-column:1/-1">
-          <label>Observação (opcional)</label>
-          <textarea id="observacao" placeholder="Ex: Diesel S10, nota fiscal, rota, etc."></textarea>
-        </div>
-      </div>
+<!-- ====================== DADOS DO MOTORISTA ====================== -->
+<section class="card">
+    <h2>Dados do Motorista</h2>
+    <div id="dadosUsuarioCard">Carregando...</div>
+</section>
 
-      <div class="controls-row" style="margin-top:8px">
-        <button id="addBtn">Salvar</button>
-        <button id="cancelarEdicao" class="btn-gray" style="display:none">Cancelar Edição</button>
-      </div>
-    </section>
+<!-- ====================== REGISTRAR ABAST. ====================== -->
+<section class="card">
+    <h2>Cadastrar Abastecimento</h2>
 
-    <!-- Período e PDF -->
-    <section class="card">
-      <h2>Período & PDF</h2>
-      <div class="grid">
-        <div><label>Início</label><input type="date" id="filterInicio"></div>
-        <div><label>Fim</label><input type="date" id="filterFim"></div>
-        <div><label>Aprovado por (opcional)</label><input type="text" id="aprovadoPor" placeholder="Nome de quem aprovou"></div>
-      </div>
-      <div class="controls-row" style="margin-top:8px">
-        <button id="exportPdfBtn">Gerar PDF (filtrado)</button>
-        <button id="limparPagina" class="btn-gray">Limpar Página</button>
-      </div>
-    </section>
+    <label>Data</label>
+    <input type="date" id="data">
 
-    <!-- Histórico -->
-    <section class="card">
-      <h2>Histórico de Abastecimentos</h2>
-      <div style="overflow-x:auto">
+    <label>Local</label>
+    <input id="local" placeholder="Posto / Cidade">
+
+    <label>KM</label>
+    <input type="number" id="quilometragem">
+
+    <label>Litros</label>
+    <input type="number" id="litros" step="0.01">
+
+    <label>Observação</label>
+    <textarea id="obs"></textarea>
+
+    <button id="addBtn">Salvar</button>
+    <button id="cancelarEdicao" style="display:none;background:#444">Cancelar Edição</button>
+</section>
+
+<!-- ====================== PERÍODO ====================== -->
+<section class="card">
+    <h2>Período & PDF</h2>
+
+    <label>Início</label>
+    <input type="date" id="filterInicio">
+
+    <label>Fim</label>
+    <input type="date" id="filterFim">
+
+    <label>Aprovado por</label>
+    <input id="aprovadoPor">
+
+    <button id="exportPdfBtn" style="margin-top:10px;">Gerar PDF</button>
+    <button id="limparPagina" style="margin-top:10px;">Limpar Página</button>
+</section>
+
+<!-- ====================== HISTÓRICO ====================== -->
+<section class="card">
+    <h2>Histórico de Abastecimentos</h2>
+
+    <div style="overflow-x:auto">
         <table id="tableRegistros">
-          <thead>
-          <tr>
-            <th>Data</th>
-            <th>Local</th>
-            <th>KM</th>
-            <th>Litros</th>
-            <th>Média (km/L)</th>
-            <th>Obs.</th>
-            <th>Ações</th>
-          </tr>
-          </thead>
-          <tbody></tbody>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Local</th>
+                    <th>KM</th>
+                    <th>Litros</th>
+                    <th>Média</th>
+                    <th>Obs</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
         </table>
-      </div>
-      <p id="resultado" style="margin-top:10px;font-weight:700;"></p>
-    </section>
+    </div>
 
-    <!-- Gráfico -->
-    <section class="card">
-      <h2>Gráfico de Desempenho</h2>
-      <canvas id="chart"></canvas>
-    </section>
-  </main>
+    <p id="resultado" style="margin-top:12px;font-weight:700;"></p>
+</section>
 
-  <footer>© 2025 Motorista Plus</footer>
+<section class="card">
+    <h2>Gráfico</h2>
+    <canvas id="chart"></canvas>
+</section>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc,
-      collection, addDoc, updateDoc, deleteDoc,
-      query, orderBy, getDocs, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+</main>
 
-    /* ✅ motorista-plus-c53f4 */
-    const firebaseConfig = {
-      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-      authDomain: "motorista-plus-c53f4.firebaseapp.com",
-      projectId: "motorista-plus-c53f4",
-      storageBucket: "motorista-plus-c53f4.appspot.com",
-      messagingSenderId: "766097061342",
-      appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
-    };
+<footer>© 2025 Motorista Plus</footer>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc,
+    collection, addDoc, updateDoc, deleteDoc,
+    query, orderBy, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const app  = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
+  /* ✅ CONFIG — motorista-plus-c53f4 */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+    authDomain: "motorista-plus-c53f4.firebaseapp.com",
+    projectId: "motorista-plus-c53f4",
+    storageBucket: "motorista-plus-c53f4.appspot.com",
+    messagingSenderId: "766097061342",
+    appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+  };
 
-    const $ = id => document.getElementById(id);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-    let uid = null;
-    let perfil = null;
-    let abastecimentos = [];
-    let chart;
-    let editId = null; // modo edição
+  const $ = (id)=>document.getElementById(id);
 
-    const pad2 = n => String(n).padStart(2,'0');
-    function fmtBR(iso){
-      const d = new Date(iso);
-      return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+  let uid = null;
+  let perfil = null;
+  let abastecimentos = [];
+  let editId = null; // modo edição
+  let chart;
+
+  /* ===== Utils ===== */
+  const pad2 = n => String(n).padStart(2,'0');
+  const fmtBR = iso => {
+    if(!iso) return "";
+    const d = new Date(iso);
+    return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+  };
+
+  /* ===== Perfil ===== */
+  function renderUsuario(){
+    $('dadosUsuarioCard').innerHTML = `
+      <div class="item"><strong>Motorista</strong>${perfil?.nome || '—'}</div>
+      <div class="item"><strong>E-mail</strong>${perfil?.email || '—'}</div>
+      <div class="item"><strong>Telefone</strong>${perfil?.telefone || '—'}</div>
+      <div class="item"><strong>Placa Cavalo</strong>${perfil?.placaCavalo || '—'}</div>
+      <div class="item"><strong>Placa Reboque</strong>${perfil?.placaReboque || '—'}</div>
+    `;
+  }
+
+  async function carregarPerfil(){
+    const snap = await getDoc(doc(db,"usuarios",uid));
+    if(snap.exists()) perfil = snap.data();
+    renderUsuario();
+  }
+
+  /* ===== Abastecimentos ===== */
+  async function carregarAbastecimentos(){
+    const col = collection(db,"usuarios",uid,"abastecimentos");
+    const qy  = query(col, orderBy("data","asc"));
+    const snaps = await getDocs(qy);
+    abastecimentos = [];
+    snaps.forEach(s=>{
+      const d = s.data();
+      abastecimentos.push({
+        id: s.id,
+        data: d.data, // "YYYY-MM-DD"
+        local: String(d.local || ''),
+        quilometragem: Number(d.quilometragem || 0),
+        litros: Number(d.litros || 0),
+        observacao: String(d.observacao || ''),
+        createdAt: d.createdAt || null
+      });
+    });
+  }
+
+  async function adicionarAbastecimento(obj){
+    await addDoc(collection(db,"usuarios",uid,"abastecimentos"), {
+      ...obj,
+      createdAt: serverTimestamp()
+    });
+  }
+
+  async function atualizarAbastecimento(id, obj){
+    await updateDoc(doc(db,"usuarios",uid,"abastecimentos",id), obj);
+  }
+
+  async function excluirAbastecimento(id){
+    await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
+  }
+
+  /* ===== Cálculos ===== */
+  function filtrar(arr, inicioISO, fimISO){
+    const ini = inicioISO ? new Date(inicioISO) : null;
+    const fim = fimISO ? new Date(fimISO) : null;
+    return arr.filter(r=>{
+      const d = new Date(r.data);
+      if(ini && d < ini) return false;
+      if(fim && d > fim) return false;
+      return true;
+    });
+  }
+
+  // Retorna array alinhado com arr: primeiro "--", depois (kmDif / litros_i)
+  function mediasPorAbastecimento(arr){
+    const out = [];
+    for(let i=0;i<arr.length;i++){
+      if(i===0){ out.push('--'); continue; }
+      const kmDif = Number(arr[i].quilometragem) - Number(arr[i-1].quilometragem);
+      const litros = Number(arr[i].litros);
+      const med = (kmDif > 0 && litros > 0) ? (kmDif / litros) : 0;
+      out.push(med ? med.toFixed(2) : '--');
+    }
+    return out;
+  }
+
+  // Média (km total / litros totais)
+  function mediaPeriodo(arr){
+    if(arr.length < 2) return '--';
+    const kmIni = Number(arr[0].quilometragem);
+    const kmFim = Number(arr[arr.length - 1].quilometragem);
+    const litrosTot = arr.reduce((s,r)=> s + Number(r.litros||0), 0);
+    if(litrosTot <= 0) return '--';
+    return ((kmFim - kmIni) / litrosTot).toFixed(2);
+  }
+
+  function resumoTextoPara(arrPeriodo){
+    const mPeriodo = mediaPeriodo(arrPeriodo);
+    const mGeral   = mediaPeriodo(abastecimentos);
+    if(mPeriodo === '--' && mGeral === '--') return 'Nenhum registro suficiente para cálculo.';
+
+    const linhas = [];
+    if(mPeriodo !== '--'){
+      const p = Number(mPeriodo);
+      linhas.push(`Média do período: ${mPeriodo} km/L`);
+      linhas.push(`Média do período (-5%): ${(p*0.95).toFixed(2)} km/L`);
+    }else{
+      linhas.push('Média do período: —');
+      linhas.push('Média do período (-5%): —');
     }
 
-    function renderUsuario(){
-      $('dadosUsuarioCard').innerHTML = `
-        <div class="item"><strong>Motorista</strong>${perfil?.nome || '—'}</div>
-        <div class="item"><strong>E-mail</strong>${perfil?.email || '—'}</div>
-        <div class="item"><strong>Telefone</strong>${perfil?.telefone || '—'}</div>
-        <div class="item"><strong>Placa Cavalo</strong>${perfil?.placaCavalo || '—'}</div>
-        <div class="item"><strong>Placa Reboque</strong>${perfil?.placaReboque || '—'}</div>
+    if(mGeral !== '--'){
+      const g = Number(mGeral);
+      linhas.push(`Média geral: ${mGeral} km/L`);
+      linhas.push(`Média geral (-5%): ${(g*0.95).toFixed(2)} km/L`);
+    }else{
+      linhas.push('Média geral: —');
+      linhas.push('Média geral (-5%): —');
+    }
+
+    return linhas.join(' | ');
+  }
+
+  /* ===== UI ===== */
+  function preencherForm(r){
+    $('data').value = r?.data || '';
+    $('local').value = r?.local || '';
+    $('quilometragem').value = r?.quilometragem ?? '';
+    $('litros').value = r?.litros ?? '';
+    if($('observacao')) $('observacao').value = r?.observacao || '';
+  }
+
+  function limparForm(){
+    preencherForm({ data:'', local:'', quilometragem:'', litros:'', observacao:'' });
+    editId = null;
+    $('addBtn').textContent = 'Salvar';
+    $('cancelarEdicao').style.display = 'none';
+  }
+
+  function atualizarTabelaEGrafico(){
+    const inicio = $('filterInicio').value || null;
+    const fim    = $('filterFim').value || null;
+
+    const filtrados = filtrar(abastecimentos, inicio, fim);
+    const mediasLinhas = mediasPorAbastecimento(filtrados);
+
+    // ===== Tabela =====
+    const tbody = $('tableRegistros').querySelector('tbody');
+    tbody.innerHTML = '';
+    filtrados.forEach((r,idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.data}</td>
+        <td>${r.local}</td>
+        <td>${r.quilometragem}</td>
+        <td>${r.litros.toFixed(2)}</td>
+        <td>${mediasLinhas[idx]}</td>
+        <td>
+          <button class="editar" data-id="${r.id}">Editar</button>
+          <button class="excluir" data-id="${r.id}" style="background:#aa2a2a">Excluir</button>
+        </td>
       `;
-    }
+      tbody.appendChild(tr);
+    });
 
-    async function carregarPerfil(){
-      const snap = await getDoc(doc(db, "usuarios", uid));
-      if (snap.exists()) perfil = snap.data();
-      renderUsuario();
-    }
+    // Ações editar/excluir
+    tbody.querySelectorAll('.editar').forEach(btn=>{
+      btn.onclick = ()=>{
+        const item = abastecimentos.find(a=> a.id === btn.dataset.id);
+        if(!item) return;
+        editId = item.id;
+        preencherForm(item);
+        $('addBtn').textContent = 'Atualizar';
+        $('cancelarEdicao').style.display = 'inline-block';
+      };
+    });
+    tbody.querySelectorAll('.excluir').forEach(btn=>{
+      btn.onclick = async ()=>{
+        if(!confirm('Excluir este abastecimento?')) return;
+        await excluirAbastecimento(btn.dataset.id);
+        await carregarAbastecimentos();
+        atualizarTabelaEGrafico();
+      };
+    });
 
-    async function carregarAbastecimentos(){
-      const col = collection(db, "usuarios", uid, "abastecimentos");
-      const qy  = query(col, orderBy("data","asc"));
-      const snaps = await getDocs(qy);
-      abastecimentos = [];
-      snaps.forEach(s=>{
-        const d = s.data();
-        abastecimentos.push({
-          id: s.id,
-          data: d.data, // YYYY-MM-DD
-          local: String(d.local || ''),
-          quilometragem: Number(d.quilometragem || 0),
-          litros: Number(d.litros || 0),
-          observacao: String(d.observacao || ''),
-          createdAt: d.createdAt || null
-        });
-      });
-    }
+    // ===== Gráfico (menor) =====
+    const ctx = $('chart').getContext('2d');
+    const labels  = filtrados.map(r=> r.data);
+    const dataVals= mediasLinhas.map((m,i)=> i===0 ? null : (m==='--'? null : Number(m)));
 
-    async function adicionarAbastecimento(obj){
-      await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
-        ...obj,
-        createdAt: serverTimestamp()
-      });
-    }
-    async function atualizarAbastecimento(id, obj){
-      await updateDoc(doc(db,"usuarios",uid,"abastecimentos",id), {
-        ...obj,
-        updatedAt: serverTimestamp()
-      });
-    }
-    async function removerAbastecimento(id){
-      await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
-    }
-
-    // ===== Filtros e cálculos =====
-    function filtrar(arr, inicioISO, fimISO){
-      const ini = inicioISO ? new Date(inicioISO) : null;
-      const fim = fimISO ? new Date(fimISO) : null;
-      return arr.filter(r=>{
-        const d = new Date(r.data);
-        if(ini && d < ini) return false;
-        if(fim && d > fim) return false;
-        return true;
-      });
-    }
-
-    // Média por abastecimento (entre registro i e i-1 usando litros de i)
-    function mediasPorAbastecimento(arr){
-      const out = [];
-      for(let i=0;i<arr.length;i++){
-        if(i===0){ out.push('--'); continue; }
-        const kmDif = Number(arr[i].quilometragem) - Number(arr[i-1].quilometragem);
-        const litros = Number(arr[i].litros);
-        const med = (kmDif > 0 && litros > 0) ? (kmDif / litros) : 0;
-        out.push(med ? med.toFixed(2) : '--');
-      }
-      return out;
-    }
-
-    // Média do período (km total / litros totais)
-    function mediaPeriodo(arr){
-      if(arr.length < 2) return '--';
-      const kmIni = Number(arr[0].quilometragem);
-      const kmFim = Number(arr[arr.length - 1].quilometragem);
-      const litrosTot = arr.reduce((s,r)=> s + Number(r.litros||0), 0);
-      if(litrosTot <= 0) return '--';
-      return ((kmFim - kmIni) / litrosTot).toFixed(2);
-    }
-
-    function atualizarTabelaEGrafico(){
-      const inicio = $('filterInicio').value || null;
-      const fim    = $('filterFim').value || null;
-
-      const filtrados = filtrar(abastecimentos, inicio, fim);
-      const mediasLinhas = mediasPorAbastecimento(filtrados);
-
-      // Tabela
-      const tbody = $('tableRegistros').querySelector('tbody');
-      tbody.innerHTML = '';
-      filtrados.forEach((r,idx)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.data}</td>
-          <td>${r.local}</td>
-          <td>${r.quilometragem}</td>
-          <td>${r.litros.toFixed(2)}</td>
-          <td>${mediasLinhas[idx]}</td>
-          <td class="obs-cell" title="${r.observacao || ''}">${r.observacao || '—'}</td>
-          <td>
-            <div class="row-actions">
-              <button data-act="edit" data-id="${r.id}">Editar</button>
-              <button data-act="del"  data-id="${r.id}" class="btn-gray">Excluir</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Ações da tabela
-      tbody.querySelectorAll('button').forEach(btn=>{
-        btn.onclick = async ()=>{
-          const id  = btn.dataset.id;
-          const act = btn.dataset.act;
-          const reg = abastecimentos.find(x=> x.id === id);
-          if(!reg) return;
-
-          if(act === 'edit'){
-            editId = id;
-            $('addBtn').textContent = 'Atualizar';
-            $('cancelarEdicao').style.display = 'inline-block';
-            $('data').value = reg.data;
-            $('local').value = reg.local;
-            $('quilometragem').value = reg.quilometragem;
-            $('litros').value = reg.litros;
-            $('observacao').value = reg.observacao || '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-          if(act === 'del'){
-            if(!confirm('Excluir este abastecimento?')) return;
-            await removerAbastecimento(id);
-            await carregarAbastecimentos();
-            atualizarTabelaEGrafico();
-          }
-        };
-      });
-
-      // Gráfico
-      const ctx = $('chart').getContext('2d');
-      const labels = filtrados.map(r=> r.data);
-      const dataVals = mediasLinhas.map((m,i)=> i===0 ? null : (m==='--'? null : Number(m)));
-
-      if(chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type:'line',
-        data:{
-          labels,
-          datasets:[{
-            label:'Média por abastecimento (km/L)',
-            data:dataVals,
-            borderColor:'#f39220',
-            backgroundColor:'rgba(243,146,32,.25)',
-            spanGaps:true,
-            fill:true,
-            tension:.3
-          }]
-        },
-        options:{
-          responsive:true,
-          maintainAspectRatio:false,
-          plugins:{ legend:{ labels:{ color:'#fff' } } },
-          scales:{
-            x:{ ticks:{ color:'#fff' } },
-            y:{ beginAtZero:true, ticks:{ color:'#fff' } }
-          }
+    if(chart) chart.destroy();
+    $('chart').height = 200; // ~200px
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Média por abastecimento (km/L)',
+          data: dataVals,
+          borderColor: '#f39220',
+          backgroundColor: 'rgba(243,146,32,0.22)',
+          spanGaps: true,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#fff" } } },
+        scales: {
+          x: { ticks: { color: "#fff" } },
+          y: { beginAtZero: true, ticks: { color: "#fff" } }
         }
-      });
-
-      // Resumo (média período e -5%)
-      const mPer = mediaPeriodo(filtrados);
-      let txt = 'Nenhum registro.';
-      if(mPer !== '--'){
-        const mNum   = Number(mPer);
-        const regra5 = (mNum * 0.95).toFixed(2);
-        txt = `Média do período: ${mPer} km/L — Regra da empresa (-5%): ${regra5} km/L`;
       }
-      $('resultado').textContent = txt;
+    });
+
+    // ===== Resumo
+    $('resultado').textContent = resumoTextoPara(filtrados);
+  }
+
+  /* ===== PDF (sem logo) ===== */
+  function gerarPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+
+    let y = 40;
+    const startX = 40;
+
+    // Título — sem logo
+    doc.setFontSize(16).setFont(undefined,'bold');
+    doc.text('Relatório de Média — Motorista Plus', startX, y);
+    y += 22;
+
+    // Perfil
+    doc.setFontSize(11).setFont(undefined,'normal');
+    const info = [
+      `Motorista: ${perfil?.nome || '—'}`,
+      `E-mail: ${perfil?.email || '—'}`,
+      `Telefone: ${perfil?.telefone || '—'}`,
+      `Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`
+    ];
+    info.forEach((t,i)=> doc.text(t, startX, y + i*16));
+    y += info.length*16 + 8;
+
+    // Período
+    const inicio = $('filterInicio').value || null;
+    const fim    = $('filterFim').value || null;
+    if(inicio || fim){
+      doc.text(`Período filtrado: ${inicio || '—'} até ${fim || '—'}`, startX, y);
+      y += 18;
     }
 
-    // PDF (sem logo)
-    function gerarPDF(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const filtrados    = filtrar(abastecimentos, inicio, fim);
+    const mediasLinhas = mediasPorAbastecimento(filtrados);
 
-      let y = 40;
-      const startX = 40;
+    // Tabela (inclui Observação)
+    const body = filtrados.map((r,idx)=>[
+      r.data,
+      r.local,
+      String(r.quilometragem),
+      r.litros.toFixed(2),
+      String(mediasLinhas[idx]),
+      r.observacao || '—'
+    ]);
 
-      // Título
-      doc.setFontSize(16).setFont(undefined,'bold');
-      doc.text('Relatório de Média — Motorista Plus', startX, y);
-      y += 24;
+    doc.autoTable({
+      startY: y,
+      head: [['Data','Local','KM','Litros','Média (km/L)','Observação']],
+      body,
+      theme: 'grid',
+      headStyles: { fillColor: [243,146,32] },
+      styles: { fontSize: 10, halign: 'center' },
+      columnStyles: {
+        1:{ halign:'left' },
+        5:{ halign:'left' }
+      },
+      margin: { left: startX, right: startX }
+    });
 
-      // Dados do motorista
-      doc.setFontSize(11).setFont(undefined,'normal');
-      const info = [
-        `Motorista: ${perfil?.nome || '—'}`,
-        `E-mail: ${perfil?.email || '—'}`,
-        `Telefone: ${perfil?.telefone || '—'}`,
-        `Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`
-      ];
-      info.forEach((t,i)=> doc.text(t, startX, y + i*18));
-      y += info.length*18 + 10;
+    y = doc.autoTable.previous.finalY + 14;
 
-      // Período filtrado
-      const inicio = $('filterInicio').value || null;
-      const fim    = $('filterFim').value || null;
-      const filtrados = filtrar(abastecimentos, inicio, fim);
-      const mediasLinhas = mediasPorAbastecimento(filtrados);
+    // Médias (período e geral) e regra -5%
+    const mPeriodo = mediaPeriodo(filtrados);
+    const mGeral   = mediaPeriodo(abastecimentos);
+    doc.setFont(undefined,'bold');
 
-      // Tabela (inclui média e observação)
-      const body = filtrados.map((r,idx)=>[
-        r.data,
-        r.local,
-        String(r.quilometragem),
-        r.litros.toFixed(2),
-        String(mediasLinhas[idx]),
-        (r.observacao || '—')
-      ]);
-
-      doc.autoTable({
-        startY: y,
-        head: [['Data','Local','KM','Litros','Média (km/L)','Obs.']],
-        body,
-        theme:'grid',
-        headStyles:{ fillColor:[243,146,32] },
-        styles:{ fontSize:10, halign:'center', cellWidth:'wrap' },
-        columnStyles:{
-          5:{ halign:'left' } // Observação alinhada à esquerda
-        },
-        margin:{ left:startX, right:startX }
-      });
-
-      y = doc.autoTable.previous.finalY + 16;
-
-      // Resumo: média do período e -5%
-      const mPer = mediaPeriodo(filtrados);
-      if(mPer !== '--'){
-        const mNum   = Number(mPer);
-        const regra5 = (mNum * 0.95).toFixed(2);
-        doc.setFont(undefined,'bold');
-        doc.text(`Média do período: ${mPer} km/L`, startX, y); y += 18;
-        doc.text(`Regra da empresa (-5%): ${regra5} km/L`, startX, y); y += 18;
-      }else{
-        doc.text('Sem dados suficientes para média do período.', startX, y); y += 18;
-      }
-
-      // Aprovado por (opcional)
-      const aprov = ($('aprovadoPor').value || '').trim();
-      if(aprov){
-        const now = new Date();
-        const iso = `${now.getFullYear()}-${pad2(now.getMonth()+1)}-${pad2(now.getDate())}`;
-        doc.setFont(undefined,'normal');
-        doc.text(`Aprovado por: ${aprov} — Data: ${fmtBR(iso)}`, startX, y); y += 18;
-      }
-
-      // Assinatura
-      const w = doc.internal.pageSize.getWidth();
-      doc.line(w/2 - 120, y + 40, w/2 + 120, y + 40);
-      doc.text('Assinatura do Motorista', w/2, y + 56, { align:'center' });
-
-      doc.save(`relatorio_media_${new Date().toISOString().slice(0,10)}.pdf`);
+    if(mPeriodo !== '--'){
+      const mp = Number(mPeriodo);
+      doc.text(`Média do período: ${mPeriodo} km/L`, startX, y); y+=16;
+      doc.text(`Média do período (-5%): ${(mp*0.95).toFixed(2)} km/L`, startX, y); y+=16;
+    }else{
+      doc.text('Média do período: —', startX, y); y+=16;
+      doc.text('Média do período (-5%): —', startX, y); y+=16;
     }
 
-    // === Eventos ===
-    $('addBtn').addEventListener('click', async ()=>{
-      const data  = ($('data').value || '').trim();
-      const local = ($('local').value || '').trim();
-      const km    = Number(($('quilometragem').value || '').trim());
-      const litros= Number(($('litros').value || '').trim());
-      const obs   = ($('observacao').value || '').trim();
+    if(mGeral !== '--'){
+      const mg = Number(mGeral);
+      doc.text(`Média geral: ${mGeral} km/L`, startX, y); y+=16;
+      doc.text(`Média geral (-5%): ${(mg*0.95).toFixed(2)} km/L`, startX, y); y+=16;
+    }else{
+      doc.text('Média geral: —', startX, y); y+=16;
+      doc.text('Média geral (-5%): —', startX, y); y+=16;
+    }
 
-      if(!data || !local || km <= 0 || litros <= 0){
-        alert('Preencha todos os campos corretamente.');
-        return;
-      }
-      if(!uid){ alert('Sessão expirada. Faça login novamente.'); return; }
+    // Aprovado por (opcional)
+    const aprov = ($('aprovadoPor').value || '').trim();
+    if(aprov){
+      doc.setFont(undefined,'normal');
+      doc.text(`Aprovado por: ${aprov} — Data: ${fmtBR(new Date().toISOString())}`, startX, y);
+      y += 16;
+    }
 
-      const payload = { data, local, quilometragem: km, litros, observacao: obs };
+    // Assinatura
+    const w = doc.internal.pageSize.getWidth();
+    doc.line(w/2 - 120, y + 36, w/2 + 120, y + 36);
+    doc.text('Assinatura do Motorista', w/2, y + 52, { align:'center' });
 
-      if(editId){
-        await atualizarAbastecimento(editId, payload);
-        editId = null;
-        $('addBtn').textContent = 'Salvar';
-        $('cancelarEdicao').style.display = 'none';
-      }else{
-        await adicionarAbastecimento(payload);
-      }
+    doc.save(`relatorio_media_${new Date().toISOString().slice(0,10)}.pdf`);
+  }
 
-      // Limpa form (não apaga dados do banco)
-      $('data').value=''; $('local').value=''; $('quilometragem').value='';
-      $('litros').value=''; $('observacao').value='';
+  /* ===== Eventos ===== */
+  $('addBtn').onclick = async ()=>{
+    const data = ($('data').value || '').trim();
+    const local = ($('local').value || '').trim();
+    const quilometragem = Number(($('quilometragem').value || '').trim());
+    const litros = Number(($('litros').value || '').trim());
+    const observacao = $('observacao') ? ($('observacao').value || '').trim() : '';
 
-      await carregarAbastecimentos();
-      atualizarTabelaEGrafico();
-      alert('Registro salvo!');
-    });
+    if(!data || !local || quilometragem <= 0 || litros <= 0){
+      alert('Preencha todos os campos corretamente.');
+      return;
+    }
+    if(!uid){ alert('Sessão expirada. Faça login novamente.'); return; }
 
-    $('cancelarEdicao').addEventListener('click', ()=>{
-      editId = null;
-      $('addBtn').textContent = 'Salvar';
-      $('cancelarEdicao').style.display = 'none';
-      $('data').value=''; $('local').value=''; $('quilometragem').value='';
-      $('litros').value=''; $('observacao').value='';
-    });
+    if(editId){
+      await atualizarAbastecimento(editId, { data, local, quilometragem, litros, observacao, updatedAt: serverTimestamp() });
+      limparForm();
+    }else{
+      await adicionarAbastecimento({ data, local, quilometragem, litros, observacao });
+    }
 
-    $('filterInicio').addEventListener('change', atualizarTabelaEGrafico);
-    $('filterFim').addEventListener('change', atualizarTabelaEGrafico);
-    $('exportPdfBtn').addEventListener('click', gerarPDF);
+    await carregarAbastecimentos();
+    atualizarTabelaEGrafico();
+    alert('Registro salvo!');
+  };
 
-    // Limpar Página (apenas UI; não apaga Firestore)
-    $('limparPagina').addEventListener('click', ()=>{
-      $('data').value=''; $('local').value=''; $('quilometragem').value='';
-      $('litros').value=''; $('observacao').value='';
-      $('filterInicio').value=''; $('filterFim').value=''; $('aprovadoPor').value='';
-      // limpa tabela/resultado/gráfico
-      const tbody = $('tableRegistros').querySelector('tbody');
-      tbody.innerHTML = '';
-      $('resultado').textContent = '';
-      if(chart) { chart.destroy(); chart = null; }
-    });
+  $('cancelarEdicao').onclick = ()=> limparForm();
 
-    // Auth
-    onAuthStateChanged(auth, async (u)=>{
-      if(!u){ window.location.href='login.html'; return; }
-      uid = u.uid;
-      await carregarPerfil();
-      await carregarAbastecimentos();
-      // garante cabeçalho (se HTML antigo)
-      const thead = document.querySelector('#tableRegistros thead tr');
-      if(thead && thead.children.length === 6){
-        const thObs = document.createElement('th'); thObs.textContent = 'Obs.';
-        const thAcs = document.createElement('th'); thAcs.textContent = 'Ações';
-        thead.appendChild(thObs); thead.appendChild(thAcs);
-      }
-      atualizarTabelaEGrafico();
-    });
-  </script>
+  $('exportPdfBtn').onclick  = ()=> gerarPDF();
+
+  // Limpar Página (não apaga Firebase)
+  $('limparPagina').onclick = ()=>{
+    limparForm();
+    $('filterInicio').value = '';
+    $('filterFim').value = '';
+    $('aprovadoPor').value = '';
+    atualizarTabelaEGrafico();
+  };
+
+  $('filterInicio').addEventListener('change', atualizarTabelaEGrafico);
+  $('filterFim').addEventListener('change', atualizarTabelaEGrafico);
+
+  /* ===== Auth boot ===== */
+  onAuthStateChanged(auth, async (u)=>{
+    if(!u){ window.location.href = 'login.html'; return; }
+    uid = u.uid;
+    await carregarPerfil();
+    await carregarAbastecimentos();
+
+    // Garante coluna de média no thead se HTML antigo
+    const thead = document.querySelector('#tableRegistros thead tr');
+    if(thead && thead.children.length === 5){
+      const thMed = document.createElement('th'); thMed.textContent = 'Média';
+      thead.appendChild(thMed);
+      const thAc  = document.createElement('th'); thAc.textContent  = 'Ações';
+      thead.appendChild(thAc);
+    }
+
+    // Altura menor do gráfico
+    $('chart').height = 200;
+    atualizarTabelaEGrafico();
+  });
+</script>
 </body>
 </html>
