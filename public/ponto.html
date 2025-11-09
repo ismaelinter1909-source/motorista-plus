@@ -178,7 +178,7 @@ async function carregarMes(mes, ano) {
   const qy = query(col, orderBy("data", "asc"));
   const snaps = await getDocs(qy);
 
-  const prefix = `${ano}-${pad2(mes + 1)}-`;
+  const prefix = `${ano}-${pad2(mes + 0)}-`;
   const lista = [];
   snaps.forEach(s => {
     const d = s.data().data;
