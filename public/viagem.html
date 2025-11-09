@@ -100,7 +100,6 @@
 
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
       <button id="salvarViagemBtn" class="btn btn-green">Salvar</button>
-      <button id="limparCamposBtn" class="btn btn-red">Limpar</button>
       <span id="statusEdicao" style="align-self:center;color:var(--muted)"></span>
     </div>
   </section>
@@ -138,8 +137,11 @@
 
   <!-- PDF -->
   <section class="card" style="text-align:center">
+  <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
     <button id="gerarPDFButton" class="btn" style="width:200px">Gerar PDF</button>
-  </section>
+    <button id="limparTudoBtn" class="btn btn-red" style="width:200px">Limpar</button>
+  </div>
+</section>
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
@@ -167,7 +169,7 @@
   const $ = id => document.getElementById(id);
 
   // ====== CONSTANTES ======
-  const DIARIA_VALOR = 100; // Fixo, como pedido
+  const DIARIA_VALOR = 100;
 
   let uid = null;
   let perfil = null;
@@ -188,31 +190,26 @@
     return d;
   };
 
-  // Regra de folgas que você definiu:
-  // 1–6 => 1; 7–13 => 2; 14–20 => 3; 21–27 => 4; e assim por diante
-  // Fórmula equivalente: folgas = ceil((dias + 1) / 7)
-  const calcularFolgas = (dias) => Math.ceil((dias + 1) / 7);
+  const calcularFolgas = dias => Math.ceil((dias + 1) / 7);
 
   function diasEntreInclusive(iniISO, fimISO) {
     const ini = new Date(iniISO);
     const fim = new Date(fimISO);
-    // zera horas pra evitar fuso
     ini.setHours(0,0,0,0);
     fim.setHours(0,0,0,0);
     return Math.round((fim - ini) / 86400000) + 1;
   }
 
+  // ====== RESUMO DIÁRIAS ======
   function atualizarResumoDiarias(diasViajados){
-    // cria/pega elemento de resumo
     let box = document.getElementById('resumoDiarias');
     if(!box){
       box = document.createElement('p');
       box.id = 'resumoDiarias';
       box.style.marginTop = '8px';
       box.style.fontWeight = '700';
-      // joga dentro da seção de Diárias (baixo do botão adicionar)
-      const diariasSection = document.querySelector('section.card:nth-of-type(3)');
-      diariasSection.appendChild(box);
+      const sec = document.querySelector('section.card:nth-of-type(3)');
+      sec.appendChild(box);
     }
 
     const recebidas = diarias.reduce((s,d)=> s + (Number(d.qtd)||0), 0);
@@ -220,29 +217,25 @@
 
     let msg;
     if(recebidas === diasViajados){
-      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). Situação: OK — bate com os ${diasViajados} dia(s) viajado(s).`;
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). Situação OK.`;
     }else if(recebidas < diasViajados){
-      const falta = diasViajados - recebidas;
-      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). A EMPRESA DEVE ${falta} diária(s) ao motorista.`;
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). A EMPRESA DEVE ${diasViajados - recebidas} diária(s).`;
     }else{
-      const adiantou = recebidas - diasViajados;
-      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). O MOTORISTA ADIANTOU ${adiantou} diária(s).`;
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). O MOTORISTA DEVE ${recebidas - diasViajados} diária(s).`;
     }
 
     box.textContent = msg;
 
-    // também mostra um campo de leitura com total de diárias recebidas, se existir um input na UI:
-    let totalInput = document.getElementById('totalDiariasRecebidas');
-    if(!totalInput){
-      totalInput = document.createElement('input');
-      totalInput.id = 'totalDiariasRecebidas';
-      totalInput.readOnly = true;
-      totalInput.style.marginTop = '8px';
-      totalInput.placeholder = 'Total de diárias recebidas';
-      const diariasSection = document.querySelector('section.card:nth-of-type(3)');
-      diariasSection.appendChild(totalInput);
+    let input = document.getElementById('totalDiariasRecebidas');
+    if(!input){
+      input = document.createElement('input');
+      input.id = 'totalDiariasRecebidas';
+      input.readOnly = true;
+      input.style.marginTop = '8px';
+      const sec = document.querySelector('section.card:nth-of-type(3)');
+      sec.appendChild(input);
     }
-    totalInput.value = `${recebidas} diária(s) — R$ ${valorRecebidas.toFixed(2)}`;
+    input.value = `${recebidas} diária(s) — R$ ${valorRecebidas.toFixed(2)}`;
   }
 
   /* ================= CARREGAR PERFIL ================= */
@@ -267,12 +260,10 @@
 
     viagemDoc = snap.data();
 
-    // Preenche inputs
     $('viagemInicio').value = toISOinput(viagemDoc.inicio);
     $('viagemFim').value    = toISOinput(viagemDoc.fim);
     $('kmInicio').value     = viagemDoc.kmInicio ?? '';
     $('kmFim').value        = viagemDoc.kmFim ?? '';
-    // ignora observações/valor da diária (removido e fixo em 100)
 
     preencherDerivadosUI();
     $('statusEdicao').textContent = "Editando viagem salva";
@@ -286,15 +277,12 @@
 
     if(!ini || !fim) return;
 
-    const dias = diasEntreInclusive(ini, fim); // incluindo início e fim
-    const folgas = calcularFolgas(dias);       // sua regra
+    const dias = diasEntreInclusive(ini, fim);
+    const folgas = calcularFolgas(dias);
 
-    // último dia de folga = dia seguinte ao fim + (folgas - 1)
     const diaSeguinteAoFim = addDays(new Date(fim), 1);
-    const ultimoDiaFolga = addDays(diaSeguinteAoFim, folgas - 1);
-
-    // retorno = dia seguinte ao último dia de folga
-    const retorno = addDays(ultimoDiaFolga, 1);
+    const ultimoDiaFolga   = addDays(diaSeguinteAoFim, folgas - 1);
+    const retorno          = addDays(ultimoDiaFolga, 1);
 
     $('diasViajados').value = `${dias} dia(s)`;
     $('diasFolga').value    = `${folgas} dia(s)`;
@@ -302,10 +290,9 @@
     $('kmRodados').value    = (kmF && kmI) ? (kmF - kmI) : '';
   }
 
-  // recalcula sempre que o usuário altera os campos base
   ['viagemInicio','viagemFim','kmInicio','kmFim'].forEach(id=>{
     const el = $(id);
-    el && (el.onchange = preencherDerivadosUI);
+    if(el) el.onchange = preencherDerivadosUI;
   });
 
   /* ================= DIÁRIAS ================= */
@@ -313,8 +300,8 @@
     const col = collection(db, "usuarios", uid, "diarias");
     const q = query(col, orderBy("data", "asc"));
     const snap = await getDocs(q);
-    diarias = [];
-    snap.forEach(d => diarias.push({ id: d.id, ...d.data() }));
+
+    diarias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderDiarias();
   }
 
@@ -327,8 +314,8 @@
       tr.innerHTML = `
         <td>${fmtBR(d.data)}</td>
         <td>Diária</td>
-        <td><input class="edit-input" type="number" min="1" max="60" value="${d.qtd}" data-id="${d.id}"></td>
-        <td>${(Number(d.qtd||0) * DIARIA_VALOR).toFixed(2)}</td>
+        <td><input class="edit-input" type="number" min="1" value="${d.qtd}" data-id="${d.id}"></td>
+        <td>${(Number(d.qtd)*DIARIA_VALOR).toFixed(2)}</td>
         <td class="row-actions">
           <button class="small-btn btn" data-act="save" data-id="${d.id}">Salvar</button>
           <button class="small-btn btn-red" data-act="del" data-id="${d.id}">Excluir</button>
@@ -336,23 +323,19 @@
       tbody.appendChild(tr);
     });
 
-    // ações salvar/excluir
-    tbody.querySelectorAll("button").forEach(b => {
-      b.onclick = async () => {
-        const id = b.dataset.id;
-        if (b.dataset.act === "del") {
-          await deleteDoc(doc(db, "usuarios", uid, "diarias", id));
+    tbody.querySelectorAll("button").forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.dataset.id;
+        if(btn.dataset.act === "del"){
+          await deleteDoc(doc(db,"usuarios",uid,"diarias",id));
         } else {
           const qtd = Number(document.querySelector(`input[data-id="${id}"]`).value);
-          await updateDoc(doc(db, "usuarios", uid, "diarias", id), { qtd });
+          await updateDoc(doc(db,"usuarios",uid,"diarias",id),{qtd});
         }
         await carregarDiarias();
-        // atualiza o resumo após mudar a lista
-        atualizarResumoComBaseNosCampos();
       };
     });
 
-    // Atualiza resumo (diárias x dias viajados)
     atualizarResumoComBaseNosCampos();
   }
 
@@ -360,26 +343,26 @@
     const ini = $('viagemInicio').value;
     const fim = $('viagemFim').value;
     if(!ini || !fim) return;
-    const dias = diasEntreInclusive(ini, fim);
-    atualizarResumoDiarias(dias);
+    atualizarResumoDiarias(diasEntreInclusive(ini,fim));
   }
 
   /* ================= SALVAR VIAGEM ================= */
   $('salvarViagemBtn').onclick = async () => {
-    const ini = $('viagemInicio').value, fim = $('viagemFim').value;
-    const kmI = +$('kmInicio').value, kmF = +$('kmFim').value;
+    const ini = $('viagemInicio').value;
+    const fim = $('viagemFim').value;
+    const kmI = Number($('kmInicio').value);
+    const kmF = Number($('kmFim').value);
+
     if (!ini || !fim || !kmI || !kmF) return alert("Complete todos os campos");
 
-    const obj = {
+    await setDoc(doc(db, "usuarios", uid, "viagemAtual", "dados"), {
       inicio: new Date(ini).toISOString(),
       fim:    new Date(fim).toISOString(),
       kmInicio: kmI,
       kmFim: kmF,
-      // diariaValor removido (fixo no código)
       updatedAt: serverTimestamp()
-    };
+    });
 
-    await setDoc(doc(db, "usuarios", uid, "viagemAtual", "dados"), obj);
     alert("Viagem salva!");
     await carregarViagem();
   };
@@ -387,9 +370,9 @@
   /* ================= ADICIONAR DIÁRIA ================= */
   $('addDiariaBtn').onclick = async () => {
     const data = $('diariaData').value;
-    const qtd  = +$('diariaQtd').value;
+    const qtd  = Number($('diariaQtd').value);
     if (!data) return alert("Selecione a data");
-    if (!qtd || qtd < 1) return alert("Informe a quantidade");
+    if (qtd < 1) return alert("Quantidade inválida");
 
     await addDoc(collection(db, "usuarios", uid, "diarias"), {
       data, qtd, createdAt: serverTimestamp()
@@ -399,29 +382,30 @@
     await carregarDiarias();
   };
 
-  /* ================= EXPORTAÇÃO PDF ================= */
+  /* ================= EXPORTAR PDF ================= */
   $('gerarPDFButton').onclick = async () => {
     await carregarViagem();
     await carregarDiarias();
     if (!viagemDoc) return alert("Salve a viagem antes");
 
     const { jsPDF } = window.jspdf;
+
     const docpdf = new jsPDF({ unit: "pt", format: "a4" });
 
     const startX = 40, rowH = 18;
     let y = 40;
 
-    try { docpdf.addImage("img/Logo.Motorista-Plus.png", "PNG", startX, 10, 110, 42); } catch (e) { /* sem logo = ok */ }
-    docpdf.setFontSize(15); docpdf.text("Planilha de Viagem — Motorista Plus", startX + 130, 40);
+    docpdf.setFontSize(15);
+    docpdf.text("Planilha de Viagem — Motorista Plus", startX, 40);
 
-    // Cabeçalho com cadastro
-    y = 80; docpdf.setFontSize(11);
+    y = 80;
+    docpdf.setFontSize(11);
+
     const iniISO = $('viagemInicio').value;
     const fimISO = $('viagemFim').value;
-    const dias = iniISO && fimISO ? diasEntreInclusive(iniISO, fimISO) : 0;
+    const dias = diasEntreInclusive(iniISO,fimISO);
     const folgas = calcularFolgas(dias);
-    const ultimoDiaFolga = addDays(addDays(new Date(fimISO), 1), folgas - 1);
-    const retorno = addDays(ultimoDiaFolga, 1);
+    const retorno = fmtBR(addDays(addDays(new Date(fimISO),1+folgas-1),1).toISOString());
 
     docpdf.rect(startX - 5, y - 15, 520, rowH * 6);
     docpdf.text(`Motorista: ${perfil?.nome || '—'}`, startX, y);
@@ -432,45 +416,71 @@
     docpdf.text(`Fim: ${fmtBR(fimISO)}`, startX + 260, y); y += rowH;
     docpdf.text(`Dias Viajados: ${dias}`, startX, y);
     docpdf.text(`Folgas: ${folgas}`, startX + 260, y); y += rowH;
-    docpdf.text(`Retorno: ${fmtBR(retorno.toISOString())}`, startX, y);
-    docpdf.text(`KM: ${$('kmInicio').value} → ${$('kmFim').value} (Rodados: ${$('kmRodados').value || '—'})`, startX + 260, y);
+    docpdf.text(`Retorno: ${retorno}`, startX, y);
+    docpdf.text(`KM: ${$('kmInicio').value} → ${$('kmFim').value} (Rodados: ${$('kmRodados').value})`, startX + 260, y);
 
     y += rowH + 10;
 
-    // Tabela de diárias
     const corpo = diarias.map(d => [
-      fmtBR(d.data), "Diária", String(d.qtd), (Number(d.qtd||0) * DIARIA_VALOR).toFixed(2)
+      fmtBR(d.data),
+      "Diária",
+      String(d.qtd),
+      (Number(d.qtd)*DIARIA_VALOR).toFixed(2)
     ]);
 
     docpdf.autoTable({
       startY: y,
-      head: [["Data", "Tipo", "Qtd", "Valor (R$)"]],
+      head: [["Data","Tipo","Qtd","Valor (R$)"]],
       body: corpo,
-      headStyles: { fillColor: [243, 146, 32] },
-      margin: { left: startX, right: startX }
+      headStyles: { fillColor: [243,146,32] },
+      margin: { left:startX, right:startX }
     });
 
     docpdf.save("planilha_viagem.pdf");
   };
 
-  /* ================= LOGADO ================= */
+  /* ================= LIMPAR TUDO ================= */
+  $('limparTudoBtn').onclick = async () => {
+    const confirmar = confirm("Deseja realmente limpar toda a viagem e diárias?");
+    if(!confirmar) return;
+
+    // Apaga viagem
+    await setDoc(doc(db,"usuarios",uid,"viagemAtual","dados"),{}, {merge:false});
+
+    // Apaga diárias
+    const snap = await getDocs(collection(db,"usuarios",uid,"diarias"));
+    const removes = snap.docs.map(d => deleteDoc(d.ref));
+    await Promise.all(removes);
+
+    // Limpa interface
+    $('viagemInicio').value = '';
+    $('viagemFim').value = '';
+    $('kmInicio').value = '';
+    $('kmFim').value = '';
+    $('diasViajados').value = '';
+    $('diasFolga').value = '';
+    $('retornoFolga').value = '';
+    $('kmRodados').value = '';
+
+    diarias = [];
+    renderDiarias();
+
+    const resumo = $('resumoDiarias');
+    if(resumo) resumo.textContent = '';
+
+    const total = $('totalDiariasRecebidas');
+    if(total) total.value = '';
+
+    alert("Dados apagados!");
+  };
+
+  /* ================= LOGIN ================= */
   onAuthStateChanged(auth, async user => {
     if (!user) return window.location.href = "index.html";
     uid = user.uid;
     await carregarPerfil();
     await carregarViagem();
     await carregarDiarias();
-
-    // trava/oculta qualquer input de "valor de diária", se existir no HTML antigo
-    const vd = $('valorDiaria');
-    if(vd){
-      vd.value = DIARIA_VALOR;
-      vd.readOnly = true;
-      vd.style.opacity = .6;
-      vd.title = "Valor fixo de R$ 100,00";
-    }
-
-    // remove qualquer resquício de "observações" na lógica (se o HTML ainda tiver o campo, será ignorado)
   });
 </script>
 
