@@ -1,107 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motorista Plus</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Motorista Plus</title>
 
-    <!-- FAVICONS -->
-    <link rel="icon" href="favicon/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
-    <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
+  <!-- FAVICONS -->
+  <link rel="icon" href="favicon/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
+  <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
 
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
 
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            background: #000000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
+  <style>
+    :root{
+      /* margenzinha para não cortar nas bordas ao escalar */
+      --safe-gap: 2vmin;
+    }
 
-        .wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            transform: scale(0.15) rotate(0deg);
-            transition:
-                transform 5.2s ease-in-out,
-                opacity 1.8s ease-in-out;
-        }
+    body{
+      margin:0;
+      height:100vh;
+      background:#000;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+    }
 
-        .logo {
-            width: 170px;
-            animation: pulse 2.5s ease-in-out infinite;
-        }
+    /* Contêiner que cresce/rotaciona */
+    .wrapper{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      opacity:1;
+      transform:scale(0.15) rotate(0deg);
+      transition:
+        transform 5.8s ease-in-out,
+        opacity 1.8s ease-in-out;
+      will-change: transform, opacity;
+    }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.07); }
-            100% { transform: scale(1); }
-        }
+    /* A imagem pulsa de leve sem interferir na escala/rotação do wrapper */
+    .logo{
+      width:180px; /* tamanho inicial não importa; a escala usa naturalWidth */
+      animation: pulse 2.6s ease-in-out infinite;
+      display:block;
+    }
 
-        .expand {
-            transform: scale(var(--final-scale)) rotate(var(--final-rotation));
-        }
+    @keyframes pulse{
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
 
-        .fade-out {
-            opacity: 0;
-        }
-    </style>
+    .expand{ transform: scale(var(--final-scale)) rotate(var(--final-rotation)); }
+    .fade-out{ opacity:0; }
+
+    /* Acessibilidade: se o usuário pedir menos animação, desabilita pulsação */
+    @media (prefers-reduced-motion: reduce){
+      .wrapper{ transition: none; }
+      .logo{ animation: none; }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="wrapper" id="wrapper">
-        <img src="img/Logo.png" class="logo" id="logo" alt="Logo Motorista Plus">
-    </div>
+  <div class="wrapper" id="wrapper">
+    <img src="img/Logo.png" alt="Logo Motorista Plus" class="logo" id="logo">
+  </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const wrapper = document.getElementById("wrapper");
-            const logo = document.getElementById("logo");
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const wrapper = document.getElementById('wrapper');
+      const logo    = document.getElementById('logo');
 
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
+      // Espera a imagem carregar para usar o tamanho real (mais preciso)
+      const onReady = () => {
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
 
-            const initialWidth = logo.clientWidth;
+        // Detecta celular
+        const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-            // base (PC)
-            let targetSize = Math.min(screenW, screenH) * 0.85;
+        // Menor lado da tela menos uma borda de segurança
+        const minSide = Math.min(screenW, screenH);
+        const safeGapPx = Math.max(screenW, screenH) * 0.02; // ~2% de folga
 
-            // ✅ Aumentar mais em CELULAR
-            const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
-            if (isMobile) {
-                targetSize = Math.min(screenW, screenH) * 0.95;  // estava 0.85 → agora 0.95
-            }
+        // Alvos diferentes para mobile/desktop
+        const targetSize = isMobile
+          ? Math.max(1, minSide - safeGapPx)           // ~98% do menor lado (sem cortar)
+          : Math.max(1, (minSide * 0.85));             // ~85% no desktop
 
-            let finalScale = targetSize / initialWidth;
+        // Usa a largura real do arquivo (naturalWidth). Se não existir, cai para width atual.
+        const baseWidth = logo.naturalWidth || logo.clientWidth || 180;
 
-            // limite de segurança
-            if (finalScale > 18) finalScale = 18;
+        let finalScale = targetSize / baseWidth;
 
-            // ✅ Rotação diferente em celular
-            const finalRotation = isMobile ? "90deg" : "0deg";
+        // Limites de segurança
+        const MAX_SCALE = isMobile ? 22 : 16;
+        const MIN_SCALE = 0.1;
+        finalScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, finalScale));
 
-            document.documentElement.style.setProperty("--final-scale", finalScale);
-            document.documentElement.style.setProperty("--final-rotation", finalRotation);
+        // Rotação final: celular = deitado; desktop = em pé
+        const finalRotation = isMobile ? '90deg' : '0deg';
 
-            const growTime = 5200;
-            const exitDelay = 2000;
+        // Aplica variáveis CSS
+        document.documentElement.style.setProperty('--final-scale', finalScale);
+        document.documentElement.style.setProperty('--final-rotation', finalRotation);
 
-            setTimeout(() => wrapper.classList.add("expand"), 300);
+        // Anima
+        const growTime = 5600;   // mais lento
+        const exitDelay = 2000;
 
-            setTimeout(() => wrapper.classList.add("fade-out"), growTime);
+        // Início da expansão
+        setTimeout(() => wrapper.classList.add('expand'), 300);
 
-            setTimeout(() => window.location.href = "login.html", growTime + exitDelay);
-        });
-    </script>
+        // Fade-out para transição suave
+        setTimeout(() => wrapper.classList.add('fade-out'), growTime);
 
+        // Vai para o login
+        setTimeout(() => { window.location.href = 'login.html'; }, growTime + exitDelay);
+      };
+
+      if (logo.complete) {
+        onReady();
+      } else {
+        logo.onload = onReady;
+        logo.onerror = onReady; // segue mesmo se a imagem falhar
+      }
+    });
+  </script>
 </body>
 </html>
