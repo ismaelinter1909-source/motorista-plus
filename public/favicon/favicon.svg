@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024"><svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- cores do Motorista Plus -->
+    <linearGradient id="SvgjsLinearGradient1001" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0f14"></stop>
+      <stop offset="1" stop-color="#10161d"></stop>
+    </linearGradient>
+  </defs>
+  <!-- fundo com margem segura p/ maskable (12%) -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#g)"></rect>
+  <g transform="translate(512,512)">
+    <!-- círculo suave para maskable (não corta em recortes redondos) -->
+    <circle r="410" fill="none" stroke="#2b3a49" stroke-width="6" opacity="0.35"></circle>
+    <!-- monograma MP -->
+    <g fill="#ffffff">
+      <!-- M -->
+      <path d="M-260 170 V-170 h90 l55 120 55-120 h90 V170 h-80 V-45 l-65 140 h-0.5 l-65-140 V170z"></path>
+      <!-- P (barra em laranja) -->
+      <path d="M50 -170 h120 c80 0 150 50 150 135s-70 135-150 135H130V170H50z"></path>
+      <rect x="130" y="-90" width="120" height="60" fill="#f39220"></rect>
+    </g>
+  </g>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>
