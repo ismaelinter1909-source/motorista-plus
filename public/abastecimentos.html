@@ -588,11 +588,6 @@
 
       const startX = 40;
 
-      /* Logo */
-      try {
-        docpdf.addImage("img/Logo.Motorista-Plus.png", "PNG", startX, 14, 110, 42);
-      } catch (e) {}
-
       docpdf.setFontSize(15);
       docpdf.text(`Relatório de Abastecimentos — Motorista Plus ${tituloExtra}`, startX + 130, 40);
 
