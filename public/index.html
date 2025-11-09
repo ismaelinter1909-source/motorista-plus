@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abertura - Motorista Plus</title>
-        <!-- FAVICON + PWA ICONS -->
+
+    <!-- FAVICON + PWA ICONS -->
     <link rel="icon" href="favicon/favicon.ico">
     <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg">
 
@@ -17,7 +18,7 @@
         body {
             margin: 0;
             height: 100vh;
-            background: #ffffff;
+            background: #000000; /* fundo preto - o anterior todo branco deixava o logo apagado */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,18 +33,17 @@
                 transform 6s ease-in-out,
                 opacity 2s ease-in-out;
             opacity: 1;
-            transform: scale(0.25) rotate(0deg);
+            transform: scale(0.2) rotate(0deg);
         }
 
         .logo {
-            width: 60vw;
-            max-width: 190px;
+            width: 160px; /* tamanho inicial */
             animation: pulse 2.5s ease-in-out infinite;
         }
 
         @keyframes pulse {
             0%   { transform: scale(1); }
-            50%  { transform: scale(1.05); }
+            50%  { transform: scale(1.06); }
             100% { transform: scale(1); }
         }
 
@@ -59,37 +59,42 @@
 <body>
 
     <div class="wrapper" id="wrapper">
-        <img src="img/Logo.png" class="logo" alt="Logo Motorista Plus">
+        <img src="img/Logo.png" class="logo" id="logo" alt="Logo Motorista Plus">
     </div>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const wrapper = document.getElementById("wrapper");
+            const logo = document.getElementById("logo");
 
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
 
-            const targetSize = Math.min(screenW, screenH) * 0.75;
-            const initialWidth = wrapper.clientWidth;
+            // ✅ Usa o tamanho real do LOGO (antes era a .wrapper – errado!)
+            const initialWidth = logo.clientWidth;
+
+            // ✅ Tamanho final ocupa 80% da menor dimensão da tela
+            const targetSize = Math.min(screenW, screenH) * 0.80;
 
             let finalScale = targetSize / initialWidth;
-            if (finalScale > 12) finalScale = 12;
 
-            // ✅ Detectar celular x computador
+            if (finalScale > 14) finalScale = 14; // limite para não explodir no PC
+
+            // ✅ Detectar celular
             const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-            // ✅ Celular → termina de lado | Computador → termina em pé
+            // ✅ Celular → logo termina de lado / PC → termina reto
             const finalRotation = isMobile ? "90deg" : "0deg";
 
             document.documentElement.style.setProperty("--final-scale", finalScale);
             document.documentElement.style.setProperty("--rotate-final", finalRotation);
 
             const growTime = 6000;
-            const exitDelay = 2000;
+            const exitDelay = 2200;
 
             setTimeout(() => {
                 wrapper.classList.add("expand");
-            }, 300);
+            }, 400);
 
             setTimeout(() => {
                 wrapper.classList.add("fade-out");
