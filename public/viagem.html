@@ -143,300 +143,336 @@
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
-
 <script type="module">
-/* ===== Firebase ===== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, setDoc, updateDoc,
-  collection, addDoc, getDocs, deleteDoc,
-  orderBy, query, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  /* ===== Firebase ===== */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, addDoc, getDocs, deleteDoc, orderBy, query, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-  authDomain: "motorista-plus-c53f4.firebaseapp.com",
-  projectId: "motorista-plus-c53f4",
-});
+  const app = initializeApp({
+    apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+    authDomain: "motorista-plus-c53f4.firebaseapp.com",
+    projectId: "motorista-plus-c53f4",
+    storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+    messagingSenderId: "766097061342",
+    appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
+    measurementId: "G-CBT2D0CXPN"
+  });
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+  const $ = id => document.getElementById(id);
 
-const $ = (id) => document.getElementById(id);
+  // ====== CONSTANTES ======
+  const DIARIA_VALOR = 100; // Fixo, como pedido
 
-let uid = null;
-let perfil = null;
-let viagem = null;
-let diarias = [];
+  let uid = null;
+  let perfil = null;
+  let viagemDoc = null;
+  let diarias = [];
 
-/* ============================
-   CARREGAR DADOS DO USUÁRIO
-============================ */
-async function carregarPerfil() {
-  const snap = await getDoc(doc(db, "usuarios", uid));
-  if (!snap.exists()) return;
-  perfil = snap.data();
+  // ====== HELPERS ======
+  const pad2 = n => String(n).padStart(2,'0');
+  const toISOinput = d => d ? new Date(d).toISOString().slice(0,10) : "";
+  const fmtBR = iso => {
+    if (!iso) return "";
+    const [y,m,d] = iso.slice(0,10).split("-");
+    return `${d}/${m}/${y}`;
+  };
+  const addDays = (date, days) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  };
 
-  $("dadosUsuarioCard").innerHTML = `
-    <div class="item"><strong>Motorista</strong>${perfil.nome}</div>
-    <div class="item"><strong>Telefone</strong>${perfil.telefone}</div>
-    <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo}</div>
-    <div class="item"><strong>Reboque</strong>${perfil.placaReboque}</div>
-    <div class="item"><strong>Email</strong>${perfil.email}</div>
-  `;
-}
+  // Regra de folgas que você definiu:
+  // 1–6 => 1; 7–13 => 2; 14–20 => 3; 21–27 => 4; e assim por diante
+  // Fórmula equivalente: folgas = ceil((dias + 1) / 7)
+  const calcularFolgas = (dias) => Math.ceil((dias + 1) / 7);
 
-/* ============================
-   FUNÇÕES DE DATA
-============================ */
-function toISO(d) {
-  return d ? new Date(d).toISOString().slice(0, 10) : "";
-}
+  function diasEntreInclusive(iniISO, fimISO) {
+    const ini = new Date(iniISO);
+    const fim = new Date(fimISO);
+    // zera horas pra evitar fuso
+    ini.setHours(0,0,0,0);
+    fim.setHours(0,0,0,0);
+    return Math.round((fim - ini) / 86400000) + 1;
+  }
 
-function fmtBR(iso) {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-}
+  function atualizarResumoDiarias(diasViajados){
+    // cria/pega elemento de resumo
+    let box = document.getElementById('resumoDiarias');
+    if(!box){
+      box = document.createElement('p');
+      box.id = 'resumoDiarias';
+      box.style.marginTop = '8px';
+      box.style.fontWeight = '700';
+      // joga dentro da seção de Diárias (baixo do botão adicionar)
+      const diariasSection = document.querySelector('section.card:nth-of-type(3)');
+      diariasSection.appendChild(box);
+    }
 
-/* ============================
-   CARREGAR VIAGEM
-============================ */
-async function carregarViagem() {
-  const ref = doc(db, "usuarios", uid, "viagemAtual", "dados");
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+    const recebidas = diarias.reduce((s,d)=> s + (Number(d.qtd)||0), 0);
+    const valorRecebidas = recebidas * DIARIA_VALOR;
 
-  viagem = snap.data();
+    let msg;
+    if(recebidas === diasViajados){
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). Situação: OK — bate com os ${diasViajados} dia(s) viajado(s).`;
+    }else if(recebidas < diasViajados){
+      const falta = diasViajados - recebidas;
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). A EMPRESA DEVE ${falta} diária(s) ao motorista.`;
+    }else{
+      const adiantou = recebidas - diasViajados;
+      msg = `Diárias recebidas: ${recebidas} (R$ ${valorRecebidas.toFixed(2)}). O MOTORISTA ADIANTOU ${adiantou} diária(s).`;
+    }
 
-  $("viagemInicio").value = toISO(viagem.inicio);
-  $("viagemFim").value = toISO(viagem.fim);
-  $("kmInicio").value = viagem.kmInicio;
-  $("kmFim").value = viagem.kmFim;
+    box.textContent = msg;
 
-  preencherCalculos();
-  $("statusEdicao").textContent = "Editando viagem salva";
-}
+    // também mostra um campo de leitura com total de diárias recebidas, se existir um input na UI:
+    let totalInput = document.getElementById('totalDiariasRecebidas');
+    if(!totalInput){
+      totalInput = document.createElement('input');
+      totalInput.id = 'totalDiariasRecebidas';
+      totalInput.readOnly = true;
+      totalInput.style.marginTop = '8px';
+      totalInput.placeholder = 'Total de diárias recebidas';
+      const diariasSection = document.querySelector('section.card:nth-of-type(3)');
+      diariasSection.appendChild(totalInput);
+    }
+    totalInput.value = `${recebidas} diária(s) — R$ ${valorRecebidas.toFixed(2)}`;
+  }
 
-/* ============================
-   CALCULAR CAMPOS (DIAS/RETORNO)
-============================ */
-function preencherCalculos() {
-  const ini = $("viagemInicio").value;
-  const fim = $("viagemFim").value;
-  const kmI = Number($("kmInicio").value);
-  const kmF = Number($("kmFim").value);
-
-  if (!ini || !fim) return;
-
-  const d1 = new Date(ini);
-  const d2 = new Date(fim);
-
-  const dias = Math.ceil((d2 - d1) / 86400000) + 1;
-  const folgas = Math.floor(dias / 7);
-
-  const retorno = new Date(fim);
-  retorno.setDate(retorno.getDate() + folgas);
-
-  $("diasViajados").value = dias + " dias";
-  $("diasFolga").value = folgas + " dias";
-  $("retornoFolga").value = fmtBR(retorno.toISOString());
-  $("kmRodados").value = kmF - kmI;
-
-  calcularResumoDiarias(dias);
-}
-
-/* atualiza resumo sempre que editar */
-["viagemInicio", "viagemFim", "kmInicio", "kmFim"].forEach(id => {
-  $(id).addEventListener("input", preencherCalculos);
-});
-
-/* ============================
-   CARREGAR DIÁRIAS
-============================ */
-async function carregarDiarias() {
-  const col = collection(db, "usuarios", uid, "diarias");
-  const q = query(col, orderBy("data", "asc"));
-  const snap = await getDocs(q);
-
-  diarias = [];
-  snap.forEach(d => diarias.push({ id: d.id, ...d.data() }));
-
-  renderDiarias();
-  preencherCalculos();
-}
-
-/* ============================
-   EXIBIR DIÁRIAS
-============================ */
-function renderDiarias() {
-  const tbody = $("tbodyDiarias");
-  tbody.innerHTML = "";
-
-  diarias.forEach(d => {
-    const v = d.qtd * 100;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${fmtBR(d.data)}</td>
-      <td>Diária</td>
-      <td><input class="edit-input" type="number" min="1" value="${d.qtd}" data-id="${d.id}"></td>
-      <td>${v.toFixed(2)}</td>
-      <td class="row-actions">
-        <button data-act="save" data-id="${d.id}" class="btn">Salvar</button>
-        <button data-act="del" data-id="${d.id}" class="btn-red">Excluir</button>
-      </td>
+  /* ================= CARREGAR PERFIL ================= */
+  async function carregarPerfil() {
+    const snap = await getDoc(doc(db, "usuarios", uid));
+    if (!snap.exists()) return;
+    perfil = snap.data();
+    $('dadosUsuarioCard').innerHTML = `
+      <div class="item"><strong>Motorista</strong>${perfil.nome || '—'}</div>
+      <div class="item"><strong>Telefone</strong>${perfil.telefone || '—'}</div>
+      <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || '—'}</div>
+      <div class="item"><strong>Reboque</strong>${perfil.placaReboque || '—'}</div>
+      <div class="item"><strong>Email</strong>${perfil.email || '—'}</div>
     `;
-    tbody.appendChild(tr);
+  }
+
+  /* ================= VIAGEM ================= */
+  async function carregarViagem() {
+    const ref = doc(db, "usuarios", uid, "viagemAtual", "dados");
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+
+    viagemDoc = snap.data();
+
+    // Preenche inputs
+    $('viagemInicio').value = toISOinput(viagemDoc.inicio);
+    $('viagemFim').value    = toISOinput(viagemDoc.fim);
+    $('kmInicio').value     = viagemDoc.kmInicio ?? '';
+    $('kmFim').value        = viagemDoc.kmFim ?? '';
+    // ignora observações/valor da diária (removido e fixo em 100)
+
+    preencherDerivadosUI();
+    $('statusEdicao').textContent = "Editando viagem salva";
+  }
+
+  function preencherDerivadosUI() {
+    const ini = $('viagemInicio').value;
+    const fim = $('viagemFim').value;
+    const kmI = Number($('kmInicio').value || 0);
+    const kmF = Number($('kmFim').value || 0);
+
+    if(!ini || !fim) return;
+
+    const dias = diasEntreInclusive(ini, fim); // incluindo início e fim
+    const folgas = calcularFolgas(dias);       // sua regra
+
+    // último dia de folga = dia seguinte ao fim + (folgas - 1)
+    const diaSeguinteAoFim = addDays(new Date(fim), 1);
+    const ultimoDiaFolga = addDays(diaSeguinteAoFim, folgas - 1);
+
+    // retorno = dia seguinte ao último dia de folga
+    const retorno = addDays(ultimoDiaFolga, 1);
+
+    $('diasViajados').value = `${dias} dia(s)`;
+    $('diasFolga').value    = `${folgas} dia(s)`;
+    $('retornoFolga').value = fmtBR(retorno.toISOString());
+    $('kmRodados').value    = (kmF && kmI) ? (kmF - kmI) : '';
+  }
+
+  // recalcula sempre que o usuário altera os campos base
+  ['viagemInicio','viagemFim','kmInicio','kmFim'].forEach(id=>{
+    const el = $(id);
+    el && (el.onchange = preencherDerivadosUI);
   });
 
-  tbody.querySelectorAll("button").forEach(btn => {
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
+  /* ================= DIÁRIAS ================= */
+  async function carregarDiarias() {
+    const col = collection(db, "usuarios", uid, "diarias");
+    const q = query(col, orderBy("data", "asc"));
+    const snap = await getDocs(q);
+    diarias = [];
+    snap.forEach(d => diarias.push({ id: d.id, ...d.data() }));
+    renderDiarias();
+  }
 
-      if (btn.dataset.act === "del") {
-        await deleteDoc(doc(db, "usuarios", uid, "diarias", id));
-      } else {
-        const qtd = Number(document.querySelector(`input[data-id="${id}"]`).value);
-        await updateDoc(doc(db, "usuarios", uid, "diarias", id), { qtd });
-      }
+  function renderDiarias() {
+    const tbody = $('tbodyDiarias');
+    tbody.innerHTML = "";
 
-      carregarDiarias();
+    diarias.forEach(d => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${fmtBR(d.data)}</td>
+        <td>Diária</td>
+        <td><input class="edit-input" type="number" min="1" max="60" value="${d.qtd}" data-id="${d.id}"></td>
+        <td>${(Number(d.qtd||0) * DIARIA_VALOR).toFixed(2)}</td>
+        <td class="row-actions">
+          <button class="small-btn btn" data-act="save" data-id="${d.id}">Salvar</button>
+          <button class="small-btn btn-red" data-act="del" data-id="${d.id}">Excluir</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    // ações salvar/excluir
+    tbody.querySelectorAll("button").forEach(b => {
+      b.onclick = async () => {
+        const id = b.dataset.id;
+        if (b.dataset.act === "del") {
+          await deleteDoc(doc(db, "usuarios", uid, "diarias", id));
+        } else {
+          const qtd = Number(document.querySelector(`input[data-id="${id}"]`).value);
+          await updateDoc(doc(db, "usuarios", uid, "diarias", id), { qtd });
+        }
+        await carregarDiarias();
+        // atualiza o resumo após mudar a lista
+        atualizarResumoComBaseNosCampos();
+      };
+    });
+
+    // Atualiza resumo (diárias x dias viajados)
+    atualizarResumoComBaseNosCampos();
+  }
+
+  function atualizarResumoComBaseNosCampos(){
+    const ini = $('viagemInicio').value;
+    const fim = $('viagemFim').value;
+    if(!ini || !fim) return;
+    const dias = diasEntreInclusive(ini, fim);
+    atualizarResumoDiarias(dias);
+  }
+
+  /* ================= SALVAR VIAGEM ================= */
+  $('salvarViagemBtn').onclick = async () => {
+    const ini = $('viagemInicio').value, fim = $('viagemFim').value;
+    const kmI = +$('kmInicio').value, kmF = +$('kmFim').value;
+    if (!ini || !fim || !kmI || !kmF) return alert("Complete todos os campos");
+
+    const obj = {
+      inicio: new Date(ini).toISOString(),
+      fim:    new Date(fim).toISOString(),
+      kmInicio: kmI,
+      kmFim: kmF,
+      // diariaValor removido (fixo no código)
+      updatedAt: serverTimestamp()
     };
+
+    await setDoc(doc(db, "usuarios", uid, "viagemAtual", "dados"), obj);
+    alert("Viagem salva!");
+    await carregarViagem();
+  };
+
+  /* ================= ADICIONAR DIÁRIA ================= */
+  $('addDiariaBtn').onclick = async () => {
+    const data = $('diariaData').value;
+    const qtd  = +$('diariaQtd').value;
+    if (!data) return alert("Selecione a data");
+    if (!qtd || qtd < 1) return alert("Informe a quantidade");
+
+    await addDoc(collection(db, "usuarios", uid, "diarias"), {
+      data, qtd, createdAt: serverTimestamp()
+    });
+
+    $('diariaQtd').value = 1;
+    await carregarDiarias();
+  };
+
+  /* ================= EXPORTAÇÃO PDF ================= */
+  $('gerarPDFButton').onclick = async () => {
+    await carregarViagem();
+    await carregarDiarias();
+    if (!viagemDoc) return alert("Salve a viagem antes");
+
+    const { jsPDF } = window.jspdf;
+    const docpdf = new jsPDF({ unit: "pt", format: "a4" });
+
+    const startX = 40, rowH = 18;
+    let y = 40;
+
+    try { docpdf.addImage("img/Logo.Motorista-Plus.png", "PNG", startX, 10, 110, 42); } catch (e) { /* sem logo = ok */ }
+    docpdf.setFontSize(15); docpdf.text("Planilha de Viagem — Motorista Plus", startX + 130, 40);
+
+    // Cabeçalho com cadastro
+    y = 80; docpdf.setFontSize(11);
+    const iniISO = $('viagemInicio').value;
+    const fimISO = $('viagemFim').value;
+    const dias = iniISO && fimISO ? diasEntreInclusive(iniISO, fimISO) : 0;
+    const folgas = calcularFolgas(dias);
+    const ultimoDiaFolga = addDays(addDays(new Date(fimISO), 1), folgas - 1);
+    const retorno = addDays(ultimoDiaFolga, 1);
+
+    docpdf.rect(startX - 5, y - 15, 520, rowH * 6);
+    docpdf.text(`Motorista: ${perfil?.nome || '—'}`, startX, y);
+    docpdf.text(`Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`, startX + 260, y); y += rowH;
+    docpdf.text(`Email: ${perfil?.email || '—'}`, startX, y);
+    docpdf.text(`Telefone: ${perfil?.telefone || '—'}`, startX + 260, y); y += rowH;
+    docpdf.text(`Início: ${fmtBR(iniISO)}`, startX, y);
+    docpdf.text(`Fim: ${fmtBR(fimISO)}`, startX + 260, y); y += rowH;
+    docpdf.text(`Dias Viajados: ${dias}`, startX, y);
+    docpdf.text(`Folgas: ${folgas}`, startX + 260, y); y += rowH;
+    docpdf.text(`Retorno: ${fmtBR(retorno.toISOString())}`, startX, y);
+    docpdf.text(`KM: ${$('kmInicio').value} → ${$('kmFim').value} (Rodados: ${$('kmRodados').value || '—'})`, startX + 260, y);
+
+    y += rowH + 10;
+
+    // Tabela de diárias
+    const corpo = diarias.map(d => [
+      fmtBR(d.data), "Diária", String(d.qtd), (Number(d.qtd||0) * DIARIA_VALOR).toFixed(2)
+    ]);
+
+    docpdf.autoTable({
+      startY: y,
+      head: [["Data", "Tipo", "Qtd", "Valor (R$)"]],
+      body: corpo,
+      headStyles: { fillColor: [243, 146, 32] },
+      margin: { left: startX, right: startX }
+    });
+
+    docpdf.save("planilha_viagem.pdf");
+  };
+
+  /* ================= LOGADO ================= */
+  onAuthStateChanged(auth, async user => {
+    if (!user) return window.location.href = "index.html";
+    uid = user.uid;
+    await carregarPerfil();
+    await carregarViagem();
+    await carregarDiarias();
+
+    // trava/oculta qualquer input de "valor de diária", se existir no HTML antigo
+    const vd = $('valorDiaria');
+    if(vd){
+      vd.value = DIARIA_VALOR;
+      vd.readOnly = true;
+      vd.style.opacity = .6;
+      vd.title = "Valor fixo de R$ 100,00";
+    }
+
+    // remove qualquer resquício de "observações" na lógica (se o HTML ainda tiver o campo, será ignorado)
   });
-}
-
-/* ============================
-   RESUMO AUTOMÁTICO DAS DIÁRIAS
-============================ */
-function calcularResumoDiarias(diasViajados) {
-  const totalRecebido = diarias.reduce((s, d) => s + d.qtd, 0);
-  const dif = totalRecebido - diasViajados;
-
-  let texto = "";
-  if (dif === 0) texto = "✔ Tudo certo. Nenhuma diária pendente.";
-  else if (dif < 0) texto = `A EMPRESA deve **${Math.abs(dif)} diária(s)** ao motorista.`;
-  else texto = `O MOTORISTA recebeu **${dif} diária(s)** a mais do que deveria.`;
-
-  $("resumoDiarias").innerHTML = `
-    <h3 style="margin-bottom:6px;color:var(--primary)">Resumo das Diárias</h3>
-    <p>Dias viajados: <b>${diasViajados}</b></p>
-    <p>Total de diárias recebidas: <b>${totalRecebido}</b></p>
-    <p style="margin-top:6px">${texto}</p>
-  `;
-}
-
-/* ============================
-   ADICIONAR DIÁRIA
-============================ */
-$("addDiariaBtn").onclick = async () => {
-  const data = $("diariaData").value;
-  const qtd = Number($("diariaQtd").value);
-
-  if (!data) return alert("Selecione a data");
-
-  await addDoc(collection(db, "usuarios", uid, "diarias"), {
-    data,
-    qtd,
-    createdAt: serverTimestamp()
-  });
-
-  $("diariaQtd").value = 1;
-
-  carregarDiarias();
-};
-
-/* ============================
-   SALVAR VIAGEM
-============================ */
-$("salvarViagemBtn").onclick = async () => {
-  const ini = $("viagemInicio").value;
-  const fim = $("viagemFim").value;
-  const kmI = Number($("kmInicio").value);
-  const kmF = Number($("kmFim").value);
-
-  if (!ini || !fim || !kmI || !kmF) return alert("Preencha todos os campos.");
-
-  await setDoc(doc(db, "usuarios", uid, "viagemAtual", "dados"), {
-    inicio: new Date(ini).toISOString(),
-    fim: new Date(fim).toISOString(),
-    kmInicio: kmI,
-    kmFim: kmF
-  });
-
-  alert("Viagem salva!");
-  carregarViagem();
-};
-
-/* ============================
-   LIMPAR CAMPOS (NÃO APAGA FIRESTORE)
-============================ */
-$("limparCamposBtn").onclick = () => {
-  ["viagemInicio", "viagemFim", "kmInicio", "kmFim"].forEach(id => $(id).value = "");
-  ["diasViajados", "diasFolga", "retornoFolga", "kmRodados"].forEach(id => $(id).value = "");
-  $("resumoDiarias").innerHTML = "";
-};
-
-/* ============================
-   EXPORTAR PDF
-============================ */
-$("gerarPDFButton").onclick = async () => {
-  await carregarViagem();
-  await carregarDiarias();
-
-  if (!viagem) return alert("Salve a viagem primeiro!");
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  pdf.setFontSize(16);
-  pdf.text("Planilha de Viagem — Motorista Plus", 20, 20);
-
-  pdf.setFontSize(12);
-  pdf.text(`Motorista: ${perfil.nome}`, 20, 40);
-  pdf.text(`Telefone: ${perfil.telefone}`, 20, 55);
-  pdf.text(`Placas: ${perfil.placaCavalo} / ${perfil.placaReboque}`, 20, 70);
-
-  pdf.text(`Início: ${fmtBR(viagem.inicio)}`, 20, 95);
-  pdf.text(`Fim: ${fmtBR(viagem.fim)}`, 20, 110);
-  pdf.text(`KM Inicial: ${viagem.kmInicio}`, 20, 125);
-  pdf.text(`KM Final: ${viagem.kmFim}`, 20, 140);
-
-  const dias = $("diasViajados").value;
-  const folga = $("diasFolga").value;
-  const retorno = $("retornoFolga").value;
-  const kmR = $("kmRodados").value;
-
-  pdf.text(`Dias Viajados: ${dias}`, 20, 165);
-  pdf.text(`Folgas: ${folga}`, 20, 180);
-  pdf.text(`Retorno: ${retorno}`, 20, 195);
-  pdf.text(`KM Rodados: ${kmR}`, 20, 210);
-
-  pdf.text("Diárias:", 20, 240);
-  const corpo = diarias.map(d => [
-    fmtBR(d.data), d.qtd, (d.qtd * 100).toFixed(2)
-  ]);
-
-  pdf.autoTable({
-    startY: 250,
-    head: [["Data", "Qtd", "Valor"]],
-    body: corpo
-  });
-
-  pdf.save("viagem.pdf");
-};
-
-/* ============================
-   INICIAR
-============================ */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return (window.location.href = "login.html");
-  uid = user.uid;
-
-  await carregarPerfil();
-  await carregarViagem();
-  await carregarDiarias();
-});
 </script>
+
 </body>
 </html>
