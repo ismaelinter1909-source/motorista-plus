@@ -16,19 +16,17 @@
             overflow: hidden;
         }
 
-        /* Wrapper controla o crescimento + giro */
         .wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
             transition:
-                transform 6s ease-in-out,  /* mais lento */
+                transform 6s ease-in-out,
                 opacity 2s ease-in-out;
             opacity: 1;
-            transform: scale(0.25) rotate(0deg); /* começa pequeno */
+            transform: scale(0.25) rotate(0deg);
         }
 
-        /* Logo com pulsação */
         .logo {
             width: 35vw;
             max-width: 190px;
@@ -41,12 +39,10 @@
             100% { transform: scale(1); }
         }
 
-        /* Crescimento + rotação final */
         .expand {
-            transform: scale(var(--final-scale)) rotate(360deg);
+            transform: scale(var(--final-scale)) rotate(var(--rotate-final));
         }
 
-        /* Fade-out suave */
         .fade-out {
             opacity: 0;
         }
@@ -62,40 +58,35 @@
         document.addEventListener("DOMContentLoaded", () => {
             const wrapper = document.getElementById("wrapper");
 
-            /* -------------------------
-               CALCULAR TAMANHO FINAL 
-               ------------------------- */
-
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
 
-            /* usar 65% do menor lado da tela */
-            const targetSize = Math.min(screenW, screenH) * 0.65;
-
-            /* pega tamanho inicial do wrapper */
+            const targetSize = Math.min(screenW, screenH) * 0.75;
             const initialWidth = wrapper.clientWidth;
-            let finalScale = targetSize / initialWidth;
 
-            /* limite de segurança */
+            let finalScale = targetSize / initialWidth;
             if (finalScale > 12) finalScale = 12;
 
+            // ✅ Detectar celular x computador
+            const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+            // ✅ Celular → termina de lado | Computador → termina em pé
+            const finalRotation = isMobile ? "90deg" : "0deg";
+
             document.documentElement.style.setProperty("--final-scale", finalScale);
+            document.documentElement.style.setProperty("--rotate-final", finalRotation);
 
-            /* Tempo da animação */
-            const growTime = 6000;  // crescimento + giro super suave
-            const exitDelay = 2000; // saída suave
+            const growTime = 6000;
+            const exitDelay = 2000;
 
-            /* Iniciar crescimento */
             setTimeout(() => {
                 wrapper.classList.add("expand");
             }, 300);
 
-            /* Fade-out */
             setTimeout(() => {
                 wrapper.classList.add("fade-out");
             }, growTime);
 
-            /* Ir para login */
             setTimeout(() => {
                 window.location.href = "login.html";
             }, growTime + exitDelay);
