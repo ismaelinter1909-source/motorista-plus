@@ -13,13 +13,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    /* ===== Tema Motorista Plus ===== */
     :root {
       --bg: #0b0f14;
-      --bg2: #10161d;
       --card: #161c23;
       --primary: #f39220;
-      --primary-700: #d47e16;
       --outline: #2b3a49;
       --text: #fff;
       --muted: #b5bcc7;
@@ -31,7 +28,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, Arial, sans-serif;
+      font-family: system-ui, Arial;
     }
 
     body {
@@ -42,36 +39,26 @@
       flex-direction: column;
     }
 
-    /* Botão voltar */
+    /* Botão Voltar */
     #voltarPainel {
       position: fixed;
       top: 12px;
       left: 12px;
-      width: auto;
       padding: 8px 14px;
-      background: rgba(255, 255, 255, .08);
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.25);
       color: #fff;
       border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, .25);
       cursor: pointer;
-      font-size: 14px;
       backdrop-filter: blur(4px);
       z-index: 9999;
-      transition: .3s ease;
     }
 
-    #voltarPainel:hover {
-      background: rgba(255, 255, 255, .16);
-    }
-
-    /* Header */
     header {
-      background:
-        linear-gradient(180deg, rgba(0, 0, 0, .3), rgba(0, 0, 0, .6)),
-        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
-      padding: 30px 15px;
+      padding: 32px 12px;
       text-align: center;
       border-bottom: 1px solid var(--outline);
+      background: black;
     }
 
     header h1 {
@@ -79,9 +66,7 @@
       font-weight: 800;
     }
 
-    header .plus {
-      color: var(--primary);
-    }
+    .plus { color: var(--primary); }
 
     main {
       width: 94%;
@@ -97,550 +82,405 @@
       border: 1px solid var(--outline);
       padding: 16px;
       border-radius: 12px;
-      backdrop-filter: blur(6px);
     }
 
     h2 {
       color: var(--primary);
-      margin-bottom: 8px;
       font-size: 1.2rem;
+      margin-bottom: 8px;
     }
 
     label {
       display: block;
       font-size: 13px;
       margin-bottom: 4px;
-      color: #e8e8e8;
     }
 
-    /* Inputs corrigidos */
-    input,
-    select,
-    textarea,
-    button {
+    input, select, button {
       width: 100%;
       padding: 12px;
       border-radius: 10px;
       border: 1px solid var(--outline);
-      background: rgba(255, 255, 255, .12);
-      color: #fff;
-      font-size: 14px;
-    }
-
-    select {
-      background: rgba(255, 255, 255, .18);
-      cursor: pointer;
+      background: rgba(255,255,255,.12);
+      color: var(--text);
+      margin-bottom: 6px;
     }
 
     .grid2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 10px;
     }
 
-    /* Botões */
-    button,
-    .btn,
-    .btn-green,
-    .btn-red,
-    .btn-ghost {
-      transition: .3s ease;
-      cursor: pointer;
-    }
+    .btn     { background: var(--primary); border: none; font-weight: 700; }
+    .btn-red { background: var(--red); border: none; }
+    .btn-green { background: var(--green); border: none; }
+    .btn-ghost { background: transparent; border: 1px solid var(--outline); color: var(--muted); }
 
-    .btn {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      font-weight: 700;
-    }
-
-    .btn:hover {
-      background: var(--primary-700);
-    }
-
-    .btn-green {
-      background: var(--green);
-      color: #fff;
-      border: none;
-    }
-
-    .btn-red {
-      background: var(--red);
-      color: #fff;
-      border: none;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--outline);
-      color: var(--muted);
-    }
-
-    #dadosUsuarioCard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-    }
-
-    #dadosUsuarioCard .item {
-      background: rgba(255, 255, 255, .05);
-      border: 1px solid var(--outline);
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-    }
-
-    ul {
-      list-style: none;
-      padding-left: 0;
-    }
+    ul { list-style: none; padding: 0; }
 
     li {
-      background: rgba(255, 255, 255, .05);
+      background: rgba(255,255,255,.05);
       border: 1px solid var(--outline);
-      padding: 10px;
+      padding: 12px;
       border-radius: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
       justify-content: space-between;
+      gap: 10px;
     }
 
-    canvas {
-      display: block;
-      margin: 10px auto;
-      max-width: 420px;
+    /* Gráfico 100% responsivo */
+    #graficoAbastecimento {
+      width: 100% !important;
+      height: 240px !important;
+      max-width: none;
+    }
+
+    @media (min-width: 769px) {
+      #graficoAbastecimento { height: 320px !important; }
     }
 
     footer {
-      padding: 12px;
       text-align: center;
-      color: var(--muted);
+      padding: 14px;
       border-top: 1px solid var(--outline);
+      color: var(--muted);
     }
   </style>
 </head>
 
 <body>
 
-  <button id="voltarPainel" onclick="window.location.href='painel.html'">← Voltar</button>
+<button id="voltarPainel" onclick="location.href='painel.html'">← Voltar</button>
 
-  <header>
-    <h1>Abastecimento — Motorista<span class="plus">Plus</span></h1>
-  </header>
+<header>
+  <h1>Abastecimento — Motorista<span class="plus">Plus</span></h1>
+</header>
 
-  <main>
+<main>
 
-    <!-- Dados do motorista -->
-    <section class="card">
-      <h2>Dados do Motorista</h2>
-      <div id="dadosUsuarioCard">Carregando...</div>
-    </section>
+  <!-- Dados do motorista -->
+  <section class="card">
+    <h2>Dados do Motorista</h2>
+    <div id="dadosUsuarioCard">Carregando...</div>
+  </section>
 
-    <!-- Filtro -->
-    <section class="card">
-      <h2>Filtro de Período</h2>
-      <div class="grid2">
-        <div>
-          <label>Data de Início</label>
-          <input type="date" id="filtroInicio">
-        </div>
-        <div>
-          <label>Data de Fim</label>
-          <input type="date" id="filtroFim">
-        </div>
+  <!-- Filtro -->
+  <section class="card">
+    <h2>Filtro de Período</h2>
+    <div class="grid2">
+      <div>
+        <label>Início</label>
+        <input type="date" id="filtroInicio">
       </div>
-      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-        <button id="filtrar" class="btn">Filtrar</button>
-        <button id="limparFiltro" class="btn-ghost">Limpar Filtro</button>
-        <button id="gerarPDFFiltroButton" class="btn">Gerar PDF do Período</button>
+      <div>
+        <label>Fim</label>
+        <input type="date" id="filtroFim">
       </div>
-    </section>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="btn" id="filtrar">Filtrar</button>
+      <button class="btn-ghost" id="limparFiltro">Limpar</button>
+      <button class="btn" id="gerarPDFFiltroButton">Gerar PDF do Período</button>
+    </div>
+  </section>
 
-    <!-- Registrar -->
-    <section class="card">
-      <h2>Registrar Abastecimento</h2>
-      <div class="grid2">
-        <div>
-          <label>Tipo</label>
-          <select id="tipoCombustivel">
-            <option value="Diesel">Diesel</option>
-            <option value="Arla">Arla</option>
-          </select>
-        </div>
-        <div>
-          <label>Data</label>
-          <input type="date" id="data">
-        </div>
-        <div>
-          <label>KM</label>
-          <input type="number" id="km" inputmode="numeric">
-        </div>
-        <div>
-          <label>Litragem (L)</label>
-          <input type="number" id="litros" step="0.01">
-        </div>
-        <div>
-          <label>Valor Total (R$)</label>
-          <input type="number" id="valor" step="0.01">
-        </div>
-        <div>
-          <label>Forma de Pagamento</label>
-          <select id="pagamento">
-            <option value="Nota Assinada">Nota Assinada</option>
-            <option value="Base-Porto">Base-Porto</option>
-            <option value="Pix">Pix</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Cheque">Cheque</option>
-            <option value="Carta Frete">Carta Frete</option>
-          </select>
-        </div>
+  <!-- Registrar -->
+  <section class="card">
+    <h2>Registrar Abastecimento</h2>
+    <div class="grid2">
+      <div>
+        <label>Tipo</label>
+        <select id="tipoCombustivel">
+          <option value="Diesel">Diesel</option>
+          <option value="Arla">Arla</option>
+        </select>
       </div>
-
-      <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
-        <button id="adicionar" class="btn-green">Salvar</button>
-        <button id="cancelarEdicao" class="btn-ghost" style="display:none">Cancelar edição</button>
-        <button id="limparTodos" class="btn-red">Apagar TODOS</button>
+      <div>
+        <label>Data</label>
+        <input type="date" id="data">
       </div>
-      <p id="statusEdicao" style="margin-top:6px; color:var(--muted)"></p>
-    </section>
+      <div>
+        <label>KM</label>
+        <input type="number" id="km" inputmode="numeric">
+      </div>
+      <div>
+        <label>Litragem</label>
+        <input type="number" step="0.01" id="litros">
+      </div>
+      <div>
+        <label>Valor (R$)</label>
+        <input type="number" step="0.01" id="valor">
+      </div>
+      <div>
+        <label>Pagamento</label>
+        <select id="pagamento">
+          <option value="Nota Assinada">Nota Assinada</option>
+          <option value="Base-Porto">Base-Porto</option>
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Cheque">Cheque</option>
+          <option value="Carta Frete">Carta Frete</option>
+        </select>
+      </div>
+    </div>
 
-    <!-- Lista -->
-    <section class="card">
-      <h2>Lista de Abastecimentos</h2>
-      <ul id="listaAbastecimentos"></ul>
-    </section>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="btn-green" id="adicionar">Salvar</button>
+      <button class="btn-red" id="limparTodos">Apagar TODOS</button>
+    </div>
+  </section>
 
-    <!-- Gráfico -->
-    <section class="card" style="text-align:center">
-      <h2>Resumo Visual</h2>
-      <canvas id="graficoAbastecimento"></canvas>
-    </section>
+  <!-- Lista -->
+  <section class="card">
+    <h2>Lista de Abastecimentos</h2>
+    <ul id="listaAbastecimentos"></ul>
+  </section>
 
-    <!-- PDF -->
-    <section class="card" style="text-align:center">
-      <button id="gerarPDFButton" class="btn" style="width:220px">Gerar PDF Completo</button>
-    </section>
+  <!-- Gráfico -->
+  <section class="card" style="text-align:center">
+    <h2>Resumo Visual</h2>
+    <canvas id="graficoAbastecimento"></canvas>
+  </section>
 
-  </main>
+  <!-- PDF -->
+  <section class="card" style="text-align:center">
+    <button id="gerarPDFButton" class="btn" style="width:220px">Gerar PDF Completo</button>
+  </section>
 
-  <footer>© 2025 Motorista Plus</footer>
+</main>
 
-  <!-- Script final (Firebase atualizado) -->
-  <script type="module">
+<footer>© 2025 Motorista Plus</footer>
 
-    /* ===== Firebase NOVO ===== */
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-      collection, addDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const app = initializeApp({
-      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-      authDomain: "motorista-plus-c53f4.firebaseapp.com",
-      projectId: "motorista-plus-c53f4",
-      storageBucket: "motorista-plus-c53f4.appspot.com"
-    });
+<script type="module">
 
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+/* ===== Firebase ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, addDoc, deleteDoc,
+  collection, getDocs, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    /* ===== RESTANTE DO SCRIPT MANTIDO, SOMENTE FIREBASE FOI ATUALIZADO ===== */
+const app = initializeApp({
+  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain: "motorista-plus-c53f4.firebaseapp.com",
+  projectId: "motorista-plus-c53f4",
+  storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+  messagingSenderId: "766097061342",
+  appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+});
 
-    const $ = (id) => document.getElementById(id);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    let uid = null;
-    let perfil = null;
-    let abastecimentos = [];
-    let chart;
-    let filtroAtivo = null;
-    let editId = null;
+const $ = id => document.getElementById(id);
 
-    const toISO = (d) => d ? new Date(d).toISOString().slice(0, 10) : "";
-    const fmtBR = (iso) => {
-      const d = new Date(iso);
-      if (isNaN(d)) return "";
-      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    };
-    const asDateOnly = (v) => {
-      if (!v) return "";
-      const d = new Date(v);
-      if (!isNaN(d)) return d.toISOString().slice(0, 10);
-      return String(v).slice(0, 10);
-    };
+let uid = null;
+let abastecimentos = [];
 
-    async function carregarPerfil() {
-      const snap = await getDoc(doc(db, "usuarios", uid));
-      if (!snap.exists()) return;
-      perfil = snap.data();
-      $('dadosUsuarioCard').innerHTML = `
-        <div class="item"><strong>Motorista</strong>${perfil.nome || "—"}</div>
-        <div class="item"><strong>Telefone</strong>${perfil.telefone || "—"}</div>
-        <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo || "—"}</div>
-        <div class="item"><strong>Reboque</strong>${perfil.placaReboque || "—"}</div>
-        <div class="item"><strong>Email</strong>${perfil.email || "—"}</div>
-      `;
-    }
+/* UTILITÁRIO – tratamento sem fuso */
+const dateKey = iso => Number((iso || "").replaceAll("-", ""));
+const between = (iso, ini, fim) => {
+  const n = dateKey(iso);
+  if (ini && n < dateKey(ini)) return false;
+  if (fim && n > dateKey(fim)) return false;
+  return true;
+};
 
-    function iniciarStream() {
-      const qRef = query(collection(db, "usuarios", uid, "abastecimentos"), orderBy("criadoEm", "desc"));
-      onSnapshot(qRef, (snap) => {
-        abastecimentos = snap.docs.map(d => {
-          const data = d.data();
-          return {
-            id: d.id,
-            tipo: data.tipo,
-            data: asDateOnly(data.data),
-            km: Number(data.km || 0),
-            litros: Number(data.litros || 0),
-            valor: Number(data.valor || 0),
-            pagamento: data.pagamento || "—",
-            criadoEm: data.criadoEm?.toDate?.() || null
-          };
-        });
-        renderLista();
-        atualizarGrafico();
-      });
-    }
+/* PERFIL */
+async function carregarPerfil(){
+  const snap = await getDoc(doc(db,"usuarios",uid));
+  if(!snap.exists()) return;
+  const p = snap.data();
 
-    function renderLista() {
-      const lista = $('listaAbastecimentos');
-      let items = [...abastecimentos];
+  $("dadosUsuarioCard").innerHTML = `
+    <div class="item"><strong>Motorista</strong><br>${p.nome}</div>
+    <div class="item"><strong>Telefone</strong><br>${p.telefone}</div>
+    <div class="item"><strong>Cavalo</strong><br>${p.placaCavalo}</div>
+    <div class="item"><strong>Reboque</strong><br>${p.placaReboque}</div>
+    <div class="item"><strong>Email</strong><br>${p.email}</div>
+  `;
+}
 
-      if (filtroAtivo) {
-        items = items.filter(a => {
-          const d = new Date(a.data);
-          const okInicio = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
-          const okFim = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
-          return okInicio && okFim;
-        });
-      }
+/* CARREGAR ABASTECIMENTOS */
+async function carregarAbastecimentos(){
+  const qy = query(
+    collection(db,"usuarios",uid,"abastecimentos"),
+    orderBy("data","asc")
+  );
+  const snaps = await getDocs(qy);
 
-      if (items.length === 0) {
-        lista.innerHTML = `<li>Nenhum registro.</li>`;
-        return;
-      }
+  abastecimentos = snaps.docs.map(s=>({
+    id: s.id,
+    data: String(s.data().data),
+    quilometragem: Number(s.data().quilometragem || 0),
+    litros: Number(s.data().litros || 0),
+    valor: Number(s.data().valor || 0),
+    tipo: (s.data().tipo === "Arla") ? "Arla" : "Diesel",
+    pagamento: s.data().pagamento || ""
+  }));
 
-      lista.innerHTML = items.map(a => `
-        <li>
-          <div style="flex:1; min-width:220px;">
-            <div style="font-weight:700">${a.tipo} — ${fmtBR(a.data)}</div>
-            <div style="font-size:13px; color:var(--muted)">
-              KM: ${a.km.toLocaleString('pt-BR')} • 
-              ${a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} L • 
-              R$ ${a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} • 
-              ${a.pagamento}
-            </div>
-          </div>
-          <div class="row-actions">
-            <button class="btn" data-act="edit" data-id="${a.id}">Editar</button>
-            <button class="btn-red" data-act="del" data-id="${a.id}">Remover</button>
-          </div>
-        </li>
-      `).join("");
+  renderLista();
+  atualizarGrafico();
+}
 
-      lista.querySelectorAll("button").forEach(b => {
-        b.onclick = async () => {
-          const id = b.dataset.id;
-          const act = b.dataset.act;
+/* SALVAR */
+$("adicionar").onclick = async () => {
+  const data = $("data").value;
+  const km = Number($("km").value);
+  const litros = Number($("litros").value);
+  const valor = Number($("valor").value);
+  const tipo = $("tipoCombustivel").value;
+  const pagamento = $("pagamento").value;
 
-          if (act === "edit") {
-            const a = abastecimentos.find(x => x.id === id);
-            if (!a) return;
-            $('tipoCombustivel').value = a.tipo;
-            $('data').value = a.data;
-            $('km').value = a.km;
-            $('litros').value = a.litros;
-            $('valor').value = a.valor;
-            $('pagamento').value = a.pagamento;
-            editId = id;
-            $('statusEdicao').textContent = "Editando registro (" + fmtBR(a.data) + ")";
-            $('cancelarEdicao').style.display = 'inline-block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+  if(!data || km<=0 || litros<=0 || valor<=0){
+    alert("Preencha tudo corretamente.");
+    return;
+  }
 
-          } else if (act === "del") {
-            if (!confirm("Deseja remover este registro?")) return;
-            await deleteDoc(doc(db, "usuarios", uid, "abastecimentos", id));
-          }
-        };
-      });
-    }
+  await addDoc(collection(db,"usuarios",uid,"abastecimentos"),{
+    data,
+    quilometragem: km,
+    litros,
+    valor,
+    tipo,
+    pagamento,
+    criadoEm: serverTimestamp()
+  });
 
-    function atualizarGrafico() {
-      const totalDiesel = abastecimentos
-        .filter(a => a.tipo === "Diesel")
-        .reduce((t, a) => t + Number(a.valor || 0), 0);
+  $("data").value = "";
+  $("km").value = "";
+  $("litros").value = "";
+  $("valor").value = "";
 
-      const totalArla = abastecimentos
-        .filter(a => a.tipo === "Arla")
-        .reduce((t, a) => t + Number(a.valor || 0), 0);
+  await carregarAbastecimentos();
+};
 
-      const ctx = $('graficoAbastecimento').getContext('2d');
-      if (chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: ["Diesel", "Arla"],
-          datasets: [{ data: [totalDiesel, totalArla] }]
-        }
-      });
-    }
+/* LISTA */
+function renderLista(){
+  const ul = $("listaAbastecimentos");
+  ul.innerHTML = "";
 
-    $('adicionar').onclick = async () => {
-      const tipo = $('tipoCombustivel').value;
-      const dataStr = $('data').value;
-      const km = Number($('km').value);
-      const litros = Number($('litros').value);
-      const valor = Number($('valor').value);
-      const pagamento = $('pagamento').value;
+  abastecimentos.forEach(r=>{
+    let li = document.createElement("li");
+    li.innerHTML = `
+      <div style="flex:1;min-width:230px">
+        <strong>${r.data}</strong><br>
+        KM: ${r.quilometragem}<br>
+        Litros: ${r.litros.toFixed(2)}<br>
+        Valor: R$ ${r.valor.toFixed(2)}<br>
+        <span style="padding:3px 8px;border-radius:6px;background:${r.tipo==="Diesel" ? "#1b5e20" : "#0d47a1"}">
+          ${r.tipo}
+        </span>
+      </div>
+      <button class="btn-red" onclick="remover('${r.id}')">Excluir</button>
+    `;
+    ul.appendChild(li);
+  });
+}
 
-      if (!dataStr || isNaN(km) || isNaN(litros) || isNaN(valor)) {
-        alert("Preencha todos os campos corretamente!");
-        return;
-      }
+window.remover = async (id)=>{
+  if(!confirm("Excluir?")) return;
+  await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
+  await carregarAbastecimentos();
+};
 
-      const registro = {
-        tipo,
-        data: dataStr,
-        km, litros, valor, pagamento,
-        criadoEm: serverTimestamp()
-      };
+/* FILTRO */
+$("filtrar").onclick = ()=>{
+  const ini = $("filtroInicio").value;
+  const fim = $("filtroFim").value;
 
-      if (editId) {
-        await updateDoc(doc(db, "usuarios", uid, "abastecimentos", editId), registro);
-        $('statusEdicao').textContent = "Registro atualizado.";
+  const arr = abastecimentos.filter(a=>between(a.data,ini,fim));
 
-      } else {
-        await addDoc(collection(db, "usuarios", uid, "abastecimentos"), registro);
-        $('statusEdicao').textContent = "Registro adicionado.";
-      }
+  const ul = $("listaAbastecimentos");
+  ul.innerHTML = "";
 
-      editId = null;
-      $('cancelarEdicao').style.display = 'none';
-      $('tipoCombustivel').value = "Diesel";
-      $('data').value = "";
-      $('km').value = "";
-      $('litros').value = "";
-      $('valor').value = "";
-      $('pagamento').value = "Nota Assinada";
-    };
+  if(arr.length===0){
+    ul.innerHTML = "<li>Nenhum registro no período.</li>";
+    return;
+  }
 
-    $('cancelarEdicao').onclick = () => {
-      editId = null;
-      $('statusEdicao').textContent = "";
-      $('cancelarEdicao').style.display = 'none';
+  arr.forEach(r=>{
+    let li=document.createElement("li");
+    li.innerHTML = `
+      <div style="flex:1;min-width:230px">
+        <strong>${r.data}</strong><br>
+        KM: ${r.quilometragem}<br>
+        Litros: ${r.litros.toFixed(2)}<br>
+        Valor: R$ ${r.valor.toFixed(2)}<br>
+        <span style="padding:3px 8px;border-radius:6px;background:${r.tipo==="Diesel" ? "#1b5e20" : "#0d47a1"}">
+          ${r.tipo}
+        </span>
+      </div>
+    `;
+    ul.appendChild(li);
+  });
+};
 
-      $('tipoCombustivel').value = "Diesel";
-      $('data').value = "";
-      $('km').value = "";
-      $('litros').value = "";
-      $('valor').value = "";
-      $('pagamento').value = "Nota Assinada";
-    };
+$("limparFiltro").onclick = ()=>{
+  $("filtroInicio").value="";
+  $("filtroFim").value="";
+  renderLista();
+};
 
-    $('limparTodos').onclick = async () => {
-      if (!confirm("Excluir TODOS os registros?")) return;
+/* GRÁFICO */
+let grafico = null;
 
-      const snap = await getDocs(collection(db, "usuarios", uid, "abastecimentos"));
-      const deletes = [];
-      snap.forEach(s => deletes.push(deleteDoc(s.ref)));
-      await Promise.all(deletes);
-    };
+function atualizarGrafico(){
+  const ctx = $("graficoAbastecimento").getContext("2d");
+  const labels = abastecimentos.map(a=>a.data);
+  const litros = abastecimentos.map(a=>a.litros);
 
-    $('filtrar').onclick = () => {
-      const inicioStr = $('filtroInicio').value;
-      const fimStr = $('filtroFim').value;
+  if(grafico) grafico.destroy();
 
-      filtroAtivo = {
-        inicio: inicioStr ? new Date(inicioStr) : null,
-        fim: fimStr ? new Date(fimStr) : null
-      };
+  grafico = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels,
+      datasets:[{
+        label:"Litros",
+        data:litros
+      }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false }
+  });
+}
 
-      renderLista();
-    };
+/* PDF COMPLETO */
+$("gerarPDFButton").onclick = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({ unit:"pt", format:"a4" });
 
-    $('limparFiltro').onclick = () => {
-      filtroAtivo = null;
-      $('filtroInicio').value = "";
-      $('filtroFim').value = "";
-      renderLista();
-    };
+  docPDF.setFontSize(16).text("Relatório de Abastecimentos — Motorista Plus",40,40);
 
-    function construirLinhasPDF(arr) {
-      return arr.map(a => [
-        fmtBR(a.data),
-        a.tipo,
-        a.km.toLocaleString('pt-BR'),
-        a.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-        "R$ " + a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-        a.pagamento
-      ]);
-    }
+  docPDF.autoTable({
+    startY:60,
+    head:[["Data","KM","Litros","Valor","Tipo","Pagamento"]],
+    body: abastecimentos.map(a=>[
+      a.data,
+      a.quilometragem,
+      a.litros.toFixed(2),
+      "R$ "+a.valor.toFixed(2),
+      a.tipo,
+      a.pagamento
+    ])
+  });
 
-    async function gerarPDF(registros, tituloExtra = "") {
-      const { jsPDF } = window.jspdf;
-      const docpdf = new jsPDF({ unit: "pt", format: "a4" });
+  docPDF.save("abastecimentos.pdf");
+};
 
-      const startX = 40;
-
-      docpdf.setFontSize(15);
-      docpdf.text(`Relatório de Abastecimentos — Motorista Plus ${tituloExtra}`, startX + 130, 40);
-
-      let y = 80;
-
-      docpdf.setFontSize(11);
-      docpdf.text(`Motorista: ${perfil?.nome || "—"}`, startX, y);
-      docpdf.text(`Placas: ${perfil?.placaCavalo || "—"} / ${perfil?.placaReboque || "—"}`, startX + 260, y);
-
-      const corpo = construirLinhasPDF(registros);
-
-      docpdf.autoTable({
-        startY: y + 14,
-        head: [["Data", "Tipo", "KM", "Litros", "Valor", "Pagamento"]],
-        body: corpo,
-        headStyles: { fillColor: [243, 146, 32] },
-        margin: { left: startX, right: startX }
-      });
-
-      docpdf.save("abastecimentos.pdf");
-    }
-
-    $('gerarPDFFiltroButton').onclick = () => {
-      let itens = [...abastecimentos];
-
-      if (filtroAtivo) {
-        itens = itens.filter(a => {
-          const d = new Date(a.data);
-          const okInicio = filtroAtivo.inicio ? d >= filtroAtivo.inicio : true;
-          const okFim = filtroAtivo.fim ? d <= filtroAtivo.fim : true;
-          return okInicio && okFim;
-        });
-      }
-
-      const extra = (filtroAtivo?.inicio || filtroAtivo?.fim)
-        ? `(${filtroAtivo?.inicio ? fmtBR(filtroAtivo.inicio.toISOString()) : '…'} a ${filtroAtivo?.fim ? fmtBR(filtroAtivo.fim.toISOString()) : '…'})`
-        : "";
-
-      gerarPDF(itens, extra);
-    };
-
-    $('gerarPDFButton').onclick = () => gerarPDF(abastecimentos, "(Completo)");
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return window.location.href = "login.html";
-      uid = user.uid;
-
-      await carregarPerfil();
-      iniciarStream();
-    });
-
-  </script>
+/* AUTH */
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  uid = user.uid;
+  await carregarPerfil();
+  await carregarAbastecimentos();
+});
+</script>
 
 </body>
-
 </html>
