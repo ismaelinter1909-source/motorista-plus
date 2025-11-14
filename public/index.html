@@ -15,11 +15,6 @@
   <meta name="theme-color" content="#000000">
 
   <style>
-    :root {
-      /* margenzinha para não cortar nas bordas ao escalar */
-      --safe-gap: 0; /* Removido o gap para maximizar o uso da tela */
-    }
-
     body {
       margin: 0;
       height: 100vh;
@@ -31,40 +26,37 @@
       overflow: hidden;
     }
 
-    /* Contêiner que cresce */
     .wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
       opacity: 1;
-      transform: scale(0.15); /* Mantido para iniciar pequeno */
+      transform: scale(0.10); 
       transition:
-        transform 5.8s ease-in-out,
+        transform 5.5s ease-in-out,
         opacity 1.8s ease-in-out;
-      will-change: transform, opacity;
     }
 
-    /* A imagem pulsa de leve sem interferir na escala do wrapper */
     .logo {
-      width: 100%; /* Tamanho inicial não importa; a escala usa naturalWidth */
-      max-width: 100vw; /* Tamanho máximo para o logo, ajustado para 100% da largura da tela */
-      max-height: 100vh; /* Tamanho máximo para o logo, ajustado para 100% da altura da tela */
-      animation: pulse 2.6s ease-in-out infinite;
+      width: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      animation: pulse 3s ease-in-out infinite;
+      will-change: transform;
     }
 
     @keyframes pulse {
       0% { transform: scale(1); }
-      50% { transform: scale(1.1); } /* Aumentado o pulso para 10% */
+      50% { transform: scale(1.12); }
       100% { transform: scale(1); }
     }
 
-    .expand { transform: scale(var(--final-scale)); } /* Mantido sem rotação */
-    .fade-out { opacity: 0; }
+    .expand {
+      transform: scale(var(--final-scale));
+    }
 
-    /* Acessibilidade: se o usuário pedir menos animação, desabilita pulsação */
-    @media (prefers-reduced-motion: reduce) {
-      .wrapper { transition: none; }
-      .logo { animation: none; }
+    .fade-out {
+      opacity: 0;
     }
   </style>
 </head>
@@ -79,57 +71,45 @@
       const wrapper = document.getElementById('wrapper');
       const logo = document.getElementById('logo');
 
-      // Espera a imagem carregar para usar o tamanho real (mais preciso)
-      const onReady = () => {
-        const screenW = window.innerWidth;
-        const screenH = window.innerHeight;
+      const iniciar = () => {
+        const sw = window.innerWidth;
+        const sh = window.innerHeight;
+        const menor = Math.min(sw, sh);
 
-        // Detecta celular
-        const isMobile = screenW < 600 || /Android|iPhone|iPad/i.test(navigator.userAgent);
+        const isMobile =
+          sw < 650 ||
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        // Menor lado da tela menos uma borda de segurança
-        const minSide = Math.min(screenW, screenH);
-        const safeGapPx = Math.max(screenW, screenH) * 0; // Removido para maximizar o uso da tela
+        // Pega o tamanho real da imagem
+        const naturalW = logo.naturalWidth || 400;
 
-        // Alvos diferentes para mobile/desktop
-        const targetSize = isMobile
-          ? Math.max(1, minSide - safeGapPx)           // ~100% do menor lado (sem cortar)
-          : Math.max(1, (minSide * 1));                 // 100% no desktop
+        // Aqui aumentamos MUITO no celular
+        let finalScale = (menor * 1.7) / naturalW;
 
-        // Usa a largura real do arquivo (naturalWidth). Se não existir, cai para width atual.
-        const baseWidth = logo.naturalWidth || logo.clientWidth || 500;
+        if (isMobile) {
+          finalScale = (menor * 2.4) / naturalW;   // TELONA
+        }
 
-        let finalScale = targetSize / baseWidth;
+        // Limites muito maiores agora
+        const MAX_SCALE = isMobile ? 90 : 60;
+        finalScale = Math.min(finalScale, MAX_SCALE);
 
-        // Limites de segurança
-        const MAX_SCALE = isMobile ? 50 : 40; // Aumentado o limite máximo para dispositivos móveis
-        const MIN_SCALE = 0.1;
-        finalScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, finalScale));
-
-        // Aplica variáveis CSS
         document.documentElement.style.setProperty('--final-scale', finalScale);
 
-        // Anima
-        const growTime = 5600;   // mais lento
-        const exitDelay = 2000;
-
-        // Início da expansão
+        // Começar animação
         setTimeout(() => wrapper.classList.add('expand'), 300);
 
-        // Fade-out para transição suave
-        setTimeout(() => wrapper.classList.add('fade-out'), growTime);
+        const growTime = 5500;
+        const exitDelay = 1800;
 
-        // Vai para o login
-        setTimeout(() => { window.location.href = 'login.html'; }, growTime + exitDelay);
+        setTimeout(() => wrapper.classList.add('fade-out'), growTime);
+        setTimeout(() => window.location.href = "login.html", growTime + exitDelay);
       };
 
-      if (logo.complete) {
-        onReady();
-      } else {
-        logo.onload = onReady;
-        logo.onerror = onReady; // segue mesmo se a imagem falhar
-      }
+      if (logo.complete) iniciar();
+      else logo.onload = iniciar;
     });
   </script>
+
 </body>
 </html>
