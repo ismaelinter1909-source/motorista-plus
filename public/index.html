@@ -15,54 +15,56 @@
   <meta name="theme-color" content="#000000">
 
   <style>
-    :root{
+    :root {
       /* margenzinha para não cortar nas bordas ao escalar */
-      --safe-gap: 2vmin;
+      --safe-gap: 0; /* Removido o gap para maximizar o uso da tela */
     }
 
-    body{
-      margin:0;
-      height:100vh;
-      background:#000;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      overflow:hidden;
+    body {
+      margin: 0;
+      height: 100vh;
+      width: 100vw;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
     }
 
-    /* Contêiner que cresce/rotaciona */
-    .wrapper{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      opacity:1;
-      transform:scale(0.15) rotate(0deg);
+    /* Contêiner que cresce */
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      transform: scale(0.15); /* Mantido para iniciar pequeno */
       transition:
         transform 5.8s ease-in-out,
         opacity 1.8s ease-in-out;
       will-change: transform, opacity;
     }
 
-    /* A imagem pulsa de leve sem interferir na escala/rotação do wrapper */
-    .logo{
-      width:180px; /* tamanho inicial não importa; a escala usa naturalWidth */
+    /* A imagem pulsa de leve sem interferir na escala do wrapper */
+    .logo {
+      width: 100%; /* Tamanho inicial não importa; a escala usa naturalWidth */
+      max-width: 100vw; /* Tamanho máximo para o logo, ajustado para 100% da largura da tela */
+      max-height: 100vh; /* Tamanho máximo para o logo, ajustado para 100% da altura da tela */
       animation: pulse 2.6s ease-in-out infinite;
-      display:block;
     }
 
-    @keyframes pulse{
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.06); }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); } /* Aumentado o pulso para 10% */
       100% { transform: scale(1); }
     }
 
-    .expand{ transform: scale(var(--final-scale)) rotate(var(--final-rotation)); }
-    .fade-out{ opacity:0; }
+    .expand { transform: scale(var(--final-scale)); } /* Mantido sem rotação */
+    .fade-out { opacity: 0; }
 
     /* Acessibilidade: se o usuário pedir menos animação, desabilita pulsação */
-    @media (prefers-reduced-motion: reduce){
-      .wrapper{ transition: none; }
-      .logo{ animation: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .wrapper { transition: none; }
+      .logo { animation: none; }
     }
   </style>
 </head>
@@ -75,7 +77,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const wrapper = document.getElementById('wrapper');
-      const logo    = document.getElementById('logo');
+      const logo = document.getElementById('logo');
 
       // Espera a imagem carregar para usar o tamanho real (mais preciso)
       const onReady = () => {
@@ -87,29 +89,25 @@
 
         // Menor lado da tela menos uma borda de segurança
         const minSide = Math.min(screenW, screenH);
-        const safeGapPx = Math.max(screenW, screenH) * 0.02; // ~2% de folga
+        const safeGapPx = Math.max(screenW, screenH) * 0; // Removido para maximizar o uso da tela
 
         // Alvos diferentes para mobile/desktop
         const targetSize = isMobile
-          ? Math.max(1, minSide - safeGapPx)           // ~98% do menor lado (sem cortar)
-          : Math.max(1, (minSide * 0.85));             // ~85% no desktop
+          ? Math.max(1, minSide - safeGapPx)           // ~100% do menor lado (sem cortar)
+          : Math.max(1, (minSide * 1));                 // 100% no desktop
 
         // Usa a largura real do arquivo (naturalWidth). Se não existir, cai para width atual.
-        const baseWidth = logo.naturalWidth || logo.clientWidth || 180;
+        const baseWidth = logo.naturalWidth || logo.clientWidth || 500;
 
         let finalScale = targetSize / baseWidth;
 
         // Limites de segurança
-        const MAX_SCALE = isMobile ? 22 : 16;
+        const MAX_SCALE = isMobile ? 50 : 40; // Aumentado o limite máximo para dispositivos móveis
         const MIN_SCALE = 0.1;
         finalScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, finalScale));
 
-        // Rotação final: celular = deitado; desktop = em pé
-        const finalRotation = isMobile ? '90deg' : '0deg';
-
         // Aplica variáveis CSS
         document.documentElement.style.setProperty('--final-scale', finalScale);
-        document.documentElement.style.setProperty('--final-rotation', finalRotation);
 
         // Anima
         const growTime = 5600;   // mais lento
