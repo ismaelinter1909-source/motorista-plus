@@ -346,34 +346,7 @@
   };
 
   /* ========================= Cálculo CORRIGIDO das folgas e retorno ========================= */
-  const calcularRetorno = (iniISO, fimISO) => {
-    const dias = diasEntreInclusive(iniISO, fimISO);
-    const folgas = calcularFolgasPelasFaixas(dias);
-
-    const fim = new Date(fimISO);
-    fim.setHours(0, 0, 0, 0);
-
-    // primeiro dia de folga = fim + 1
-    const primeiroDiaFolga = new Date(fim);
-    primeiroDiaFolga.setDate(fim.getDate() + 1);
-
-    // ultimo dia de folga = fim + folgas
-    const ultimoDiaFolga = new Date(fim);
-    ultimoDiaFolga.setDate(fim.getDate() + folgas);
-
-    // retorno = fim + folgas + 1
-    const retorno = new Date(fim);
-    retorno.setDate(fim.getDate() + folgas + 1);
-
-    return {
-      dias,
-      folgas,
-      primeiroFolgaISO: primeiroDiaFolga.toISOString().slice(0, 10),
-      ultimoFolgaISO: ultimoDiaFolga.toISOString().slice(0, 10),
-      retornoISO: retorno.toISOString().slice(0, 10)
-    };
-  };
-
+ 
   /* ========================= UI Helpers (readonly toggle) ========================= */
   function setFieldsReadonly(readonly) {
     ['viagemInicio','viagemFim','kmInicio','kmFim'].forEach(id => {
@@ -388,6 +361,33 @@
       }
     });
   }
+  const calcularRetorno = (iniISO, fimISO) => {
+  const dias = diasEntreInclusive(iniISO, fimISO);
+  const folgas = calcularFolgasPelasFaixas(dias);
+
+  const fim = new Date(fimISO);
+  fim.setHours(0, 0, 0, 0);
+
+  // primeiro dia de folga = fim + 1
+  const primeiroDiaFolga = new Date(fim);
+  primeiroDiaFolga.setDate(primeiroDiaFolga.getDate() + 1);
+
+  // ultimo dia de folga = fim + folgas
+  const ultimoDiaFolga = new Date(fim);
+  ultimoDiaFolga.setDate(ultimoDiaFolga.getDate() + folgas);
+
+  // retorno = fim + folgas + 1
+  const retorno = new Date(fim);
+  retorno.setDate(retorno.getDate() + folgas + 1);
+
+  return {
+    dias,
+    folgas,
+    primeiroFolgaISO: primeiroDiaFolga.toISOString().slice(0, 10),
+    ultimoFolgaISO: ultimoDiaFolga.toISOString().slice(0, 10),
+    retornoISO: retorno.toISOString().slice(0, 10)
+  };
+};
 
   /* ========================= Preencher UI ========================= */
   function preencherDerivadosUI() {
