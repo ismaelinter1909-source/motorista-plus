@@ -252,7 +252,7 @@ footer{
   <button id="voltarPainelTopo" onclick="window.location.href='painel.html'">← Voltar</button>
 
   <header>
-    <h1>Gastos & Diárias — Motorista<span class="plus">Plus</span></h1>
+    <h1>Gastos & Bônus — Motorista<span class="plus">Plus</span></h1>
   </header>
 
   <main class="wrap">
@@ -595,12 +595,12 @@ footer{
   function atualizarResumo(){
     ensureResumoInputs();
 
-    const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
+    const bonus = +(totalBonus * BONUS_VALOR).toFixed(2);
     const totalG = +(gastos.reduce((s,g)=>s + g.valor, 0)).toFixed(2);
     const totalV = +(vales.reduce((s,v)=>s + v.valor, 0)).toFixed(2);
 
     $('totalDiariasText').textContent =
-      `Total de diárias: ${totalDiarias} — Valor total: R$ ${bonus.toFixed(2)}`;
+      `Total de diárias: ${totalBonus} — Valor total: R$ ${bonus.toFixed(2)}`;
 
     const somaBG = bonus + totalG;
     const diff   = Math.abs(somaBG - totalV).toFixed(2);
@@ -625,14 +625,14 @@ footer{
   }
 
   /* ================= Diárias ================= */
-  function loadDiariasFromLocal(){
-    totalDiarias = loadLocal(lsKey('totalDiarias'), 0);
+  function loadBonusFromLocal(){
+    totalBonus = loadLocal(lsKey('totalDiarias'), 0);
     $('tripStart').value = loadLocal(lsKey('tripStart'), '');
     $('tripEnd').value   = loadLocal(lsKey('tripEnd'), '');
   }
 
   function saveDiariasToLocal(){
-    saveLocal(lsKey('totalDiarias'), totalDiarias);
+    saveLocal(lsKey('totalBônus'), totalBonus);
     saveLocal(lsKey('tripStart'), $('tripStart').value);
     saveLocal(lsKey('tripEnd'),   $('tripEnd').value);
   }
@@ -643,7 +643,7 @@ footer{
     if(!s||!e||e<s){ alert('Selecione datas válidas.'); return; }
 
     const days = (new Date(e).getTime() - new Date(s).getTime())/(1000*60*60*24);
-    totalDiarias = Math.floor(days) + 1;
+    totalBonus = Math.floor(days) + 1;
 
     saveDiariasToLocal();
     atualizarResumo();
@@ -652,7 +652,7 @@ footer{
   $('clearDiarias').onclick = ()=>{
     $('tripStart').value = '';
     $('tripEnd').value   = '';
-    totalDiarias = 0;
+    totalBonus = 0;
     removeLocal(lsKey('totalDiarias'));
     removeLocal(lsKey('tripStart'));
     removeLocal(lsKey('tripEnd'));
@@ -742,7 +742,7 @@ footer{
     let y = 44;
 
     docPDF.setFontSize(16);
-    docPDF.text('Relatório — Gastos & Diárias', startX, y);
+    docPDF.text('Relatório — Gastos & Bônus', startX, y);
     y += 22;
 
     const s = $('tripStart').value;
@@ -753,7 +753,7 @@ footer{
     docPDF.text(`Período: ${periodoTxt}`, startX, y); 
     y += 16;
 
-    const bonus = +(totalDiarias * DIARIA_VALOR).toFixed(2);
+    const bonus = +(totalBonus * BONUS_VALOR).toFixed(2);
     const totalG = +(gastos.reduce((s2,g)=>s2 + g.valor, 0)).toFixed(2);
     const totalV = +(vales.reduce((s2,v)=>s2 + v.valor, 0)).toFixed(2);
     const somaBG = bonus + totalG;
@@ -767,7 +767,7 @@ footer{
     docPDF.text(`Telefone: ${perfil?.telefone || '—'}`, startX+260, y);
     y += 22;
 
-    docPDF.text(`Diárias: ${totalDiarias} × R$ ${DIARIA_VALOR.toFixed(2)} = R$ ${bonus.toFixed(2)}`, startX, y); y += 16;
+    docPDF.text(`Bônus: ${totalBonus} × R$ ${BONUS_VALOR.toFixed(2)} = R$ ${bonus.toFixed(2)}`, startX, y); y += 16;
     docPDF.text(`Total Gastos: R$ ${totalG.toFixed(2)}`, startX, y); y += 16;
     docPDF.text(`Total Vales: R$ ${totalV.toFixed(2)}`, startX, y); y += 16;
     docPDF.text(totalV > somaBG
