@@ -1,494 +1,226 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel Motorista — Motorista Plus</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel Motorista — Motorista Plus</title>
 
-  <!-- Firebase libs (v11) -->
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js"></script>
+<style>
+  :root{
+    --bg:#0b0f14; --bg2:#10161d; --card:rgba(16,22,29,.86);
+    --primary:#f39220; --primary-700:#d47e16; --outline:#2b3a49; --text:#fff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Arial}
 
-  <style>
-    :root{
-      --bg:#0b0f14; --bg2:#10161d; --card:rgba(16,22,29,.86);
-      --primary:#f39220; --primary-700:#d47e16; --outline:#2b3a49; --text:#fff;
-      --muted:#c7cbd0;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;overflow-y:auto}
-    .container{max-width:1100px;margin:20px auto;padding:18px}
+  body{background:var(--bg);color:var(--text);overflow-x:hidden}
 
-    header.top{
-      display:flex;gap:18px;align-items:center;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.6));
-      padding:22px;border-radius:12px;border:1px solid var(--outline)
-    }
-    .avatar{
-      width:110px;height:110px;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,.08);
-      display:flex;align-items:center;justify-content:center;background:#111;
-      flex:0 0 110px;
-      position:relative;
-    }
-    .avatar img{width:100%;height:100%;object-fit:cover;display:block}
-    .avatar .placeholder{
-      color:var(--muted);font-weight:700;font-size:18px
-    }
-    .profile-info{flex:1}
-    .profile-info h1{font-size:20px;margin-bottom:6px}
-    .profile-info p{color:var(--muted);font-size:14px;margin-bottom:6px}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    button.btn{background:var(--primary);border:none;padding:10px 14px;border-radius:10px;color:#111;font-weight:700;cursor:pointer}
-    button.btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted);padding:10px 12px;border-radius:10px;cursor:pointer}
-    button.btn-danger{background:#d9534f;color:#fff;border:none;padding:10px 12px;border-radius:10px;cursor:pointer}
+  /* Botão abrir menu */
+  #abrirMenu{
+    position:fixed; top:15px; left:15px; z-index:9999;
+    padding:10px 14px; background:var(--primary); border:none; border-radius:8px;
+    color:#fff; font-weight:700; cursor:pointer; transition:.25s;
+  }
+  #abrirMenu:hover{ background:var(--primary-700); transform:scale(1.05) }
 
-    /* Menu lateral / editar */
-    .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;margin-top:18px}
-    label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
-    input[type="text"], input[type="email"], input[type="tel"]{
-      width:100%;padding:10px;margin-top:6px;border-radius:10px;border:1px solid var(--outline);
-      background:rgba(255,255,255,.03);color:var(--text)
-    }
+  /* Menu lateral */
+  .menu-lateral{
+    position:fixed; top:0; left:-330px; width:300px; height:100vh; z-index:9998;
+    background:var(--bg2); padding:20px; border-right:1px solid var(--outline);
+    transition:.3s;
+  }
+  .menu-lateral.active{ left:0 }
+  .menu-lateral h3{ text-align:center; color:var(--primary); margin-bottom:10px }
+  .menu-lateral input{
+    width:100%; padding:12px; margin-top:6px; border-radius:10px;
+    background:#0f141a; border:1px solid var(--outline); color:#fff;
+  }
+  .menu-lateral button{
+    margin-top:12px; padding:12px; border:none; background:var(--primary);
+    color:#fff; font-weight:700; border-radius:10px; cursor:pointer; transition:.25s;
+  }
+  .menu-lateral button:hover{ background:var(--primary-700); transform:scale(1.05) }
 
-    /* upload preview mini */
-    #previewMini{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    #previewMini img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--outline)}
+  /* Hero */
+  header.hero{
+    height:70vh;
+    background:
+      linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.85)),
+      url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:20px;
+  }
 
-    .status{margin-top:10px;color:var(--muted);font-size:13px}
+  /* Nome Motorista Plus restaurado */
+  .brand{
+    font-size:clamp(38px,6vw,60px);
+    font-weight:800;
+    color:#fff;
+    text-align:center;
+  }
+  .brand .plus{ color:var(--primary) }
 
-    footer{margin-top:26px;color:var(--muted);text-align:center;font-size:13px}
-    @media (max-width:700px){
-      header.top{flex-direction:column;align-items:center;text-align:center}
-      .profile-info h1{font-size:18px}
-    }
-  </style>
+  .slogan{
+    font-size:clamp(14px,2vw,20px);
+    letter-spacing:.15em;
+    margin-bottom:20px;
+    opacity:.9;
+    color:#fff;
+    text-align:center;
+  }
+
+  /* Cartão de perfil (sem foto agora) */
+  .card-perfil{
+    background:var(--card); border:1px solid var(--outline); border-radius:16px;
+    padding:22px; width:min(90%,450px); backdrop-filter:blur(6px);
+    box-shadow:0 10px 35px rgba(0,0,0,.35);
+  }
+  .info{
+    background:rgba(255,255,255,.06); border:1px solid var(--outline);
+    padding:10px; margin:8px 0; border-radius:10px;
+  }
+
+  /* Conteúdo (cards mais para baixo – opção A) */
+  .conteudo{
+    max-width:1100px; margin:80px auto 40px;
+    padding:20px;
+  }
+  .titulo-sessao{ text-align:center; font-size:22px; color:var(--primary); margin-bottom:20px; font-weight:800 }
+
+  .links-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:18px;
+  }
+  .links-grid a{
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+    background:var(--card); border:1px solid var(--outline);
+    padding:22px; border-radius:16px; text-decoration:none; color:#fff;
+    font-size:18px; font-weight:700;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  /* Hover suave */
+  .links-grid a:hover{
+    transform:translateY(-3px) scale(1.03);
+    box-shadow:0 10px 26px rgba(0,0,0,.35);
+  }
+
+  .card-icon{ width:48px; height:48px; fill:#fff }
+
+  /* Botão sair */
+  #logoutBtn{
+    margin:40px auto; background:#d94343; padding:14px 20px; border-radius:12px; color:#fff;
+    border:none; font-weight:700; cursor:pointer; transition:.25s; display:block; width:220px;
+  }
+  #logoutBtn:hover{ background:#b93636; transform:scale(1.05) }
+</style>
+
 </head>
 <body>
 
-<div class="container">
-  <header class="top">
-    <div class="avatar" id="avatarWrap" title="Foto de perfil">
-      <div class="placeholder" id="avatarPlaceholder">—</div>
-      <!-- <img id="avatarImg" src=""> será inserida por script -->
-    </div>
+<button id="abrirMenu">Perfil</button>
 
-    <div class="profile-info">
-      <h1 id="boasVindas">Bem-vindo(a)</h1>
-      <p id="userResumo">Carregando dados...</p>
-
-      <div class="controls">
-        <button class="btn" id="btnEscolher">Escolher foto (galeria)</button>
-        <button class="btn-ghost" id="btnCamera">Tirar foto</button>
-        <button class="btn-ghost" id="btnRemover">Remover foto</button>
-        <button class="btn" id="btnEditarPerfil">Editar perfil</button>
-        <button class="btn-danger" id="logoutBtn">Sair</button>
-      </div>
-
-      <div id="statusArea" class="status"></div>
-    </div>
-  </header>
-
-  <!-- Card editar perfil -->
-  <section class="card" id="cardEditar">
-    <h2 style="color:var(--primary);margin-bottom:8px">Editar Perfil</h2>
-
-    <label>Nome</label>
-    <input type="text" id="editarNome" placeholder="Nome completo">
-
-    <label>Telefone</label>
-    <input type="tel" id="editarTelefone" placeholder="(xx) xxxxx-xxxx">
-
-    <label>Placa Cavalo</label>
-    <input type="text" id="editarPlacaCavalo" placeholder="ABC0D00">
-
-    <label>Placa Reboque</label>
-    <input type="text" id="editarPlacaReboque" placeholder="ABC0D00">
-
-    <label>Email</label>
-    <input type="email" id="editarEmail" placeholder="email@exemplo.com">
-
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn" id="salvarPerfil">Salvar</button>
-      <button class="btn-ghost" id="cancelarEdicao">Cancelar</button>
-    </div>
-
-    <div id="previewMini" aria-hidden="true"></div>
-  </section>
-
-  <footer>© 2025 Motorista Plus</footer>
+<div class="menu-lateral" id="menuLateral">
+  <h3>Editar Perfil</h3>
+  <label>Nome</label><input id="editarNome">
+  <label>Telefone</label><input id="editarTelefone">
+  <label>Placa Cavalo</label><input id="editarPlacaCavalo">
+  <label>Placa Reboque</label><input id="editarPlacaReboque">
+  <label>Email</label><input id="editarEmail">
+  <button id="salvarPerfil">Salvar</button>
 </div>
 
-<!-- input file escondido para "Escolher foto" -->
-<input type="file" id="inputFileFoto" accept="image/*" style="display:none">
+<header class="hero">
 
-<!-- script principal -->
+  <!-- ✅ Nome Motorista Plus restaurado -->
+  <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
+  <p class="slogan">SEMPRE EM MOVIMENTO</p>
+
+  <div class="card-perfil">
+    <h2 id="boasVindas" style="text-align:center;">Bem-vindo(a)</h2>
+
+    <div class="info" id="userNome"></div>
+    <div class="info" id="userTelefone"></div>
+    <div class="info" id="userPlacaCavalo"></div>
+    <div class="info" id="userPlacaReboque"></div>
+    <div class="info" id="userEmail"></div>
+  </div>
+</header>
+
+<div class="conteudo">
+  <h2 class="titulo-sessao">Planilhas de Viagem</h2>
+
+  <div class="links-grid">
+    <a href="media.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 3h2v18H3zM9 13h2v8H9zM15 8h2v13h-2zM21 3h-2v18h2z"/></svg>Média</a>
+    <a href="abastecimentos.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 3h10v18H3zM18 6l3 3v9a3 3 0 1 1-6 0v-7h2v7a1 1 0 1 0 2 0V10l-2-2z"/></svg>Abastecimento</a>
+    <a href="gastos.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M2 7h20v10H2zm3 3v4h14v-4z"/></svg>Gastos</a>
+    <a href="viagem.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 2l7 7-7 7-7-7z"/></svg>Viagem</a>
+    <a href="entregas.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M3 5h13v14H3zM16 8h4l1 3v8h-5z"/></svg>Entregas</a>
+    <a href="manutencao.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm9.4 6.2a8 8 0 0 0 .1-3.4l2-1.6-1.5-2.6-2.3.6a8 8 0 0 0-2.4-1.4L16.7 2h-3.4l-.6 2.4a8 8 0 0 0-2.4 1.4l-2.3-.6L5 6.6l2 1.6a8 8 0 0 0 0 3.4l-2 1.6L6.5 17l2.3-.6a8 8 0 0 0 2.4 1.4l.6 2.4h3.4l.6-2.4a8 8 0 0 0 2.4-1.4l2.3.6 1.5-2.6z"/></svg>Manutenção</a>
+    <a href="ponto.html"><svg class="card-icon" viewBox="0 0 24 24"><path d="M12 1a11 11 0 1 1 0 22A11 11 0 0 1 12 1zm1 6h-2v7h6v-2h-4z"/></svg>Ponto</a>
+  </div>
+
+  <button id="logoutBtn">Sair</button>
+</div>
+
 <script type="module">
-  // Import Firebase modules (v11)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-  // ====== CONFIG FIREBASE (substitua se necessário) ======
+  /* ✅ motorista-plus-c53f4 */
   const firebaseConfig = {
     apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
     authDomain: "motorista-plus-c53f4.firebaseapp.com",
     projectId: "motorista-plus-c53f4",
-    storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+    storageBucket: "motorista-plus-c53f4.appspot.com",
     messagingSenderId: "766097061342",
-    appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
-    measurementId: "G-CBT2D0CXPN"
+    appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
   };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const storage = getStorage(app);
 
-  // ====== DOM ======
-  const avatarWrap = document.getElementById('avatarWrap');
-  const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-  const boasVindas = document.getElementById('boasVindas');
-  const userResumo = document.getElementById('userResumo');
-  const statusArea = document.getElementById('statusArea');
+  const menu = document.getElementById("menuLateral");
+  abrirMenu.onclick = ()=> menu.classList.toggle("active");
 
-  const btnEscolher = document.getElementById('btnEscolher');
-  const btnCamera = document.getElementById('btnCamera');
-  const btnRemover = document.getElementById('btnRemover');
-  const inputFileFoto = document.getElementById('inputFileFoto');
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ window.location.href="login.html"; return; }
 
-  const editarNome = document.getElementById('editarNome');
-  const editarTelefone = document.getElementById('editarTelefone');
-  const editarPlacaCavalo = document.getElementById('editarPlacaCavalo');
-  const editarPlacaReboque = document.getElementById('editarPlacaReboque');
-  const editarEmail = document.getElementById('editarEmail');
-  const salvarPerfil = document.getElementById('salvarPerfil');
-  const cancelarEdicao = document.getElementById('cancelarEdicao');
-  const cardEditar = document.getElementById('cardEditar');
-  const previewMini = document.getElementById('previewMini');
-  const btnEditarPerfil = document.getElementById('btnEditarPerfil');
-  const logoutBtn = document.getElementById('logoutBtn');
+    const refUser = doc(db,"usuarios",user.uid);
+    const snap = await getDoc(refUser);
 
-  let uid = null;
-  let usuarioDocRef = null;
-  let currentAvatarUrl = null;
-  let selectedFile = null; // arquivo selecionado/tirado
+    if(!snap.exists()){ alert("Erro ao carregar perfil."); return; }
+    const u = snap.data();
 
-  // util
-  function setStatus(msg, color = 'var(--muted)') {
-    statusArea.style.color = color;
-    statusArea.textContent = msg || '';
-  }
+    boasVindas.textContent = "Bem-vindo(a), " + (u.nome || "");
 
-  function showAvatarFromUrl(url) {
-    // remove placeholder
-    avatarPlaceholder.style.display = 'none';
-    // remove any previous img
-    const existing = avatarWrap.querySelector('img');
-    if (existing) existing.remove();
-    const img = document.createElement('img');
-    img.id = 'avatarImg';
-    img.src = url;
-    img.alt = 'Foto de perfil';
-    avatarWrap.appendChild(img);
-  }
+    userNome.textContent = "Nome: " + (u.nome || "—");
+    userTelefone.textContent = "Telefone: " + (u.telefone || "—");
+    userPlacaCavalo.textContent = "Placa Cavalo: " + (u.placaCavalo || "—");
+    userPlacaReboque.textContent = "Placa Reboque: " + (u.placaReboque || "—");
+    userEmail.textContent = "Email: " + (u.email || "—");
 
-  function showPlaceholderInitials(name) {
-    // show initials
-    const txt = name ? name.split(' ').map(s=>s[0]||'').slice(0,2).join('').toUpperCase() : '—';
-    avatarPlaceholder.textContent = txt;
-    avatarPlaceholder.style.display = 'block';
-    const existing = avatarWrap.querySelector('img');
-    if (existing) existing.remove();
-  }
+    editarNome.value = u.nome || "";
+    editarTelefone.value = u.telefone || "";
+    editarPlacaCavalo.value = u.placaCavalo || "";
+    editarPlacaReboque.value = u.placaReboque || "";
+    editarEmail.value = u.email || "";
 
-  // read file and preview mini
-  async function previewFile(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    return new Promise(resolve => {
-      reader.onload = () => {
-        // show preview small
-        previewMini.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = reader.result;
-        previewMini.appendChild(img);
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // resize via canvas before upload (optional light resize to 1200px width)
-  async function resizeImageFile(file, maxWidth = 1200, quality = 0.8) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const ratio = img.width / img.height;
-          const w = Math.min(maxWidth, img.width);
-          const h = Math.round(w / ratio);
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          canvas.toBlob(blob => {
-            if (!blob) return resolve(file); // fallback original
-            const newFile = new File([blob], file.name.replace(/\s+/g, '_'), { type: 'image/jpeg' });
-            resolve(newFile);
-          }, 'image/jpeg', quality);
-        };
-        img.onerror = () => resolve(file);
-        img.src = reader.result;
-      };
-      reader.onerror = () => resolve(file);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // Upload to storage and return download URL
-  async function uploadProfileImage(file) {
-    if (!uid) throw new Error('Usuário não autenticado');
-    // resize
-    const fileToUpload = await resizeImageFile(file, 1200, 0.8);
-    const ts = Date.now();
-    const safeName = fileToUpload.name.replace(/[^a-zA-Z0-9_\-\.]/g,'_');
-    const path = `perfil/${uid}/${ts}_${safeName}`;
-    const r = storageRef(storage, path);
-    const snap = await uploadBytes(r, fileToUpload);
-    const url = await getDownloadURL(snap.ref);
-    return url;
-  }
-
-  // ====== Auth state ======
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      // redirect to login
-      window.location.href = 'login.html';
-      return;
-    }
-    uid = user.uid;
-    usuarioDocRef = doc(db, 'usuarios', uid);
-    await carregarPerfil();
-  });
-
-  // fetch profile and show
-  async function carregarPerfil() {
-    try {
-      setStatus('Carregando perfil...');
-      const snap = await getDoc(usuarioDocRef);
-      if (!snap.exists()) {
-        setStatus('Perfil não encontrado', 'orange');
-        return;
-      }
-      const u = snap.data();
-      boasVindas.textContent = `Bem-vindo(a), ${u.nome || 'Motorista'}`;
-      userResumo.textContent = `${u.telefone || '—'} — ${u.placaCavalo || '—'} / ${u.placaReboque || '—'}`;
-      editarNome.value = u.nome || '';
-      editarTelefone.value = u.telefone || '';
-      editarPlacaCavalo.value = u.placaCavalo || '';
-      editarPlacaReboque.value = u.placaReboque || '';
-      editarEmail.value = u.email || '';
-
-      currentAvatarUrl = u.fotoPerfil || null;
-      if (currentAvatarUrl) {
-        showAvatarFromUrl(currentAvatarUrl);
-        // preview mini
-        previewMini.innerHTML = '';
-        const img = document.createElement('img'); img.src = currentAvatarUrl;
-        previewMini.appendChild(img);
-      } else {
-        showPlaceholderInitials(u.nome || '');
-        previewMini.innerHTML = '';
-      }
-      setStatus('');
-    } catch (err) {
-      console.error('carregarPerfil', err);
-      setStatus('Erro ao carregar perfil', 'red');
-    }
-  }
-
-  // ====== Button actions ======
-  // abrir seletor (galeria)
-  btnEscolher.addEventListener('click', ()=> inputFileFoto.click());
-  inputFileFoto.addEventListener('change', async (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    selectedFile = f;
-    await previewFile(f);
-    setStatus('Imagem selecionada (não salva). Clique em "Salvar" para enviar.', 'var(--muted)');
-  });
-
-  // tirar foto via getUserMedia
-  btnCamera.addEventListener('click', async () => {
-    // cria modal temporário com vídeo e botão tirar
-    const modal = document.createElement('div');
-    Object.assign(modal.style, {
-      position:'fixed',left:0,top:0,width:'100%',height:'100%',background:'rgba(0,0,0,0.8)',
-      display:'flex',alignItems:'center',justifyContent:'center',zIndex:99999
-    });
-    const holder = document.createElement('div');
-    holder.style.width = '90%'; holder.style.maxWidth = '420px'; holder.style.background='#111'; holder.style.padding='10px'; holder.style.borderRadius='12px';
-    const video = document.createElement('video'); video.autoplay = true; video.playsInline = true;
-    video.style.width = '100%'; video.style.borderRadius = '8px';
-    const btnCapture = document.createElement('button'); btnCapture.textContent = 'Foto'; btnCapture.className='btn';
-    const btnClose = document.createElement('button'); btnClose.textContent = 'Cancelar'; btnClose.className='btn-ghost';
-    const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.marginTop='8px';
-    actions.appendChild(btnCapture); actions.appendChild(btnClose);
-    holder.appendChild(video); holder.appendChild(actions); modal.appendChild(holder); document.body.appendChild(modal);
-
-    let stream = null;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-      video.srcObject = stream;
-    } catch (err) {
-      console.error('camera error', err);
-      setStatus('Não foi possível acessar a câmera. Use a galeria.', 'red');
-      modal.remove(); if (stream) stream.getTracks().forEach(t=>t.stop());
-      return;
-    }
-
-    btnCapture.onclick = async () => {
-      // criar snapshot
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(async (blob) => {
-        if (!blob) { setStatus('Erro ao capturar imagem', 'red'); return; }
-        const file = new File([blob], `camera_${Date.now()}.jpg`, { type:'image/jpeg' });
-        selectedFile = file;
-        await previewFile(file);
-        setStatus('Foto capturada (não salva). Clique em "Salvar" para enviar.', 'var(--muted)');
-        // fechar modal
-        modal.remove(); stream.getTracks().forEach(t=>t.stop());
-      }, 'image/jpeg', 0.9);
+    salvarPerfil.onclick = async ()=>{
+      await updateDoc(refUser,{
+        nome: editarNome.value,
+        telefone: editarTelefone.value,
+        placaCavalo: editarPlacaCavalo.value,
+        placaReboque: editarPlacaReboque.value,
+        email: editarEmail.value
+      });
+      alert("Perfil atualizado!");
+      location.reload();
     };
-
-    btnClose.onclick = () => { modal.remove(); if (stream) stream.getTracks().forEach(t=>t.stop()); };
   });
 
-  // Remover foto (apenas remove URL do documento)
-  btnRemover.addEventListener('click', async () => {
-    if (!confirm('Remover foto do perfil? (isso não exclui o arquivo do Storage)')) return;
-    try {
-      setStatus('Removendo foto...');
-      await updateDoc(usuarioDocRef, { fotoPerfil: null });
-      currentAvatarUrl = null;
-      showPlaceholderInitials(editarNome.value || '');
-      previewMini.innerHTML = '';
-      setStatus('Foto removida.');
-    } catch (err) {
-      console.error('remover foto', err);
-      setStatus('Erro ao remover foto', 'red');
-    }
-  });
+  logoutBtn.onclick = async ()=>{ await signOut(auth); window.location.href="login.html"; };
 
-  // mostrar/ocultar card editar
-  btnEditarPerfil.addEventListener('click', ()=> {
-    cardEditar.scrollIntoView({behavior:'smooth'});
-  });
-  cancelarEdicao.addEventListener('click', ()=> {
-    carregarPerfil();
-    setStatus('');
-  });
-
-  // salvar perfil + upload se tiver arquivo selecionado
-  salvarPerfil.addEventListener('click', async () => {
-    const nome = editarNome.value.trim();
-    const telefone = editarTelefone.value.trim();
-    const placaCavalo = editarPlacaCavalo.value.trim();
-    const placaReboque = editarPlacaReboque.value.trim();
-    const email = editarEmail.value.trim();
-
-    if (!nome) { alert('Digite o nome'); return; }
-
-    setStatus('Salvando perfil...');
-    try {
-      let urlFoto = currentAvatarUrl || null;
-      if (selectedFile) {
-        setStatus('Enviando foto para o servidor...');
-        try {
-          urlFoto = await uploadProfileImage(selectedFile);
-          setStatus('Foto enviada. Salvando dados...');
-        } catch (err) {
-          console.error('uploadProfileImage erro', err);
-          setStatus('Erro no upload da foto: ' + (err.message || err.code || ''), 'red');
-          return;
-        }
-      }
-
-      // gravar no Firestore
-      const payload = { nome, telefone, placaCavalo, placaReboque, email };
-      if (urlFoto) payload.fotoPerfil = urlFoto;
-      await updateDoc(usuarioDocRef, payload);
-      // reset
-      selectedFile = null;
-      currentAvatarUrl = urlFoto || null;
-      if (currentAvatarUrl) showAvatarFromUrl(currentAvatarUrl); else showPlaceholderInitials(nome);
-      setStatus('Perfil atualizado com sucesso.', 'green');
-      // scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      console.error('salvarPerfil', err);
-      setStatus('Erro ao salvar perfil: ' + (err.message || err.code || ''), 'red');
-    }
-  });
-
-  // logout
-  logoutBtn.addEventListener('click', async () => {
-    await signOut(auth);
-    window.location.href = 'login.html';
-  });
-
-  /* Helper upload (mesma função reutilizável) */
-  async function resizeImageFile(file, maxWidth = 1200, quality = 0.8) {
-    // fallback to identity - same implementation as earlier
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          const ratio = img.width / img.height || 1;
-          const w = Math.min(maxWidth, img.width);
-          const h = Math.round(w / ratio);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          canvas.toBlob(blob => {
-            if (!blob) { resolve(file); return; }
-            const newFile = new File([blob], file.name.replace(/\s+/g,'_'), { type: 'image/jpeg' });
-            resolve(newFile);
-          }, 'image/jpeg', quality);
-        };
-        img.onerror = () => resolve(file);
-        img.src = reader.result;
-      };
-      reader.onerror = () => resolve(file);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function uploadProfileImage(file) {
-    if (!uid) throw new Error('Usuário não autenticado');
-    const fileToUpload = await resizeImageFile(file, 1200, 0.8);
-    const ts = Date.now();
-    const safeName = fileToUpload.name.replace(/[^a-zA-Z0-9_\-\.]/g,'_');
-    const path = `perfil/${uid}/${ts}_${safeName}`;
-    const r = storageRef(storage, path);
-    const snap = await uploadBytes(r, fileToUpload);
-    const url = await getDownloadURL(snap.ref);
-    return url;
-  }
-
-  // show placeholder initials at load until profile arrives
-  showPlaceholderInitials('');
-  setStatus('');
 </script>
 
 </body>
