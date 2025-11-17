@@ -124,6 +124,10 @@
     <label>Descrição Reboque</label>
     <textarea id="descReboque"></textarea>
 
+    <label>Fotos (opcional)</label>
+    <input type="file" id="fotoManutencao" accept="image/*" multiple>
+    <div id="previewFotos" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+
     <button class="btn" id="salvar">Salvar</button>
     <button class="btn-ghost" id="cancelarEdicao" style="display:none">Cancelar Edição</button>
     <button class="btn-red" id="apagarTodos">Apagar TODOS</button>
@@ -148,14 +152,16 @@
 
 <!-- SCRIPT NOVO -->
 <script type="module">
-
-/* ========= Firebase ========= */
+/* ========================= Firebase (app + services) ========================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, addDoc, updateDoc, deleteDoc,
   collection, getDocs, query, orderBy, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
@@ -169,26 +175,107 @@ const app = initializeApp({
 
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-const $ = (id)=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 let uid = null;
 let manutencoes = [];
 let editId = null;
+let fotosParaUpload = []; // FileList -> array
+let fotosPreviewUrls = []; // preview dataURLs for UI
 
-/* ========= Formatação ========= */
-const fmtBR = d => {
-  const x = new Date(d);
-  return `${String(x.getDate()).padStart(2,'0')}/${String(x.getMonth()+1).padStart(2,'0')}/${x.getFullYear()}`;
+/* ========================= Data helpers (safe for local timezone) ========================= */
+const parseISO = iso => {
+  if (!iso) return null;
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Date(y, m-1, d);
 };
+const toISO = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  const d = String(date.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+};
+const fmtBR = iso => {
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+};
+
+/* ========================= Folga (mesma lógica da página de viagem) ========================= */
+function calcularFolgasPelasFaixas(dias){
+  if (dias <= 7) return 1;
+  if (dias <= 14) return 2;
+  if (dias <= 21) return 3;
+  if (dias <= 30) return 4;
+  if (dias <= 37) return 5;
+  if (dias <= 44) return 6;
+  if (dias <= 52) return 7;
+  if (dias <= 60) return 8;
+  return Math.ceil(dias/7);
+}
+
+function calcularRetornoFolga(iniISO, fimISO){
+  const ini = parseISO(iniISO);
+  const fim = parseISO(fimISO);
+  const dias = Math.round((fim - ini)/86400000) + 1;
+  const folgas = calcularFolgasPelasFaixas(dias);
+
+  const primeiro = new Date(fim);
+  primeiro.setDate(primeiro.getDate() + 1);
+
+  const ultimo = new Date(fim);
+  ultimo.setDate(ultimo.getDate() + folgas);
+
+  const retorno = new Date(fim);
+  retorno.setDate(retorno.getDate() + folgas + 1);
+
+  return {
+    dias,
+    folgas,
+    primeiroFolgaISO: toISO(primeiro),
+    ultimoFolgaISO: toISO(ultimo),
+    retornoISO: toISO(retorno)
+  };
+}
+
+/* ========= UI: preview de imagens ========= */
+const fotoInput = $('fotoManutencao');
+const previewDiv = $('previewFotos');
+
+if (fotoInput) {
+  fotoInput.addEventListener('change', async (e) => {
+    fotosParaUpload = Array.from(e.target.files || []);
+    fotosPreviewUrls = [];
+
+    previewDiv.innerHTML = "";
+    for (const f of fotosParaUpload) {
+      // criar preview dataURL
+      const reader = new FileReader();
+      const p = await new Promise(resolve => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(f);
+      });
+      fotosPreviewUrls.push(p);
+
+      const img = document.createElement('img');
+      img.src = p;
+      img.style.width = "120px";
+      img.style.height = "auto";
+      img.style.borderRadius = "6px";
+      img.style.border = "1px solid rgba(255,255,255,.08)";
+      img.style.objectFit = "cover";
+      previewDiv.appendChild(img);
+    }
+  });
+}
 
 /* ========= Perfil ========= */
 async function carregarPerfil(){
   const snap = await getDoc(doc(db,"usuarios",uid));
   if(!snap.exists()) return;
-
   const p = snap.data();
-
   $('dadosUsuarioCard').innerHTML = `
     <div class="item"><strong>Motorista</strong>${p.nome}</div>
     <div class="item"><strong>Telefone</strong>${p.telefone}</div>
@@ -200,57 +287,60 @@ async function carregarPerfil(){
 
 /* ========= Lista (stream) ========= */
 function iniciarStream(){
-  const qRef = query(
-    collection(db,"usuarios",uid,"manutencoes"),
-    orderBy("criadoEm","desc")
-  );
-
-  onSnapshot(qRef, snap=>{
-    manutencoes = snap.docs.map(d=>({
-      id: d.id,
-      data: d.data().data,
-      cavalo: d.data().cavalo,
-      reboque: d.data().reboque
-    }));
+  const qRef = query(collection(db,"usuarios",uid,"manutencoes"), orderBy("criadoEm","desc"));
+  onSnapshot(qRef, snap => {
+    manutencoes = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     renderLista();
   });
 }
 
 /* ========= Render lista ========= */
 function renderLista(){
-  if(manutencoes.length === 0){
+  if(!manutencoes || manutencoes.length === 0){
     $('lista').innerHTML = `<li>(nenhuma manutenção)</li>`;
     return;
   }
 
-  $('lista').innerHTML = manutencoes.map(m=>`
+  $('lista').innerHTML = manutencoes.map(m => `
     <li>
       <div style="flex:1;min-width:240px">
         <div style="font-weight:700">Manutenção — ${fmtBR(m.data)}</div>
         <div class="tag">Cavalo: ${m.cavalo || "—"}</div>
         <div class="tag">Reboque: ${m.reboque || "—"}</div>
+        ${m.fotos && m.fotos.length ? `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${m.fotos.slice(0,4).map(u=>`<img src="${u}" style="width:60px;height:auto;border-radius:4px">`).join('')}</div>` : ''}
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
         <button class="btn" data-id="${m.id}" data-act="edit">Editar</button>
         <button class="btn-red" data-id="${m.id}" data-act="del">Remover</button>
       </div>
     </li>
   `).join("");
 
-  document.querySelectorAll("button[data-act]").forEach(btn=>{
-    btn.onclick = async ()=>{
+  document.querySelectorAll("button[data-act]").forEach(btn => {
+    btn.onclick = async () => {
       const id = btn.dataset.id;
       const act = btn.dataset.act;
-
       if(act === "edit"){
         const m = manutencoes.find(x=>x.id===id);
-        $('dataManutencao').value = m.data;
-        $('descCavalo').value = m.cavalo;
-        $('descReboque').value = m.reboque;
+        $('dataManutencao').value = m.data || "";
+        $('descCavalo').value = m.cavalo || "";
+        $('descReboque').value = m.reboque || "";
+        // preview fotos do doc (não baixar para upload novamente) — mostrar miniaturas
+        previewDiv.innerHTML = "";
+        fotosParaUpload = []; fotosPreviewUrls = [];
+        if(m.fotos && m.fotos.length){
+          m.fotos.forEach(url=>{
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.width = "120px";
+            img.style.height = "auto";
+            img.style.borderRadius = "6px";
+            previewDiv.appendChild(img);
+          });
+        }
         editId = id;
         $('cancelarEdicao').style.display = "block";
       }
-
       if(act === "del"){
         if(confirm("Excluir este registro?")){
           await deleteDoc(doc(db,"usuarios",uid,"manutencoes",id));
@@ -260,49 +350,43 @@ function renderLista(){
   });
 }
 
-/* ========= Função helper de soma de dias ========= */
-function addDays(date, days){
-  const newD = new Date(date);
-  newD.setDate(newD.getDate() + days);
-  return newD;
+/* ========= Cancelar edição ========= */
+$('cancelarEdicao').onclick = ()=>{
+  editId = null;
+  $('cancelarEdicao').style.display = "none";
+  $('dataManutencao').value = "";
+  $('descCavalo').value = "";
+  $('descReboque').value = "";
+  fotosParaUpload = [];
+  fotosPreviewUrls = [];
+  previewDiv.innerHTML = "";
+};
+
+/* ========= Apagar todos ========= */
+$('apagarTodos').onclick = async ()=>{
+  if(!confirm("Excluir TODOS os registros?")) return;
+  const all = await getDocs(collection(db,"usuarios",uid,"manutencoes"));
+  const jobs = [];
+  all.forEach(d => jobs.push(deleteDoc(d.ref)));
+  await Promise.all(jobs);
+};
+
+/* ========= Upload helper: envia array de Files para Storage e retorna URLs ========= */
+async function uploadFilesAndGetUrls(filesArray){
+  if(!filesArray || filesArray.length === 0) return [];
+  const urls = [];
+  for(const file of filesArray){
+    const ts = Date.now();
+    const path = `manutencoes/${uid}/${ts}_${file.name.replace(/\s+/g,'_')}`;
+    const r = storageRef(storage, path);
+    const snap = await uploadBytes(r, file);
+    const url = await getDownloadURL(snap.ref);
+    urls.push(url);
+  }
+  return urls;
 }
 
-/* ========= CÁLCULO DE FOLGA — IGUAL À PÁGINA DE VIAGEM ========= */
-$('calcFolga').onclick = ()=>{
-
-  const i = $('inicioFolga').value;
-  const f = $('fimFolga').value;
-
-  if(!i || !f){
-    alert("Selecione as datas.");
-    return;
-  }
-
-  const inicio = new Date(i);
-  const fim = new Date(f);
-
-  const dias = Math.floor((fim - inicio)/(1000*60*60*24)) + 1;
-
-  const folgas = Math.ceil(dias / 7);
-
-  const primeiroDiaFolga = addDays(fim, 1);
-
-  const ultimoDiaFolga = addDays(primeiroDiaFolga, folgas - 1);
-
-  const retorno = addDays(ultimoDiaFolga, 1);
-
-  $('diasFolga').value = folgas;
-  $('retornoFolga').value = fmtBR(retorno);
-};
-
-$('limparFolga').onclick = ()=>{
-  $('inicioFolga').value = "";
-  $('fimFolga').value = "";
-  $('diasFolga').value = "";
-  $('retornoFolga').value = "";
-};
-
-/* ========= Salvar ========= */
+/* ========= Salvar (com upload de fotos) ========= */
 $('salvar').onclick = async ()=>{
   const data = $('dataManutencao').value;
   const cavalo = $('descCavalo').value.trim();
@@ -313,45 +397,71 @@ $('salvar').onclick = async ()=>{
     return;
   }
 
-  const registro = { data, cavalo, reboque, criadoEm: serverTimestamp() };
+  $('status').textContent = "Salvando...";
+
+  // upload imagens (se houver)
+  let urls = [];
+  try {
+    if(fotosParaUpload && fotosParaUpload.length){
+      urls = await uploadFilesAndGetUrls(fotosParaUpload);
+    }
+  } catch(err){
+    console.error("Erro upload fotos:", err);
+    alert("Falha ao enviar fotos. Tente novamente.");
+    $('status').textContent = "";
+    return;
+  }
+
+  const registro = { data, cavalo, reboque, fotos: urls, criadoEm: serverTimestamp() };
 
   if(editId){
     await updateDoc(doc(db,"usuarios",uid,"manutencoes",editId), registro);
     $('status').textContent = "Registro atualizado.";
-    $('cancelarEdicao').style.display = "none";
     editId = null;
-  }else{
+    $('cancelarEdicao').style.display = "none";
+  } else {
     await addDoc(collection(db,"usuarios",uid,"manutencoes"), registro);
     $('status').textContent = "Registro salvo.";
   }
 
+  // limpar campos & preview
   $('dataManutencao').value = "";
   $('descCavalo').value = "";
   $('descReboque').value = "";
+  fotosParaUpload = [];
+  fotosPreviewUrls = [];
+  previewDiv.innerHTML = "";
 };
 
-/* ========= Cancelar edição ========= */
-$('cancelarEdicao').onclick = ()=>{
-  editId = null;
-  $('cancelarEdicao').style.display = "none";
-  $('dataManutencao').value = "";
-  $('descCavalo').value = "";
-  $('descReboque').value = "";
-  $('status').textContent = "";
+/* ========= Cálculo de folga (botão) ========= */
+$('calcFolga').onclick = ()=>{
+  const ini = $('inicioFolga').value;
+  const fim = $('fimFolga').value;
+  if(!ini || !fim){ alert("Selecione as datas."); return; }
+  const info = calcularRetornoFolga(ini, fim);
+  $('diasFolga').value = info.folgas;
+  $('retornoFolga').value = fmtBR(info.retornoISO);
 };
 
-/* ========= Apagar todos ========= */
-$('apagarTodos').onclick = async ()=>{
-  if(!confirm("Excluir TODOS os registros?")) return;
+/* ========= PDF: helpers para imagens ========= */
+/* carrega URL em Image e retorna uma Promise<Image> */
+function loadImage(url){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = e => reject(e);
+    img.src = url;
+  });
+}
 
-  const all = await getDocs(collection(db,"usuarios",uid,"manutencoes"));
-  const jobs = [];
-  all.forEach(d=> jobs.push(deleteDoc(d.ref)));
-  await Promise.all(jobs);
-};
+/* ========= Gerar PDF COMPLETO (inclui fotos, tamanho médio ~350px) ========= */
+$('pdfCompleto').onclick = async ()=>{
 
-/* ========= PDF COMPLETO ========= */
-$('pdfCompleto').onclick = ()=>{
+  // garantir que list data esteja atualizado
+  await carregarPerfil();
+  await carregarDiarias?.(); // caso exista função (não obrigatória)
+  // já temos manutencoes via stream
 
   const { jsPDF } = window.jspdf;
   const docPDF = new jsPDF({ unit:'pt', format:'a4' });
@@ -359,60 +469,107 @@ $('pdfCompleto').onclick = ()=>{
   let y = 40;
   const left = 40;
   const pageWidth = docPDF.internal.pageSize.getWidth();
+  const pageHeight = docPDF.internal.pageSize.getHeight();
 
   docPDF.setFontSize(18).setFont(undefined,"bold");
   docPDF.text("Relatório Completo — Motorista Plus", left, y);
-  y+=30;
+  y += 30;
 
-  /* PERFIL */
+  // Perfil
   docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados do Motorista:", left, y);
-  y+=18;
-
+  docPDF.text("Dados do Motorista:", left, y); y += 18;
   const itens = document.querySelectorAll("#dadosUsuarioCard .item");
   itens.forEach(i=>{
     docPDF.setFontSize(11).setFont(undefined,"normal");
     docPDF.text(i.innerText.replace(/\n/g," - "), left, y);
-    y+=16;
+    y += 16;
   });
+  y += 12;
 
-  y+=12;
-
-  /* FOLGA */
+  // Folga
   docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados da Folga:", left, y);
-  y+=18;
-
+  docPDF.text("Dados da Folga:", left, y); y += 18;
   docPDF.setFontSize(11).setFont(undefined,"normal");
   docPDF.text(`Início da folga: ${$('inicioFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Fim da folga: ${$('fimFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Dias de folga: ${$('diasFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Retorno: ${$('retornoFolga').value || "—"}`, left, y); y+=26;
 
-  /* MANUTENÇÕES */
+  // MANUTENÇÕES — tabela
   docPDF.autoTable({
     startY: y,
-    head: [["Data","Cavalo","Reboque"]],
-    body: manutencoes.map(m=>[
+    head: [["Data","Cavalo","Reboque","Fotos"]],
+    body: manutencoes.map(m => [
       fmtBR(m.data),
       m.cavalo || "—",
-      m.reboque || "—"
+      m.reboque || "—",
+      m.fotos && m.fotos.length ? `${m.fotos.length} foto(s)` : "—"
     ]),
     styles:{ fontSize:10 },
     headStyles:{ fillColor:[243,146,32] },
     margin:{ left, right:left }
   });
 
-  y = docPDF.autoTable.previous.finalY + 40;
+  y = docPDF.autoTable.previous ? docPDF.autoTable.previous.finalY + 20 : y + 20;
 
-  docPDF.line(pageWidth/2 - 120, y, pageWidth/2 + 120, y);
-  docPDF.text("Assinatura do Motorista", pageWidth/2, y+16, { align:"center" });
+  // Agora inserir fotos por manutenção (cada manutenção com fotos)
+  for (const m of manutencoes) {
+    if (!m.fotos || m.fotos.length === 0) continue;
 
-  docPDF.save("manutencoes.pdf");
+    // Cabeçalho da manutenção
+    docPDF.setFontSize(12).setFont(undefined,"bold");
+    docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y); y += 16;
+    docPDF.setFontSize(11).setFont(undefined,"normal");
+    docPDF.text(`Cavalo: ${m.cavalo || "—"}    Reboque: ${m.reboque || "—"}`, left, y); y += 18;
+
+    for (const url of m.fotos) {
+      try {
+        const img = await loadImage(url);
+        // calcular escala pra width = 350 pontos (ou menor se imagem menor)
+        const maxWidth = 350;
+        const ratio = img.width / img.height;
+        let drawW = Math.min(maxWidth, img.width);
+        let drawH = drawW / ratio;
+
+        // se ultrapassar area vertical restante, nova página
+        if (y + drawH + 30 > pageHeight - 60) { // margem inferior
+          docPDF.addPage();
+          y = 40;
+        }
+
+        // desenhar imagem
+        // precisamos converter image para dataURL compatível com jsPDF
+        // criar canvas temporário
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+        docPDF.addImage(dataUrl, 'JPEG', left, y, drawW, drawH);
+        y += drawH + 10;
+      } catch(err){
+        console.warn("Falha ao carregar imagem para PDF", err);
+      }
+    }
+
+    // espaço entre manutenções
+    y += 12;
+    // se estiver perto do final da página, pular
+    if (y > pageHeight - 120) { docPDF.addPage(); y = 40; }
+  }
+
+  // linha de assinatura
+  const yAss = y + 20;
+  docPDF.line(pageWidth/2 - 120, yAss, pageWidth/2 + 120, yAss);
+  docPDF.text("Assinatura do Motorista", pageWidth/2, yAss + 16, { align: "center" });
+
+  docPDF.save("manutencoes_com_fotos.pdf");
 };
 
 /* ========= Auth ========= */
-onAuthStateChanged(auth, async user=>{
+onAuthStateChanged(auth, async user => {
   if(!user){ location.href = "login.html"; return; }
   uid = user.uid;
   await carregarPerfil();
