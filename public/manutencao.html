@@ -729,36 +729,57 @@ $('pdfCompleto').onclick = async () => {
   /* Fotos das manutenções */
   const size = 180;
 
-  for (const m of manutencoes) {
+  /* =========================
+      FOTOS NO PDF (CORRIGIDO)
+   ========================= */
 
-    if (!m.fotos?.length) continue;
+for (const m of manutencoes) {
 
-    docPDF.setFontSize(14).setFont(undefined, "bold");
-    docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y);
-    y += 20;
+  if (!m.fotos || m.fotos.length === 0) continue;
 
-    for (const url of m.fotos) {
+  docPDF.addPage();
+  y = 40;
 
-      const response = await fetch(url);
+  docPDF.setFontSize(14).setFont(undefined, "bold");
+  docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y);
+  y += 20;
+
+  for (const url of m.fotos) {
+
+    try {
+      // baixar imagem
+      const response = await fetch(url, { mode: "cors" });
       const blob = await response.blob();
 
+      // converter em base64
       const reader = new FileReader();
-      await new Promise(res => {
-        reader.onload = res;
+      const base64 = await new Promise(resolve => {
+        reader.onloadend = () => resolve(reader.result);
         reader.readAsDataURL(blob);
       });
 
-      if (y + size > 760) {
+      // verificar tamanho máximo na página
+      const imgW = 250; 
+      const imgH = 250;
+
+      if (y + imgH > 750) {
         docPDF.addPage();
         y = 40;
       }
 
-      docPDF.addImage(reader.result, "JPEG", left, y, size, size);
-      y += size + 20;
-    }
+      docPDF.addImage(base64, "JPEG", left, y, imgW, imgH);
+      y += imgH + 20;
 
-    y += 20;
+    } catch (err) {
+      console.error("Erro ao inserir foto no PDF:", err);
+
+      docPDF.setFontSize(10).setFont(undefined, "normal");
+      docPDF.text("Erro ao carregar imagem", left, y);
+      y += 20;
+    }
   }
+}
+
 
   /* Assinatura */
   docPDF.line(pageWidth / 2 - 120, y, pageWidth / 2 + 120, y);
