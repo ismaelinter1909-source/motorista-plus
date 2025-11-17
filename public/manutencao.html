@@ -11,72 +11,158 @@
 
   <style>
     :root{
-      --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
-      --primary:#f39220; --primary-700:#d47e16;
-      --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
-      --green:#2b9348; --red:#dc3545; --info:#0077b6;
+      --bg:#0b0f14; 
+      --bg2:#10161d; 
+      --card:#161c23;
+      --primary:#f39220; 
+      --primary-700:#d47e16;
+      --outline:#2b3a49; 
+      --text:#fff; 
+      --muted:#b5bcc7;
+      --green:#2b9348; 
+      --red:#dc3545; 
+      --info:#0077b6;
     }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:system-ui,Arial,sans-serif
+    }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column
+    }
 
     #voltarPainel{
-      position:fixed;top:12px;left:12px;z-index:9999;
-      padding:8px 14px;border-radius:8px;
+      position:fixed;
+      top:12px;
+      left:12px;
+      z-index:9999;
+      padding:8px 14px;
+      border-radius:8px;
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.25);
-      color:#fff;cursor:pointer;
+      color:#fff;
+      cursor:pointer;
       backdrop-filter:blur(4px);
-      width: auto;
+      width:auto;
     }
 
     header{
       background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
-      padding:30px 16px;text-align:center;border-bottom:1px solid var(--outline)
+      padding:30px 16px;
+      text-align:center;
+      border-bottom:1px solid var(--outline)
     }
-    header h1{font-size:clamp(20px,4vw,30px);font-weight:800}
+
+    header h1{
+      font-size:clamp(20px,4vw,30px);
+      font-weight:800
+    }
+
     .plus{color:var(--primary)}
 
-    main{width:94%;max-width:1100px;margin:18px auto;flex:1;display:grid;gap:14px}
+    main{
+      width:94%;
+      max-width:1100px;
+      margin:18px auto;
+      flex:1;
+      display:grid;
+      gap:14px
+    }
 
     .card{
       background:var(--card);
-      padding:16px;border-radius:12px;
+      padding:16px;
+      border-radius:12px;
       border:1px solid var(--outline);
       backdrop-filter:blur(6px)
     }
 
-    h2{color:var(--primary);margin-bottom:8px;font-size:1.15rem}
+    h2{
+      color:var(--primary);
+      margin-bottom:8px;
+      font-size:1.15rem
+    }
 
-    label{display:block;font-size:13px;margin-top:8px;color:#e8e8e8}
+    label{
+      display:block;
+      font-size:13px;
+      margin-top:8px;
+      color:#e8e8e8
+    }
 
     input,textarea,button{
-      width:100%;padding:12px;border-radius:10px;
+      width:100%;
+      padding:12px;
+      border-radius:10px;
       background:rgba(255,255,255,.08);
       border:1px solid var(--outline);
-      color:#fff;font-size:14px;
+      color:#fff;
+      font-size:14px;
     }
 
     textarea{min-height:90px;resize:vertical}
-    .btn{background:var(--primary);border:none;font-weight:700;cursor:pointer}
-    .btn:hover{background:var(--primary-700)}
-    .btn-red{background:var(--red)}
-    .btn-red:hover{filter:brightness(1.05)}
-    .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
 
-    ul{list-style:none;margin-top:8px;padding:0}
-    li{
-      background:rgba(255,255,255,.03);border:1px solid var(--outline);
-      padding:12px;border-radius:10px;
-      margin-bottom:8px;display:flex;justify-content:space-between;
-      flex-wrap:wrap;gap:10px;align-items:center
+    .btn{
+      background:var(--primary);
+      border:none;
+      font-weight:700;
+      cursor:pointer
     }
 
-    .preview-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .preview-row img{width:120px;height:auto;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,.06)}
+    .btn:hover{
+      background:var(--primary-700)
+    }
 
-    .small-muted{font-size:13px;color:var(--muted);margin-top:6px}
+    .btn-red{
+      background:var(--red);
+      color:white;
+    }
 
-    footer{text-align:center;color:var(--muted);padding:12px;margin-top:20px}
+    .btn-red:hover{filter:brightness(1.05)}
+
+    .btn-ghost{
+      background:transparent;
+      border:1px solid var(--outline);
+      color:var(--muted)
+    }
+
+    ul{list-style:none;margin-top:8px;padding:0}
+
+    li{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--outline);
+      padding:10px;
+      border-radius:10px;
+      margin-bottom:8px;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px
+    }
+
+    footer{
+      text-align:center;
+      color:var(--muted);
+      padding:12px;
+      margin-top:20px
+    }
+
+    /* preview fotos */
+    #previewFotos img{
+      width:120px;
+      height:auto;
+      margin:6px;
+      border-radius:8px;
+      border:1px solid var(--outline);
+    }
   </style>
 </head>
 
@@ -112,10 +198,8 @@
     <label>Retorno da Folga</label>
     <input type="text" id="retornoFolga" readonly>
 
-    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-      <button class="btn" id="calcFolga">Calcular</button>
-      <button class="btn-ghost" id="limparFolga">Limpar</button>
-    </div>
+    <button class="btn" id="calcFolga">Calcular</button>
+    <button class="btn-ghost" id="limparFolga">Limpar</button>
   </section>
 
   <!-- Registrar manutenção -->
@@ -126,23 +210,20 @@
     <input type="date" id="dataManutencao">
 
     <label>Descrição Cavalo</label>
-    <textarea id="descCavalo" placeholder="Ex.: substituição do farol, troca de óleo..."></textarea>
+    <textarea id="descCavalo"></textarea>
 
     <label>Descrição Reboque</label>
-    <textarea id="descReboque" placeholder="Observações para o reboque..."></textarea>
+    <textarea id="descReboque"></textarea>
 
     <label>Fotos (opcional)</label>
-    <!-- capture="environment" permite abrir câmera no mobile -->
-    <input type="file" id="fotoManutencao" accept="image/*" multiple>
+    <input type="file" id="fotoManutencao" accept="image/*" capture="environment" multiple>
     <div id="previewFotos"></div>
 
-    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-      <button class="btn" id="salvar">Salvar</button>
-      <button class="btn-ghost" id="cancelarEdicao" style="display:none">Cancelar Edição</button>
-      <button class="btn-red" id="apagarTodos">Apagar TODOS</button>
-    </div>
+    <button class="btn" id="salvar">Salvar</button>
+    <button class="btn-ghost" id="cancelarEdicao" style="display:none">Cancelar Edição</button>
+    <button class="btn-red" id="apagarTodos">Apagar TODOS</button>
 
-    <p id="status" class="small-muted"></p>
+    <p id="status" style="color:#ccc;margin-top:6px"></p>
   </section>
 
   <!-- Lista -->
@@ -162,8 +243,7 @@
 
 <!-- SCRIPT -->
 <script type="module">
-
-/* ========================= Firebase (app + services) ========================= */
+  /* ========================= Firebase ========================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
@@ -188,33 +268,35 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-const $ = (id)=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 let uid = null;
 let manutencoes = [];
 let editId = null;
-let fotosParaUpload = []; // Files array
-let fotosPreviewUrls = []; // dataURLs for preview
 
-/* ========================= Helpers data (safe local) ========================= */
+let fotosParaUpload = [];
+let fotosPreview = [];
+
+/* ========================= Helpers ========================= */
 const parseISO = iso => {
-  if (!iso) return null;
   const [y,m,d] = iso.split("-").map(Number);
   return new Date(y, m-1, d);
 };
+
 const toISO = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth()+1).padStart(2,"0");
   const d = String(date.getDate()).padStart(2,"0");
   return `${y}-${m}-${d}`;
 };
+
 const fmtBR = iso => {
   if(!iso) return "";
   const [y,m,d] = iso.split("-");
   return `${d}/${m}/${y}`;
 };
 
-/* ========= Funções folga (igual viagem) ========= */
+/* ========================= Folga (igual página viagem) ========================= */
 function calcularFolgasPelasFaixas(dias){
   if (dias <= 7) return 1;
   if (dias <= 14) return 2;
@@ -226,15 +308,22 @@ function calcularFolgasPelasFaixas(dias){
   if (dias <= 60) return 8;
   return Math.ceil(dias/7);
 }
+
 function calcularRetornoFolga(iniISO, fimISO){
   const ini = parseISO(iniISO);
   const fim = parseISO(fimISO);
+
   const dias = Math.round((fim - ini)/86400000) + 1;
   const folgas = calcularFolgasPelasFaixas(dias);
 
-  const primeiro = new Date(fim); primeiro.setDate(primeiro.getDate() + 1);
-  const ultimo = new Date(fim); ultimo.setDate(ultimo.getDate() + folgas);
-  const retorno = new Date(fim); retorno.setDate(retorno.getDate() + folgas + 1);
+  const primeiro = new Date(fim);
+  primeiro.setDate(primeiro.getDate()+1);
+
+  const ultimo = new Date(fim);
+  ultimo.setDate(ultimo.getDate()+folgas);
+
+  const retorno = new Date(fim);
+  retorno.setDate(retorno.getDate()+folgas+1);
 
   return {
     dias,
@@ -245,34 +334,36 @@ function calcularRetornoFolga(iniISO, fimISO){
   };
 }
 
-/* ========= Preview & file handling ========= */
-const inputFotos = $('fotoManutencao');
-const previewDiv = $('previewFotos');
+/* ========================= Visualizar fotos ========================= */
+const inputFotos = $("fotoManutencao");
+const previewDiv = $("previewFotos");
 
-inputFotos.addEventListener('change', async (e) => {
-  fotosParaUpload = Array.from(e.target.files || []);
-  fotosPreviewUrls = [];
-  previewDiv.innerHTML = "";
-  for (const f of fotosParaUpload) {
-    // criar preview dataURL
-    const reader = new FileReader();
-    const p = await new Promise(resolve => {
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(f);
-    });
-    fotosPreviewUrls.push(p);
-    const img = document.createElement('img');
-    img.src = p;
-    previewDiv.appendChild(img);
-  }
-});
+if (inputFotos) {
+  inputFotos.addEventListener("change", async e => {
+    fotosParaUpload = Array.from(e.target.files);
+    fotosPreview = [];
+    previewDiv.innerHTML = "";
 
-/* ========= Perfil ========= */
+    for (const file of fotosParaUpload) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        fotosPreview.push(reader.result);
+        const img = document.createElement("img");
+        img.src = reader.result;
+        previewDiv.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+/* ========================= Perfil ========================= */
 async function carregarPerfil(){
-  const snap = await getDoc(doc(db,"usuarios",uid));
-  if(!snap.exists()) return;
+  const snap = await getDoc(doc(db, "usuarios", uid));
+  if (!snap.exists()) return;
+
   const p = snap.data();
-  $('dadosUsuarioCard').innerHTML = `
+  $("dadosUsuarioCard").innerHTML = `
     <div class="item"><strong>Motorista</strong>${p.nome}</div>
     <div class="item"><strong>Telefone</strong>${p.telefone}</div>
     <div class="item"><strong>Cavalo</strong>${p.placaCavalo}</div>
@@ -281,59 +372,76 @@ async function carregarPerfil(){
   `;
 }
 
-/* ========= Stream lista ========= */
+/* ========================= Stream da lista ========================= */
 function iniciarStream(){
-  const qRef = query(collection(db,"usuarios",uid,"manutencoes"), orderBy("criadoEm","desc"));
-  onSnapshot(qRef, snap=>{
-    manutencoes = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  const qRef = query(
+    collection(db,"usuarios",uid,"manutencoes"),
+    orderBy("criadoEm","desc")
+  );
+  onSnapshot(qRef, snap => {
+    manutencoes = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     renderLista();
   });
 }
 
-/* ========= Render lista ========= */
+/* ========================= Render lista ========================= */
 function renderLista(){
-  if(!manutencoes || manutencoes.length === 0){
-    $('lista').innerHTML = `<li>(nenhuma manutenção)</li>`;
+  const lista = $("lista");
+
+  if (manutencoes.length === 0){
+    lista.innerHTML = `<li>(nenhuma manutenção)</li>`;
     return;
   }
 
-  $('lista').innerHTML = manutencoes.map(m=>`
+  lista.innerHTML = manutencoes.map(m => `
     <li>
-      <div style="flex:1;min-width:240px">
+      <div style="flex:1">
         <div style="font-weight:700">Manutenção — ${fmtBR(m.data)}</div>
-        <div class="small-muted">Cavalo: ${m.cavalo || "—"}  —  Reboque: ${m.reboque || "—"}</div>
-        ${m.fotos && m.fotos.length ? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${m.fotos.slice(0,4).map(u=>`<img src="${u}" style="width:60px;height:auto;border-radius:4px">`).join('')}</div>` : ''}
+        <div style="color:#bbb">Cavalo: ${m.cavalo || "—"} • Reboque: ${m.reboque || "—"}</div>
+        ${m.fotos?.length ? `
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+            ${m.fotos.slice(0,4).map(f=>`<img src="${f}" style="width:70px;border-radius:6px;border:1px solid #333">`).join("")}
+          </div>
+        ` : ""}
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn" data-id="${m.id}" data-act="edit">Editar</button>
-        <button class="btn-red" data-id="${m.id}" data-act="del">Remover</button>
+
+      <div style="display:flex;gap:8px">
+        <button class="btn" data-act="edit" data-id="${m.id}">Editar</button>
+        <button class="btn-red" data-act="del" data-id="${m.id}">Remover</button>
       </div>
     </li>
   `).join("");
 
   document.querySelectorAll("button[data-act]").forEach(btn=>{
-    btn.onclick = async ()=>{
+    btn.onclick = async () => {
       const id = btn.dataset.id;
       const act = btn.dataset.act;
-      if(act === "edit"){
-        const m = manutencoes.find(x=>x.id===id);
-        $('dataManutencao').value = m.data || "";
-        $('descCavalo').value = m.cavalo || "";
-        $('descReboque').value = m.reboque || "";
-        // preview existing fotos
+
+      if (act === "edit") {
+        const m = manutencoes.find(x => x.id === id);
+
+        $("dataManutencao").value = m.data;
+        $("descCavalo").value = m.cavalo || "";
+        $("descReboque").value = m.reboque || "";
+
         previewDiv.innerHTML = "";
-        fotosParaUpload = []; fotosPreviewUrls = [];
-        if(m.fotos && m.fotos.length){
+        fotosParaUpload = [];
+        fotosPreview = [];
+
+        if (m.fotos) {
           m.fotos.forEach(url=>{
-            const img = document.createElement('img'); img.src = url;
+            const img = document.createElement("img");
+            img.src = url;
             previewDiv.appendChild(img);
           });
         }
+
         editId = id;
-        $('cancelarEdicao').style.display = "block";
+        $("cancelarEdicao").style.display = "block";
       }
-      if(act === "del"){
-        if(confirm("Excluir este registro?")){
+
+      if (act === "del") {
+        if (confirm("Excluir este registro?")) {
           await deleteDoc(doc(db,"usuarios",uid,"manutencoes",id));
         }
       }
@@ -341,280 +449,239 @@ function renderLista(){
   });
 }
 
-/* ========= Cancelar edição ========= */
-$('cancelarEdicao').onclick = ()=>{
+/* ========================= Cancelar edição ========================= */
+$("cancelarEdicao").onclick = () => {
   editId = null;
-  $('cancelarEdicao').style.display = "none";
-  $('dataManutencao').value = "";
-  $('descCavalo').value = "";
-  $('descReboque').value = "";
-  fotosParaUpload = []; fotosPreviewUrls = [];
+  $("cancelarEdicao").style.display = "none";
+  $("dataManutencao").value = "";
+  $("descCavalo").value = "";
+  $("descReboque").value = "";
+  fotosParaUpload = [];
+  fotosPreview = [];
   previewDiv.innerHTML = "";
-  $('status').textContent = "";
 };
 
-/* ========= Apagar todos ========= */
-$('apagarTodos').onclick = async ()=>{
-  if(!confirm("Excluir TODOS os registros?")) return;
+/* ========================= Apagar TODOS ========================= */
+$("apagarTodos").onclick = async () => {
+  if (!confirm("Excluir todas as manutenções?")) return;
+
   const all = await getDocs(collection(db,"usuarios",uid,"manutencoes"));
-  const jobs = [];
-  all.forEach(d=> jobs.push(deleteDoc(d.ref)));
-  await Promise.all(jobs);
+  for (const d of all.docs) await deleteDoc(d.ref);
 };
 
-/* ========= Resize image helper antes do upload (maxWidth ~1200) ========= */
-async function resizeFile(file, maxWidth = 1200, quality = 0.8){
-  return new Promise((resolve, reject) => {
+/* ========================= REDUZIR FOTO ANTES DO UPLOAD ========================= */
+async function resizeImage(file, maxWidth = 1200) {
+  return new Promise(resolve => {
     const img = new Image();
     const reader = new FileReader();
+
     reader.onload = () => {
       img.onload = () => {
+        const canvas = document.createElement("canvas");
         const ratio = img.width / img.height;
-        const w = Math.min(maxWidth, img.width);
-        const h = Math.round(w / ratio);
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
+        canvas.width = maxWidth;
+        canvas.height = maxWidth / ratio;
+
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
         canvas.toBlob(blob => {
-          if(!blob) { reject(new Error('Erro ao redimensionar')); return; }
-          const newFile = new File([blob], file.name, { type: 'image/jpeg' });
-          resolve(newFile);
-        }, 'image/jpeg', quality);
+          resolve(new File([blob], file.name, { type:"image/jpeg" }));
+        }, "image/jpeg", 0.8);
       };
-      img.onerror = () => reject(new Error('Falha ao processar imagem'));
       img.src = reader.result;
     };
-    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
     reader.readAsDataURL(file);
   });
 }
 
-/* ========= Upload helper (faz resize e upload) ========= */
-async function uploadFilesAndGetUrls(filesArray){
-  if(!filesArray || filesArray.length === 0) return [];
-  const urls = [];
-  for(const file of filesArray){
-    // reduzir arquivo antes do upload para evitar problemas
-    let fileToUpload = file;
-    try {
-      fileToUpload = await resizeFile(file, 1200, 0.8);
-    } catch(e){
-      // se falhar resize, usar original
-      console.warn('resize falhou, usando original', e);
-      fileToUpload = file;
-    }
+/* ========================= UPLOAD DE FOTOS ========================= */
+async function enviarFotos(files){
+  if (!files.length) return [];
 
-    const ts = Date.now();
-    const cleanName = fileToUpload.name.replace(/\s+/g,'_');
-    const path = `manutencoes/${uid}/${ts}_${cleanName}`;
-    const r = storageRef(storage, path);
-    try {
-      const snap = await uploadBytes(r, fileToUpload);
-      const url = await getDownloadURL(snap.ref);
-      urls.push(url);
-    } catch(err){
-      // repassar erro para o chamador
-      throw err;
-    }
+  const urls = [];
+
+  for (const file of files){
+    const reduced = await resizeImage(file);
+    const name = Date.now() + "_" + file.name.replace(/\s+/g,"_");
+    const path = `manutencoes/${uid}/${name}`;
+    const refFile = storageRef(storage, path);
+
+    const upload = await uploadBytes(refFile, reduced);
+    const url = await getDownloadURL(upload.ref);
+
+    urls.push(url);
   }
+
   return urls;
 }
 
-/* ========= Salvar (com upload de fotos) ========= */
-$('salvar').onclick = async ()=>{
-  const data = $('dataManutencao').value;
-  const cavalo = $('descCavalo').value.trim();
-  const reboque = $('descReboque').value.trim();
+/* ========================= SALVAR MANUTENÇÃO ========================= */
+$("salvar").onclick = async () => {
+  const data = $("dataManutencao").value;
+  const cavalo = $("descCavalo").value.trim();
+  const reboque = $("descReboque").value.trim();
 
-  if(!data || (!cavalo && !reboque)){
+  const status = $("status");
+
+  if (!data || (!cavalo && !reboque)){
     alert("Preencha a data e pelo menos um campo (Cavalo ou Reboque).");
     return;
   }
 
-  $('status').style.color = varOr('#ccc');
-  $('status').textContent = "Salvando...";
+  status.textContent = "Enviando fotos...";
+  status.style.color = "#ccc";
 
-  let urls = [];
+  let fotos = [];
   try {
-    if(fotosParaUpload && fotosParaUpload.length){
-      $('status').textContent = `Enviando ${fotosParaUpload.length} foto(s)...`;
-      urls = await uploadFilesAndGetUrls(fotosParaUpload);
-    }
-  } catch(err){
-    console.error("Erro upload fotos:", err);
-    $('status').style.color = "red";
-    $('status').textContent = "ERRO AO ENVIAR FOTO: " + (err.message || err.toString());
+    fotos = await enviarFotos(fotosParaUpload);
+  } catch (e) {
+    status.textContent = "ERRO AO ENVIAR FOTO: " + e.message;
+    status.style.color = "red";
     return;
   }
 
-  const registro = { data, cavalo, reboque, fotos: urls, criadoEm: serverTimestamp() };
+  const registro = {
+    data,
+    cavalo,
+    reboque,
+    fotos,
+    criadoEm: serverTimestamp()
+  };
 
   try {
-    if(editId){
+    if (editId) {
       await updateDoc(doc(db,"usuarios",uid,"manutencoes",editId), registro);
-      $('status').textContent = "Registro atualizado.";
+      status.textContent = "Registro atualizado.";
       editId = null;
-      $('cancelarEdicao').style.display = "none";
+      $("cancelarEdicao").style.display = "none";
     } else {
       await addDoc(collection(db,"usuarios",uid,"manutencoes"), registro);
-      $('status').textContent = "Registro salvo.";
+      status.textContent = "Manutenção salva.";
     }
-  } catch(err){
-    console.error("Erro salvar documento:", err);
-    $('status').style.color = "red";
-    $('status').textContent = "ERRO AO SALVAR: " + (err.message || err.toString());
+  } catch (e) {
+    status.textContent = "ERRO AO SALVAR: " + e.message;
+    status.style.color = "red";
     return;
   }
 
-  // limpar
-  $('dataManutencao').value = "";
-  $('descCavalo').value = "";
-  $('descReboque').value = "";
-  fotosParaUpload = []; fotosPreviewUrls = [];
+  $("dataManutencao").value = "";
+  $("descCavalo").value = "";
+  $("descReboque").value = "";
+  fotosParaUpload = [];
+  fotosPreview = [];
   previewDiv.innerHTML = "";
 };
 
-/* helper de cor segura (fallback) */
-function varOr(fallback){
-  try {
-    return getComputedStyle(document.documentElement).getPropertyValue('--muted') || fallback;
-  } catch(e){ return fallback; }
-}
+/* ========================= Cálculo de Folga ========================= */
+$("calcFolga").onclick = () => {
+  const ini = $("inicioFolga").value;
+  const fim = $("fimFolga").value;
 
-/* ========= Calcular Folga (botão) ========= */
-$('calcFolga').onclick = ()=>{
-  const ini = $('inicioFolga').value;
-  const fim = $('fimFolga').value;
-  if(!ini || !fim){ alert("Selecione as datas."); return; }
+  if (!ini || !fim){
+    alert("Selecione as duas datas.");
+    return;
+  }
+
   const info = calcularRetornoFolga(ini, fim);
-  $('diasFolga').value = info.folgas;
-  $('retornoFolga').value = fmtBR(info.retornoISO);
+  $("diasFolga").value = info.folgas;
+  $("retornoFolga").value = fmtBR(info.retornoISO);
 };
 
-/* ========= PDF helpers ========= */
-function loadImage(url){
-  return new Promise((resolve,reject)=>{
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = ()=> resolve(img);
-    img.onerror = e=> reject(e);
-    img.src = url;
-  });
-}
+$("limparFolga").onclick = () => {
+  $("inicioFolga").value = "";
+  $("fimFolga").value = "";
+  $("diasFolga").value = "";
+  $("retornoFolga").value = "";
+};
 
-/* ========= Gerar PDF COMPLETO (inclui fotos méd. ~350px) ========= */
-$('pdfCompleto').onclick = async ()=>{
-
+/* ========================= PDF — COM FOTOS ========================= */
+$("pdfCompleto").onclick = async () => {
   const { jsPDF } = window.jspdf;
-  const docPDF = new jsPDF({ unit:'pt', format:'a4' });
+  const pdf = new jsPDF({ unit:"pt", format:"a4" });
 
   let y = 40;
   const left = 40;
-  const pageWidth = docPDF.internal.pageSize.getWidth();
+  const pageWidth = pdf.internal.pageSize.getWidth();
 
-  /* Cabeçalho */
-  docPDF.setFontSize(18).setFont(undefined,"bold");
-  docPDF.text("Relatório Completo — Motorista Plus", left, y);
-  y+=30;
+  pdf.setFontSize(18);
+  pdf.text("Relatório Completo — Motorista Plus", left, y);
+  y += 30;
 
-  /* Dados do Motorista */
-  docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados do Motorista:", left, y);
-  y+=18;
+  // Motorista
+  pdf.setFontSize(12);
+  pdf.text("Dados do Motorista:", left, y); y += 16;
 
-  const itens = document.querySelectorAll("#dadosUsuarioCard .item");
-  itens.forEach(i=>{
-    docPDF.setFontSize(11).setFont(undefined,"normal");
-    docPDF.text(i.innerText.replace(/\n/g," - "), left, y);
-    y+=16;
+  document.querySelectorAll("#dadosUsuarioCard .item").forEach(it => {
+    pdf.setFontSize(11);
+    pdf.text(it.innerText, left, y);
+    y += 14;
   });
 
-  y+=12;
+  y += 10;
 
-  /* FOLGA */
-  docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados da Folga:", left, y);
-  y+=18;
+  // Folga
+  pdf.setFontSize(12);
+  pdf.text("Dados da Folga:", left, y); y += 16;
 
-  docPDF.setFontSize(11).setFont(undefined,"normal");
-  docPDF.text(`Início da folga: ${$('inicioFolga').value || "—"}`, left, y); y+=16;
-  docPDF.text(`Fim da folga: ${$('fimFolga').value || "—"}`, left, y); y+=16;
-  docPDF.text(`Dias de folga: ${$('diasFolga').value || "—"}`, left, y); y+=16;
-  docPDF.text(`Retorno: ${$('retornoFolga').value || "—"}`, left, y); y+=26;
+  pdf.setFontSize(11);
+  pdf.text(`Início: ${$("inicioFolga").value || "—"}`, left, y); y += 14;
+  pdf.text(`Fim: ${$("fimFolga").value || "—"}`, left, y); y += 14;
+  pdf.text(`Dias: ${$("diasFolga").value || "—"}`, left, y); y += 14;
+  pdf.text(`Retorno: ${$("retornoFolga").value || "—"}`, left, y); y += 20;
 
-  /* TABELA PRINCIPAL */
-  docPDF.autoTable({
+  // Tabela
+  pdf.autoTable({
     startY: y,
     head: [["Data","Cavalo","Reboque","Fotos"]],
-    body: manutencoes.map(m=>[
+    body: manutencoes.map(m => [
       fmtBR(m.data),
       m.cavalo || "—",
       m.reboque || "—",
-      `${(m.fotos?.length || 0)} foto(s)`
+      `${m.fotos?.length || 0} foto(s)`
     ]),
-    styles:{ fontSize:10 },
-    headStyles:{ fillColor:[243,146,32] },
-    margin:{ left, right:left }
+    headStyles: { fillColor:[243,146,32] },
+    styles: { fontSize:10 },
+    margin: { left }
   });
 
-  y = docPDF.autoTable.previous.finalY + 30;
+  y = pdf.lastAutoTable.finalY + 30;
 
-  /* =========================
-      MOSTRAR FOTOS NO PDF
-     ========================= */
+  // Fotos
+  for (const m of manutencoes){
+    if (!m.fotos?.length) continue;
 
-  for (const m of manutencoes) {
-    if (!m.fotos || m.fotos.length === 0) continue;
+    pdf.setFontSize(14);
+    pdf.text(`Manutenção — ${fmtBR(m.data)}`, left, y);
+    y += 20;
 
-    docPDF.setFontSize(14).setFont(undefined,"bold");
-    docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y);
-    y+=20;
+    for (const url of m.fotos){
+      if (y > 700) { pdf.addPage(); y = 40; }
 
-    let imgSize = 180; // tamanho das fotos
-
-    for (const url of m.fotos) {
-
-      // Baixar imagem
-      const response = await fetch(url);
-      const blob = await response.blob();
-
-      // Converter para Base64
-      const reader = new FileReader();
-      await new Promise(resolve=>{
-        reader.onload = resolve;
+      const blob = await fetch(url).then(r => r.blob());
+      const base64 = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
         reader.readAsDataURL(blob);
       });
 
-      // Inserir imagem no PDF
-      if (y + imgSize > 780) {
-        docPDF.addPage();
-        y = 40;
-      }
-
-      docPDF.addImage(reader.result, "JPEG", left, y, imgSize, imgSize);
-      y += imgSize + 20;
+      pdf.addImage(base64, "JPEG", left, y, 180, 180);
+      y += 200;
     }
 
     y += 20;
   }
 
-  /* Firma */
-  docPDF.line(pageWidth/2 - 120, y, pageWidth/2 + 120, y);
-  docPDF.text("Assinatura do Motorista", pageWidth/2, y+16, { align:"center" });
-
-  docPDF.save("manutencoes.pdf");
+  pdf.save("manutencoes.pdf");
 };
 
-/* ========= Auth ========= */
-onAuthStateChanged(auth, async user=>{
-  if(!user){ location.href = "login.html"; return; }
+/* ========================= Autenticação ========================= */
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "login.html";
   uid = user.uid;
+
   await carregarPerfil();
   iniciarStream();
 });
-
 </script>
-
 </body>
 </html>
