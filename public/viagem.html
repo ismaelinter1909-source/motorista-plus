@@ -368,9 +368,9 @@
   const fim = new Date(fimISO);
   fim.setHours(0, 0, 0, 0);
 
-  // primeiro dia de folga = fim + 1
+  // primeiro dia de folga = fim + 2
   const primeiroDiaFolga = new Date(fim);
-  primeiroDiaFolga.setDate(primeiroDiaFolga.getDate() + 1);
+  primeiroDiaFolga.setDate(primeiroDiaFolga.getDate() + 2);
 
   // ultimo dia de folga = fim + folgas
   const ultimoDiaFolga = new Date(fim);
