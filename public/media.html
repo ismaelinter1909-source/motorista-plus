@@ -88,7 +88,7 @@
     th{ background:var(--primary); padding:6px; color:white; font-size:13px; }
     td{ padding:6px; border-bottom:1px solid var(--outline); text-align:center; }
 
-    /* Gráfico menor/leve */
+    /* Gráfico */
     canvas{
       max-height:180px !important;
       height:180px !important;
@@ -122,7 +122,7 @@
     <div id="dadosUsuarioCard">Carregando...</div>
   </section>
 
-  <!-- Registrar abastecimento (sempre Diesel nesta tela) -->
+  <!-- Registrar abastecimento -->
   <section class="card">
     <h2>Cadastrar Abastecimento (Diesel)</h2>
 
@@ -147,7 +147,7 @@
 
   <!-- Filtro e PDF -->
   <section class="card">
-    <h2>Período & PDF (apenas Diesel)</h2>
+    <h2>Período & PDF (Diesel)</h2>
 
     <label>Início</label>
     <input type="date" id="filterInicio">
@@ -181,6 +181,8 @@
         <tbody></tbody>
       </table>
     </div>
+
+    <div id="resumoKm"></div>
 
     <p id="resultado" style="margin-top:12px;font-weight:700;"></p>
   </section>
@@ -277,7 +279,20 @@
       .filter(r => between(r.data, inicioISO || null, fimISO || null));
   }
 
-  /* ===== Médias por abastecimento (entre registros consecutivos) ===== */
+  /* ===== Pegar o último KM antes do período ===== */
+  function ultimoKmAntesDoPeriodo(inicioISO){
+    if (!inicioISO) return null;
+
+    const anteriores = abastecimentos
+      .filter(a => a.tipo === 'diesel')
+      .filter(a => dateKey(a.data) < dateKey(inicioISO));
+
+    if (anteriores.length === 0) return null;
+
+    return Number(anteriores[anteriores.length - 1].quilometragem);
+  }
+
+  /* ===== Médias por abastecimento ===== */
   function mediasPorAbastecimento(arr){
     const out = [];
     for (let i=0;i<arr.length;i++){
@@ -290,14 +305,25 @@
     return out;
   }
 
-  /* ===== Média do período ===== */
-  function mediaPeriodo(arr){
-    if (arr.length < 2) return '--';
-    const kmIni = Number(arr[0].quilometragem);
-    const kmFim = Number(arr[arr.length - 1].quilometragem);
+  /* ===== Nova média do período ===== */
+  function mediaPeriodo(arr, inicioISO){
+    if (arr.length === 0) return '--';
+
+    const kmFinal = Number(arr[arr.length - 1].quilometragem);
+    const kmAntes = ultimoKmAntesDoPeriodo(inicioISO);
+
+    const kmInicial = (kmAntes !== null)
+      ? kmAntes
+      : Number(arr[0].quilometragem);
+
     const litrosTot = arr.reduce((s,r)=> s + Number(r.litros||0), 0);
+
     if (litrosTot <= 0) return '--';
-    return ((kmFim - kmIni) / litrosTot).toFixed(2);
+
+    const kmRodado = kmFinal - kmInicial;
+    if (kmRodado <= 0) return '--';
+
+    return (kmRodado / litrosTot).toFixed(2);
   }
 
   /* ===== Render tabela + gráfico + resumo ===== */
@@ -330,26 +356,50 @@
     const dataVals = medias.map((m,i)=> i===0 ? null : (m==='--' ? null : Number(m)));
     if (chart) chart.destroy();
     chart = new Chart(ctx, {
-      type: 'line',
-      data: {
+      type:'line',
+      data:{
         labels,
-        datasets: [{
+        datasets:[{
           label:'Média (km/L) — Diesel',
-          data: dataVals,
-          fill: true
+          data:dataVals,
+          fill:true
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options:{ responsive:true, maintainAspectRatio:false }
     });
 
-    // Resumo com -5%
-    const mp = mediaPeriodo(diesel);
+    /* ===== Resumo com KM antes do período ===== */
+    let resumoTexto = '';
+
+    if (diesel.length > 0){
+      const kmFinal = Number(diesel[diesel.length - 1].quilometragem);
+      const kmAntes = ultimoKmAntesDoPeriodo(inicio);
+      const kmInicial = (kmAntes !== null)
+        ? kmAntes
+        : Number(diesel[0].quilometragem);
+
+      const kmRodado = kmFinal - kmInicial;
+
+      resumoTexto = `
+        <div style="margin-top:10px; background:#ffffff10; padding:10px; border-radius:8px; font-size:14px;">
+          <b style="color:var(--primary)">Resumo do Período:</b><br>
+          Último KM antes do período: <b>${kmAntes !== null ? kmAntes : 'Não existe registro anterior'}</b><br>
+          KM Inicial usado no cálculo: <b>${kmInicial}</b><br>
+          KM Final do período: <b>${kmFinal}</b><br>
+          KM Rodado: <b>${kmRodado > 0 ? kmRodado : 0} km</b>
+        </div>
+      `;
+    }
+
+    $('resumoKm').innerHTML = resumoTexto;
+
+    // Resumo final
+    const mp = mediaPeriodo(diesel, inicio);
     $('resultado').textContent =
       (mp==='--')
         ? 'Sem dados suficientes (Diesel).'
         : `Média do período (Diesel): ${mp} km/L — Regra da empresa (-5%): ${(Number(mp)*0.95).toFixed(2)} km/L`;
   }
-
   /* ===== PDF (somente Diesel e período filtrado) ===== */
   function gerarPDF(){
     const { jsPDF } = window.jspdf;
@@ -393,17 +443,54 @@
       margin:{ left:startX, right:startX }
     });
 
-    y = doc.autoTable.previous.finalY + 16;
+    y = doc.autoTable.previous ? doc.autoTable.previous.finalY + 16 : y + 120;
 
-    // Resumo
-    const mp = mediaPeriodo(diesel);
-    if (mp !== '--'){
-      doc.setFont(undefined,'bold');
-      doc.text(`Média do período (Diesel): ${mp} km/L`, startX, y); y += 16;
-      doc.text(`Regra da empresa (-5%): ${(Number(mp)*0.95).toFixed(2)} km/L`, startX, y); y += 16;
-    }else{
-      doc.text('Sem dados suficientes para média (Diesel).', startX, y); y += 16;
+    // Determinar KM antes do período (registro completo se existir)
+    let registroAntes = null;
+    if (inicio) {
+      const anteriores = abastecimentos
+        .filter(a => a.tipo === 'diesel')
+        .filter(a => dateKey(a.data) < dateKey(inicio));
+      if (anteriores.length > 0) registroAntes = anteriores[anteriores.length - 1];
     }
+
+    const kmAntes = registroAntes ? Number(registroAntes.quilometragem) : null;
+    const kmInicialUsado = (kmAntes !== null && kmAntes !== undefined) ? kmAntes :
+      (diesel.length > 0 ? Number(diesel[0].quilometragem) : null);
+    const kmFinal = (diesel.length > 0) ? Number(diesel[diesel.length - 1].quilometragem) : null;
+
+    // Resumo no PDF
+    const mp = mediaPeriodo(diesel, inicio);
+    if (diesel.length > 0) {
+      doc.setFont(undefined,'bold');
+      doc.text('Resumo do Período:', startX, y); y += 14;
+      doc.setFont(undefined,'normal');
+
+      if (registroAntes) {
+        doc.text(`Último registro antes do período: KM ${registroAntes.quilometragem} — Data: ${registroAntes.data}`, startX, y); y += 14;
+      } else {
+        doc.text(`Último registro antes do período: — (não existe)`, startX, y); y += 14;
+      }
+
+      doc.text(`KM Inicial usado no cálculo: ${kmInicialUsado ?? '—'}`, startX, y); y += 14;
+      doc.text(`KM Final do período: ${kmFinal ?? '—'}`, startX, y); y += 14;
+
+      const litrosTot = diesel.reduce((s,r)=> s + Number(r.litros||0), 0);
+      doc.text(`Litros somados no período: ${litrosTot.toFixed(2)}`, startX, y); y += 14;
+
+      if (mp !== '--') {
+        doc.setFont(undefined,'bold');
+        doc.text(`Média do período (Diesel): ${mp} km/L`, startX, y); y += 14;
+        doc.text(`Regra da empresa (-5%): ${(Number(mp)*0.95).toFixed(2)} km/L`, startX, y); y += 14;
+        doc.setFont(undefined,'normal');
+      } else {
+        doc.text('Sem dados suficientes para média (Diesel).', startX, y); y += 14;
+      }
+    } else {
+      doc.text('Sem registros no período selecionado.', startX, y); y += 14;
+    }
+
+    y += 8;
 
     // Aprovado por (opcional)
     const aprov = ($('aprovadoPor').value || '').trim();
@@ -442,23 +529,28 @@
       return;
     }
 
-    await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
-      data, local, quilometragem: km, litros,
-      tipo: 'diesel',
-      obs,
-      criadoEm: serverTimestamp()
-    });
+    try {
+      await addDoc(collection(db, "usuarios", uid, "abastecimentos"), {
+        data, local, quilometragem: km, litros,
+        tipo: 'diesel',
+        obs,
+        criadoEm: serverTimestamp()
+      });
 
-    // limpar
-    $('data').value = '';
-    $('local').value = '';
-    $('quilometragem').value = '';
-    $('litros').value = '';
-    $('obs').value = '';
+      // limpar
+      $('data').value = '';
+      $('local').value = '';
+      $('quilometragem').value = '';
+      $('litros').value = '';
+      $('obs').value = '';
 
-    await carregarAbastecimentos();
-    atualizarTabelaEGrafico();
-    alert('Abastecimento (Diesel) adicionado!');
+      await carregarAbastecimentos();
+      atualizarTabelaEGrafico();
+      alert('Abastecimento (Diesel) adicionado!');
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar. Tente novamente.');
+    }
   });
 
   /* ===== Filtro / PDF / Limpar ===== */
