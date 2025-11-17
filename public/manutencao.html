@@ -341,29 +341,49 @@ const inputFotos = $('fotoManutencao');
 const previewDiv = $('previewFotos');
 
 if (inputFotos) {
-  inputFotos.addEventListener('change', async (e) => {
+  /* ========= Preview & file handling (PNG → JPEG) ========= */
+inputFotos.addEventListener('change', async (e) => {
+  fotosParaUpload = Array.from(e.target.files || []);
+  fotosPreviewUrls = [];
+  previewDiv.innerHTML = "";
 
-    fotosParaUpload = Array.from(e.target.files || []);
-    fotosPreviewUrls = [];
-    previewDiv.innerHTML = "";
+  for (const f of fotosParaUpload) {
+    // CONVERTER PNG PARA JPEG SEMPRE
+    const reader = new FileReader();
 
-    for (const f of fotosParaUpload) {
-      const reader = new FileReader();
-      const dataURL = await new Promise(res => {
-        reader.onload = () => res(reader.result);
-        reader.readAsDataURL(f);
-      });
+    const dataURL = await new Promise(resolve => {
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(f);
+    });
 
-      fotosPreviewUrls.push(dataURL);
-
-      const img = document.createElement('img');
+    // Criar imagem temporária
+    const img = new Image();
+    await new Promise(resolve => {
+      img.onload = resolve;
       img.src = dataURL;
-      img.style.width = "80px";
-      img.style.borderRadius = "8px";
+    });
 
-      previewDiv.appendChild(img);
-    }
-  });
+    // Converter tudo para JPEG menor
+    const canvas = document.createElement("canvas");
+    const MAX_WIDTH = 1200;
+    const ratio = img.width / img.height;
+
+    canvas.width = Math.min(MAX_WIDTH, img.width);
+    canvas.height = canvas.width / ratio;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // SEMPRE salvar como JPEG (mesmo se original for PNG)
+    const jpegURL = canvas.toDataURL("image/jpeg", 0.8);
+
+    fotosPreviewUrls.push(jpegURL);
+
+    const imgPrev = document.createElement("img");
+    imgPrev.src = jpegURL;
+    previewDiv.appendChild(imgPrev);
+  }
+});
 }
 
 /* ========================= Perfil ========================= */
@@ -545,29 +565,26 @@ async function resizeFile(file, maxWidth = 1200, quality = 0.85) {
 }
 
 /* ========================= Upload Fotos ========================= */
-
-async function uploadFilesAndGetUrls(files) {
-
-  if (!files || !files.length) return [];
+async function uploadFilesAndGetUrls(filesArray){
+  if(!filesArray.length) return [];
 
   const urls = [];
 
-  for (const file of files) {
+  for (let i = 0; i < fotosPreviewUrls.length; i++) {
 
-    let resized = file;
+    const base64 = fotosPreviewUrls[i];
 
-    try {
-      resized = await resizeFile(file);
-    } catch (e) {
-      resized = file;
-    }
+    // Converte Base64 → Blob JPEG
+    const blob = await (await fetch(base64)).blob();
 
-    const path = `manutencoes/${uid}/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-    const refUp = storageRef(storage, path);
+    const filename = `foto_${Date.now()}_${i}.jpg`;
+    const path = `manutencoes/${uid}/${filename}`;
 
-    const snap = await uploadBytes(refUp, resized);
+    const r = storageRef(storage, path);
 
+    const snap = await uploadBytes(r, blob);
     const url = await getDownloadURL(snap.ref);
+
     urls.push(url);
   }
 
