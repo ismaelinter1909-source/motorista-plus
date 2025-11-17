@@ -133,7 +133,7 @@
 
     <label>Fotos (opcional)</label>
     <!-- capture="environment" permite abrir câmera no mobile -->
-    <input type="file" id="fotoManutencao" accept="image/*" capture="environment" multiple>
+    <input type="file" id="fotos" accept="image/*" capture="environment" multiple>
     <div id="previewFotos" class="preview-row"></div>
 
     <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
@@ -505,101 +505,105 @@ function loadImage(url){
 
 /* ========= Gerar PDF COMPLETO (inclui fotos méd. ~350px) ========= */
 $('pdfCompleto').onclick = async ()=>{
-  // ensure list updated (stream already)
+
   const { jsPDF } = window.jspdf;
   const docPDF = new jsPDF({ unit:'pt', format:'a4' });
 
   let y = 40;
   const left = 40;
   const pageWidth = docPDF.internal.pageSize.getWidth();
-  const pageHeight = docPDF.internal.pageSize.getHeight();
 
+  /* Cabeçalho */
   docPDF.setFontSize(18).setFont(undefined,"bold");
   docPDF.text("Relatório Completo — Motorista Plus", left, y);
-  y += 30;
+  y+=30;
 
-  // Perfil
+  /* Dados do Motorista */
   docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados do Motorista:", left, y); y += 18;
+  docPDF.text("Dados do Motorista:", left, y);
+  y+=18;
+
   const itens = document.querySelectorAll("#dadosUsuarioCard .item");
   itens.forEach(i=>{
     docPDF.setFontSize(11).setFont(undefined,"normal");
     docPDF.text(i.innerText.replace(/\n/g," - "), left, y);
-    y += 16;
+    y+=16;
   });
-  y += 12;
 
-  // Folga
+  y+=12;
+
+  /* FOLGA */
   docPDF.setFontSize(12).setFont(undefined,"bold");
-  docPDF.text("Dados da Folga:", left, y); y += 18;
+  docPDF.text("Dados da Folga:", left, y);
+  y+=18;
+
   docPDF.setFontSize(11).setFont(undefined,"normal");
   docPDF.text(`Início da folga: ${$('inicioFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Fim da folga: ${$('fimFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Dias de folga: ${$('diasFolga').value || "—"}`, left, y); y+=16;
   docPDF.text(`Retorno: ${$('retornoFolga').value || "—"}`, left, y); y+=26;
 
-  // tabela de manutenções
+  /* TABELA PRINCIPAL */
   docPDF.autoTable({
     startY: y,
     head: [["Data","Cavalo","Reboque","Fotos"]],
-    body: manutencoes.map(m => [
+    body: manutencoes.map(m=>[
       fmtBR(m.data),
       m.cavalo || "—",
       m.reboque || "—",
-      m.fotos && m.fotos.length ? `${m.fotos.length} foto(s)` : "—"
+      `${(m.fotos?.length || 0)} foto(s)`
     ]),
     styles:{ fontSize:10 },
     headStyles:{ fillColor:[243,146,32] },
     margin:{ left, right:left }
   });
 
-  y = docPDF.autoTable.previous ? docPDF.autoTable.previous.finalY + 20 : y + 20;
+  y = docPDF.autoTable.previous.finalY + 30;
 
-  // inserir fotos por manutenção
-  for(const m of manutencoes){
-    if(!m.fotos || m.fotos.length === 0) continue;
+  /* =========================
+      MOSTRAR FOTOS NO PDF
+     ========================= */
 
-    docPDF.setFontSize(12).setFont(undefined,"bold");
-    docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y); y += 16;
-    docPDF.setFontSize(11).setFont(undefined,"normal");
-    docPDF.text(`Cavalo: ${m.cavalo || "—"}    Reboque: ${m.reboque || "—"}`, left, y); y += 18;
+  for (const m of manutencoes) {
+    if (!m.fotos || m.fotos.length === 0) continue;
 
-    for(const url of m.fotos){
-      try {
-        const img = await loadImage(url);
-        const maxWidth = 350;
-        const ratio = img.width / img.height;
-        let drawW = Math.min(maxWidth, img.width);
-        let drawH = drawW / ratio;
+    docPDF.setFontSize(14).setFont(undefined,"bold");
+    docPDF.text(`Manutenção — ${fmtBR(m.data)}`, left, y);
+    y+=20;
 
-        if(y + drawH + 30 > pageHeight - 60){
-          docPDF.addPage(); y = 40;
-        }
+    let imgSize = 180; // tamanho das fotos
 
-        // converter via canvas
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    for (const url of m.fotos) {
 
-        docPDF.addImage(dataUrl, 'JPEG', left, y, drawW, drawH);
-        y += drawH + 10;
-      } catch(err){
-        console.warn("Falha carregar imagem para PDF", err);
+      // Baixar imagem
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // Converter para Base64
+      const reader = new FileReader();
+      await new Promise(resolve=>{
+        reader.onload = resolve;
+        reader.readAsDataURL(blob);
+      });
+
+      // Inserir imagem no PDF
+      if (y + imgSize > 780) {
+        docPDF.addPage();
+        y = 40;
       }
+
+      docPDF.addImage(reader.result, "JPEG", left, y, imgSize, imgSize);
+      y += imgSize + 20;
     }
 
-    y += 12;
-    if(y > pageHeight - 120){ docPDF.addPage(); y = 40; }
+    y += 20;
   }
 
-  // assinatura
-  const yAss = y + 20;
-  docPDF.line(pageWidth/2 - 120, yAss, pageWidth/2 + 120, yAss);
-  docPDF.text("Assinatura do Motorista", pageWidth/2, yAss + 16, { align: "center" });
+  /* Firma */
+  docPDF.line(pageWidth/2 - 120, y, pageWidth/2 + 120, y);
+  docPDF.text("Assinatura do Motorista", pageWidth/2, y+16, { align:"center" });
 
-  docPDF.save("manutencoes_com_fotos.pdf");
+  docPDF.save("manutencoes.pdf");
 };
 
 /* ========= Auth ========= */
