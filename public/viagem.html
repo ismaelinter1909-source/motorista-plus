@@ -425,6 +425,11 @@ $('limparResumoBtn').onclick = async ()=>{
 
 /* ========= PDF ========= */
 $('gerarPDFBtn').onclick = async ()=>{
+
+  // Garantir soma automática antes do PDF
+  await carregarDiarias();
+  const resumo = recalcularResumo();
+
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({unit:"pt",format:"a4"});
   let y = 40;
@@ -435,6 +440,7 @@ $('gerarPDFBtn').onclick = async ()=>{
   pdf.text(`Motorista: ${perfil?.nome||"-"}`,40,y); y+=16;
   pdf.text(`Placas: ${perfil?.placaCavalo||"-"} / ${perfil?.placaReboque||"-"}`,40,y); y+=20;
 
+  /* ======= TABELA VIAGEM ======= */
   pdf.autoTable({
     startY:y,
     head:[["Início","Fim","Folgas","Retorno","KM Início","KM Fim","Rodado"]],
@@ -447,11 +453,13 @@ $('gerarPDFBtn').onclick = async ()=>{
       $('kmFim').value,
       $('kmRodados').value
     ]],
-    margin:{left:40,right:40}
+    margin:{left:40,right:40},
+    headStyles:{ fillColor:[243,146,32] } // LARANJA OFICIAL
   });
 
-  y = pdf.lastAutoTable.finalY + 20;
+  y = pdf.lastAutoTable.finalY + 25;
 
+  /* ======= TABELA DIÁRIAS ======= */
   pdf.text("Diárias:",40,y); y+=10;
 
   pdf.autoTable({
@@ -462,12 +470,44 @@ $('gerarPDFBtn').onclick = async ()=>{
       d.qtd,
       `R$ ${(d.qtd * Number($('valorDiaria').value)).toFixed(2)}`
     ]),
-    margin:{left:40,right:40}
+    margin:{left:40,right:40},
+    headStyles:{ fillColor:[243,146,32] }
   });
 
   y = pdf.lastAutoTable.finalY + 30;
 
-  pdf.text("Resumo Final:",40,y); y+=20;
+  /* ======= TABELA RESUMO DE DIÁRIAS — IGUAL AO CARD ======= */
+  pdf.text("Resumo de Diárias:",40,y); y += 10;
+
+  pdf.autoTable({
+    startY:y,
+    head:[[
+      "Empresa devia",
+      "Motorista devia",
+      "Diárias recebidas",
+      "Dias viajados",
+      "Empresa final",
+      "Motorista final"
+    ]],
+    body:[[
+      $('empresaDevia').value,
+      $('motoristaDevia').value,
+      $('diariasRecebidas').value,
+      resumo.viajados,
+      resumo.empresaFinal,
+      resumo.motoristaFinal
+    ]],
+    margin:{left:40,right:40},
+    headStyles:{ fillColor:[243,146,32] }
+  });
+
+  y = pdf.lastAutoTable.finalY + 25;
+
+  /* ======= RESUMO FINAL ======= */
+  pdf.setFontSize(12);
+  pdf.text("Resumo Final:",40,y); y+=18;
+
+  pdf.setFontSize(11);
   pdf.text($('resumoDiariasUI').textContent,40,y);
 
   pdf.save("planilha_viagem.pdf");
