@@ -8,6 +8,7 @@
   <!-- libs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
@@ -15,130 +16,30 @@
       --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
       --primary:#f39220; --primary-700:#d47e16;
       --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
-      --green:#2b9348; --red:#dc3545; --info:#0077b6;
+      --green:#2b9348; --red:#dc3545;
     }
-    *{ box-sizing:border-box; margin:0; padding:0; font-family:system-ui,Arial,sans-serif }
-
-    body{
-      background:var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-      overflow-x:hidden;
-    }
-
-    #voltarPainelTopo{
-      position:fixed; top:12px; left:12px; z-index:9999;
-      padding:8px 14px; width:auto;
-      background:rgba(255,255,255,.08);
-      color:#fff; border-radius:8px;
-      border:1px solid rgba(255,255,255,.25);
-      cursor:pointer; font-size:14px;
-      backdrop-filter:blur(4px);
-      transition:.3s ease;
-    }
-    #voltarPainelTopo:hover{ background:rgba(255,255,255,.16) }
-
-    header{
-      background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
-      padding:28px 16px;
-      text-align:center;
-      border-bottom:1px solid var(--outline)
-    }
-    header h1{ font-weight:800; font-size:clamp(20px,4vw,30px) }
-    header .plus{ color:var(--primary); }
-
-    .wrap{
-      width:94%; max-width:1100px;
-      margin:18px auto; flex:1;
-      display:grid; gap:14px;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--outline);
-      padding:16px;
-      border-radius:12px;
-      backdrop-filter:blur(6px);
-    }
-
-    .dados{
-      display:flex; flex-wrap:wrap;
-      gap:12px;
-    }
-    .dados div{
-      min-width:160px; flex:1;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--outline);
-      padding:10px;
-      border-radius:10px;
-    }
-    .dados div b{
-      color:var(--primary);
-      display:block; margin-bottom:2px;
-    }
-
-    label{
-      display:block;
-      color:#e8e8e8;
-      margin:6px 0 4px;
-      font-size:13px;
-    }
-
-    input,select,textarea,button{
-      width:100%; padding:12px;
-      border-radius:10px;
-      border:1px solid var(--outline);
-      background:rgba(255,255,255,.08);
-      color:#fff; font-size:15px;
-      outline:none;
-      transition:.25s;
-    }
-
-    .btn{
-      background:var(--primary); border:none;
-      font-weight:700; cursor:pointer;
-      color:#fff; transition:.25s;
-    }
-    .btn:hover{ background:var(--primary-700); transform:translateY(-1px); }
-
-    .btn-green{ background:var(--green); }
-    .btn-red{ background:var(--red); }
-    .btn-ghost{ background:transparent; border:1px solid var(--outline); color:var(--muted); }
-
-    .grid2{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:14px;
-    }
-
-    @media(max-width:900px){ .grid2{ grid-template-columns:1fr; } }
-
-    ul{
-      list-style:none;
-      padding-left:0;
-      margin-top:8px;
-      max-height:260px;
-      overflow-y:auto;
-    }
-    li{
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--outline);
-      padding:12px;
-      border-radius:10px;
-      margin:6px 0;
-      display:flex; flex-wrap:wrap;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-    }
-
-    footer{
-      padding:12px; text-align:center;
-      color:var(--muted);
-      border-top:1px solid var(--outline);
-    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
+    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+    #voltarPainelTopo{position:fixed;top:12px;left:12px;z-index:9999;padding:8px 14px;width:auto;background:rgba(255,255,255,.08);color:#fff;border-radius:8px;border:1px solid rgba(255,255,255,.25);cursor:pointer;font-size:14px;backdrop-filter:blur(4px);transition:.3s}
+    #voltarPainelTopo:hover{background:rgba(255,255,255,.16)}
+    header{background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));padding:28px 16px;text-align:center;border-bottom:1px solid var(--outline)}
+    header h1{font-weight:800;font-size:clamp(20px,4vw,30px)} header .plus{color:var(--primary)}
+    .wrap{width:94%;max-width:1100px;margin:18px auto;flex:1;display:grid;gap:14px}
+    .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px)}
+    .dados{display:flex;flex-wrap:wrap;gap:12px}
+    .dados div{min-width:160px;flex:1;background:rgba(255,255,255,.05);border:1px solid var(--outline);padding:10px;border-radius:10px}
+    .dados div b{color:var(--primary);display:block;margin-bottom:2px}
+    label{display:block;color:#e8e8e8;margin:6px 0 4px;font-size:13px}
+    input,select,textarea,button{width:100%;padding:12px;border-radius:10px;border:1px solid var(--outline);background:rgba(255,255,255,.08);color:#fff;font-size:15px;outline:none;transition:.25s}
+    .btn{background:var(--primary);border:none;font-weight:700;cursor:pointer;color:#fff;transition:.25s}
+    .btn:hover{background:var(--primary-700);transform:translateY(-1px)}
+    .btn-green{background:var(--green)} .btn-red{background:var(--red)} .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
+    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+    ul{list-style:none;padding-left:0;margin-top:8px;max-height:260px;overflow-y:auto}
+    li{background:rgba(255,255,255,.05);border:1px solid var(--outline);padding:12px;border-radius:10px;margin:6px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
+    canvas{max-width:100%;height:auto}
   </style>
 </head>
 <body>
@@ -151,452 +52,480 @@
 
 <main class="wrap">
 
-  <!-- DADOS MOTORISTA -->
+  <!-- Dados do motorista -->
   <section class="card">
     <h2>Dados do Motorista</h2>
-    <div class="dados" id="dadosUsuario"></div>
+    <div class="dados" id="dadosUsuario">Carregando...</div>
   </section>
 
-  <!-- DIÁRIAS -->
+  <!-- Diárias -->
   <section class="card">
     <h2>Período da Viagem (diárias automáticas)</h2>
-    <div class="row" style="margin-top:6px">
-      <div style="flex:1 1 220px">
-        <label>Data Início</label>
-        <input type="date" id="tripStart">
-      </div>
-      <div style="flex:1 1 220px">
-        <label>Data Fim</label>
-        <input type="date" id="tripEnd">
-      </div>
-      <div style="flex:0 0 180px;align-self:end">
-        <button class="btn btn-green" id="calcDiarias">Calcular Bônus</button>
-      </div>
-      <div style="flex:0 0 180px;align-self:end">
-        <button class="btn btn-ghost" id="clearDiarias">Limpar Bônus</button>
-      </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1 1 220px"><label>Data Início</label><input type="date" id="tripStart"></div>
+      <div style="flex:1 1 220px"><label>Data Fim</label><input type="date" id="tripEnd"></div>
+      <div style="flex:0 0 160px;align-self:end"><button id="calcDiarias" class="btn btn-green">Calcular Bônus</button></div>
+      <div style="flex:0 0 160px;align-self:end"><button id="clearDiarias" class="btn btn-ghost">Limpar Bônus</button></div>
     </div>
-
-    <p id="totalDiariasText" class="tag" style="margin-top:8px">
-      Total de Bônus: 0 — Valor total: R$ 0,00
-    </p>
+    <p id="totalDiariasText" style="margin-top:8px">Total de Bônus: 0 — Valor total: R$ 0,00</p>
   </section>
 
-  <!-- GRID GASTOS/VALES -->
+  <!-- Gastos / Vales -->
   <div class="grid2">
-
-    <!-- GASTOS -->
     <section class="card">
       <h2>Registrar Gastos</h2>
-
-      <label>Data</label>
-      <input type="date" id="gastoDate">
-
-      <label>Motivo</label>
-      <input id="gastoMotivo">
-
-      <label>Local</label>
-      <input id="gastoLocal">
-
-      <label>Valor (R$)</label>
-      <input type="number" id="gastoValor" step="0.01">
-
+      <label>Data</label><input type="date" id="gastoDate">
+      <label>Motivo</label><input id="gastoMotivo" placeholder="Ex: Almoço, Pedágio">
+      <label>Local</label><input id="gastoLocal" placeholder="Ex: Posto X">
+      <label>Valor (R$)</label><input type="number" step="0.01" id="gastoValor" placeholder="0.00">
       <label>Autorização</label>
       <select id="gastoAut">
-        <option>Francisco</option>
-        <option>Vinicios</option>
-        <option>Douglas</option>
-        <option>Daniel</option>
-        <option>Jeferson</option>
-        <option>Valdir</option>
-        <option>William</option>
-        <option>Outro</option>
+        <option>Francisco</option><option>Vinicios</option><option>Douglas</option><option>Daniel</option><option>Jeferson</option><option>Valdir</option><option>William</option><option>Outro</option>
       </select>
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-green" id="addGasto">Salvar</button>
-        <button class="btn btn-ghost" id="cancelarEditGasto" style="display:none">Cancelar edição</button>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="addGasto" class="btn btn-green" style="flex:1">Salvar</button>
+        <button id="cancelarEditGasto" class="btn btn-ghost" style="flex:1;display:none">Cancelar edição</button>
       </div>
-
-      <h3 style="margin-top:12px;font-size:1rem;color:var(--primary)">Lista de Gastos</h3>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button id="exportGastosCsv" class="btn btn-ghost" style="flex:1">Exportar Gastos CSV</button>
+        <button id="exportGastosXls" class="btn btn-ghost" style="flex:1">Exportar Gastos XLSX</button>
+      </div>
+      <h3 style="margin-top:12px;color:var(--primary)">Lista de Gastos</h3>
       <ul id="listaGastos"></ul>
     </section>
 
-    <!-- VALES -->
     <section class="card">
       <h2>Retirada de Vales</h2>
-
-      <label>Data</label>
-      <input type="date" id="valeDate">
-
-      <label>Descrição</label>
-      <input id="valeMotivo">
-
-      <label>Valor (R$)</label>
-      <input type="number" id="valeValor" step="0.01">
-
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-green" id="addVale">Salvar</button>
-        <button class="btn btn-ghost" id="cancelarEditVale" style="display:none">Cancelar edição</button>
+      <label>Data</label><input type="date" id="valeDate">
+      <label>Descrição</label><input id="valeMotivo" placeholder="Ex: Vale refeição">
+      <label>Valor (R$)</label><input type="number" step="0.01" id="valeValor" placeholder="0.00">
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="addVale" class="btn btn-green" style="flex:1">Salvar</button>
+        <button id="cancelarEditVale" class="btn btn-ghost" style="flex:1;display:none">Cancelar edição</button>
       </div>
-
-      <h3 style="margin-top:12px;font-size:1rem;color:var(--primary)">Lista de Vales</h3>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button id="exportValesCsv" class="btn btn-ghost" style="flex:1">Exportar Vales CSV</button>
+        <button id="exportValesXls" class="btn btn-ghost" style="flex:1">Exportar Vales XLSX</button>
+      </div>
+      <h3 style="margin-top:12px;color:var(--primary)">Lista de Vales</h3>
       <ul id="listaVales"></ul>
     </section>
-
   </div>
 
-  <!-- RESUMO -->
+  <!-- Resumo + gráfico -->
   <section class="card" style="text-align:center">
     <h2>Resumo Visual</h2>
-    <canvas id="chartResumo"></canvas>
-    <p id="saldoTexto"></p>
+    <canvas id="chartResumo" width="420" height="280"></canvas>
+    <p id="saldoTexto" style="margin-top:8px;font-weight:700"></p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+      <button id="exportCsvAll" class="btn btn-ghost">Exportar Todos CSV</button>
+      <button id="exportXlsAll" class="btn btn-ghost">Exportar Todos XLSX</button>
+    </div>
   </section>
 
-  <!-- AÇÕES -->
+  <!-- Ações -->
   <section class="card" style="text-align:center">
-    <button class="btn btn-green" id="gerarPDF">Gerar PDF</button>
-    <button class="btn btn-red" id="clearAll">Apagar TODOS</button>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button id="gerarPDF" class="btn btn-green" style="min-width:180px">Gerar PDF (planilha + gráfico)</button>
+      <button id="clearAll" class="btn btn-red" style="min-width:180px">Apagar TODOS</button>
+    </div>
   </section>
 
 </main>
 
 <footer>© 2025 Motorista Plus</footer>
 
-<!-- SCRIPT COMPLETO -->
+<!-- SCRIPT -->
 <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, addDoc, updateDoc,
+    deleteDoc, query, orderBy, onSnapshot, getDocs, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, collection, addDoc, updateDoc,
-  deleteDoc, query, orderBy, onSnapshot, getDocs, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  // sua config
+  const app = initializeApp({
+    apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+    authDomain:"motorista-plus-c53f4.firebaseapp.com",
+    projectId:"motorista-plus-c53f4",
+    storageBucket:"motorista-plus-c53f4.appspot.com",
+    messagingSenderId:"766097061342",
+    appId:"1:766097061342:web:36d999bec6d9fe8c46994f"
+  });
 
-const app = initializeApp({
-  apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-  authDomain:"motorista-plus-c53f4.firebaseapp.com",
-  projectId:"motorista-plus-c53f4",
-  storageBucket:"motorista-plus-c53f4.appspot.com",
-  messagingSenderId:"766097061342",
-  appId:"1:766097061342:web:36d999bec6d9fe8c46994f"
-});
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const auth = getAuth(app);
-const db   = getFirestore(app);
+  const $ = id => document.getElementById(id);
 
-const $ = (id)=>document.getElementById(id);
+  let uid = null;
+  let perfil = null;
+  let gastos = [];
+  let vales = [];
+  let editGastoId = null;
+  let editValeId = null;
+  const DIARIA_VALOR = 4.28;
+  let totalDiarias = 0;
 
-let uid = null;
-let perfil = null;
-let gastos = [];
-let vales = [];
-let editGastoId = null;
-let editValeId  = null;
+  const fmtBR = iso => iso ? iso.split("-").reverse().join("/") : "—";
 
-// Valor da diária
-const DIARIA_VALOR = 4.28;
-let totalDiarias = 0;
+  /* carregar perfil */
+  async function carregarPerfil(){
+    const snap = await getDoc(doc(db,"usuarios",uid));
+    if(!snap.exists()) return;
+    perfil = snap.data();
+    $('dadosUsuario').innerHTML = `
+      <div><b>Motorista:</b> ${perfil.nome || '—'}</div>
+      <div><b>Cavalo:</b> ${perfil.placaCavalo || '—'}</div>
+      <div><b>Reboque:</b> ${perfil.placaReboque || '—'}</div>
+      <div><b>Email:</b> ${perfil.email || '—'}</div>
+      <div><b>Telefone:</b> ${perfil.telefone || '—'}</div>
+    `;
+  }
 
-/* ===== FORMATAÇÃO ===== */
-const fmtBR = (iso)=> iso ? iso.split("-").reverse().join("/") : "—";
+  /* streams gastos/vales */
+  function iniciarStream(){
+    const qG = query(collection(db,"usuarios",uid,"gastos"), orderBy("criadoEm","desc"));
+    onSnapshot(qG, snap => {
+      gastos = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      renderGastos(); atualizarResumo();
+    });
 
-/* ================= PERFIL ================= */
-async function carregarPerfil(){
-  const snap = await getDoc(doc(db,"usuarios",uid));
-  if(!snap.exists()) return;
-  perfil = snap.data();
+    const qV = query(collection(db,"usuarios",uid,"vales"), orderBy("criadoEm","desc"));
+    onSnapshot(qV, snap => {
+      vales = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      renderVales(); atualizarResumo();
+    });
+  }
 
-  $('dadosUsuario').innerHTML = `
-    <div><b>Motorista:</b> ${perfil.nome}</div>
-    <div><b>Cavalo:</b> ${perfil.placaCavalo}</div>
-    <div><b>Reboque:</b> ${perfil.placaReboque}</div>
-    <div><b>Email:</b> ${perfil.email}</div>
-    <div><b>Telefone:</b> ${perfil.telefone}</div>
-  `;
-}
+  /* render */
+  function renderGastos(){
+    const ul = $('listaGastos');
+    if(!gastos.length){ ul.innerHTML = "<li class='tag'>(nenhum)</li>"; return; }
+    ul.innerHTML = gastos.map(g => `
+      <li>
+        <div style="flex:1">
+          <div><b>${fmtBR(g.date)} — R$ ${Number(g.valor).toFixed(2)}</b></div>
+          <div class="tag">${g.motivo} — ${g.local} — Aut.: ${g.aut}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" data-id="${g.id}" data-act="editG">Editar</button>
+          <button class="btn btn-red" data-id="${g.id}" data-act="delG">Remover</button>
+        </div>
+      </li>
+    `).join("");
+    ul.querySelectorAll("button").forEach(b=>{
+      b.onclick = async () => {
+        const id = b.dataset.id, act = b.dataset.act;
+        if(act === "editG"){
+          const g = gastos.find(x=>x.id===id);
+          $('gastoDate').value = g.date || "";
+          $('gastoMotivo').value = g.motivo || "";
+          $('gastoLocal').value = g.local || "";
+          $('gastoValor').value = g.valor || "";
+          $('gastoAut').value = g.aut || "Francisco";
+          editGastoId = id;
+          $('cancelarEditGasto').style.display = "inline-block";
+        } else if(act === "delG"){
+          if(confirm("Excluir este gasto?")) await deleteDoc(doc(db,"usuarios",uid,"gastos",id));
+        }
+      };
+    });
+  }
 
-/* ================== STREAM REALTIME ================== */
-function iniciarStream(){
+  function renderVales(){
+    const ul = $('listaVales');
+    if(!vales.length){ ul.innerHTML = "<li class='tag'>(nenhum)</li>"; return; }
+    ul.innerHTML = vales.map(v => `
+      <li>
+        <div style="flex:1">
+          <div><b>${fmtBR(v.date)} — R$ ${Number(v.valor).toFixed(2)}</b></div>
+          <div class="tag">${v.motivo || '—'}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" data-id="${v.id}" data-act="editV">Editar</button>
+          <button class="btn btn-red" data-id="${v.id}" data-act="delV">Remover</button>
+        </div>
+      </li>
+    `).join("");
+    ul.querySelectorAll("button").forEach(b=>{
+      b.onclick = async () => {
+        const id = b.dataset.id, act = b.dataset.act;
+        if(act === "editV"){
+          const v = vales.find(x=>x.id===id);
+          $('valeDate').value = v.date || "";
+          $('valeMotivo').value = v.motivo || "";
+          $('valeValor').value = v.valor || "";
+          editValeId = id;
+          $('cancelarEditVale').style.display = "inline-block";
+        } else if(act === "delV"){
+          if(confirm("Excluir este vale?")) await deleteDoc(doc(db,"usuarios",uid,"vales",id));
+        }
+      };
+    });
+  }
 
-  const qG = query(collection(db,"usuarios",uid,"gastos"), orderBy("criadoEm","desc"));
-  onSnapshot(qG, snap=>{
-    gastos = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    renderGastos();
+  /* diárias */
+  $('calcDiarias').addEventListener('click', () => {
+    const s = $('tripStart').value, e = $('tripEnd').value;
+    if(!s || !e || s > e){ alert("Selecione datas válidas."); return; }
+    const sd = new Date(s + "T00:00:00"), ed = new Date(e + "T00:00:00");
+    const days = Math.floor((ed - sd) / 86400000) + 1;
+    totalDiarias = days;
+    localStorage.setItem(`mp:${uid}:start`, s);
+    localStorage.setItem(`mp:${uid}:end`, e);
+    localStorage.setItem(`mp:${uid}:dias`, String(days));
     atualizarResumo();
   });
 
-  const qV = query(collection(db,"usuarios",uid,"vales"), orderBy("criadoEm","desc"));
-  onSnapshot(qV, snap=>{
-    vales = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-    renderVales();
+  $('clearDiarias').addEventListener('click', () => {
+    $('tripStart').value = ""; $('tripEnd').value = ""; totalDiarias = 0;
+    localStorage.removeItem(`mp:${uid}:start`); localStorage.removeItem(`mp:${uid}:end`); localStorage.removeItem(`mp:${uid}:dias`);
     atualizarResumo();
   });
-}
 
-/* ================== LISTAS ================== */
-function renderGastos(){
-  if(gastos.length === 0){
-    listaGastos.innerHTML = "<li class='tag'>(nenhum)</li>";
-    return;
-  }
-  listaGastos.innerHTML = gastos.map(g=>`
-    <li>
-      <div style="flex:1">
-        <b>${fmtBR(g.date)} — R$ ${g.valor.toFixed(2)}</b>
-        <div class="tag">${g.motivo} — ${g.local} — Aut.: ${g.aut}</div>
-      </div>
-      <button class="btn" data-id="${g.id}" data-act="edit">Editar</button>
-      <button class="btn-red" data-id="${g.id}" data-act="del">Remover</button>
-    </li>
-  `).join("");
-
-  document.querySelectorAll("#listaGastos button").forEach(b=>{
-    b.onclick = async ()=>{
-      const id = b.dataset.id;
-      const act = b.dataset.act;
-      if(act==="edit"){
-        const g = gastos.find(x=>x.id===id);
-        gastoDate.value = g.date;
-        gastoMotivo.value = g.motivo;
-        gastoLocal.value = g.local;
-        gastoValor.value = g.valor;
-        gastoAut.value = g.aut;
-        editGastoId = id;
-        cancelarEditGasto.style.display="block";
-      }
-      else{
-        if(confirm("Excluir gasto?")){
-          await deleteDoc(doc(db,"usuarios",uid,"gastos",id));
-        }
-      }
-    };
+  /* CRUD gastos */
+  $('addGasto').addEventListener('click', async () => {
+    const d = $('gastoDate').value, m = $('gastoMotivo').value.trim(), l = $('gastoLocal').value.trim();
+    const v = parseFloat($('gastoValor').value || 0), a = $('gastoAut').value || "Francisco";
+    if(!d || !m || !l || !v){ alert("Preencha todos os campos e valor > 0"); return; }
+    const payload = { date:d, motivo:m, local:l, valor:v, aut:a, criadoEm: serverTimestamp() };
+    if(editGastoId){ await updateDoc(doc(db,"usuarios",uid,"gastos",editGastoId), payload); editGastoId = null; $('cancelarEditGasto').style.display='none'; }
+    else await addDoc(collection(db,"usuarios",uid,"gastos"), payload);
+    $('gastoDate').value=''; $('gastoMotivo').value=''; $('gastoLocal').value=''; $('gastoValor').value=''; $('gastoAut').value='Francisco';
   });
-}
 
-function renderVales(){
-  if(vales.length === 0){
-    listaVales.innerHTML = "<li class='tag'>(nenhum)</li>";
-    return;
-  }
-  listaVales.innerHTML = vales.map(v=>`
-    <li>
-      <div style="flex:1">
-        <b>${fmtBR(v.date)} — R$ ${v.valor.toFixed(2)}</b>
-        <div class="tag">${v.motivo || "—"}</div>
-      </div>
-      <button class="btn" data-id="${v.id}" data-act="edit">Editar</button>
-      <button class="btn-red" data-id="${v.id}" data-act="del">Remover</button>
-    </li>
-  `).join("");
-
-  document.querySelectorAll("#listaVales button").forEach(b=>{
-    b.onclick = async ()=>{
-      const id = b.dataset.id;
-      const act = b.dataset.act;
-      if(act==="edit"){
-        const v = vales.find(x=>x.id===id);
-        valeDate.value = v.date;
-        valeMotivo.value = v.motivo;
-        valeValor.value = v.valor;
-        editValeId = id;
-        cancelarEditVale.style.display="block";
-      }
-      else{
-        if(confirm("Excluir vale?")){
-          await deleteDoc(doc(db,"usuarios",uid,"vales",id));
-        }
-      }
-    };
+  $('cancelarEditGasto').addEventListener('click', ()=> {
+    editGastoId = null; $('cancelarEditGasto').style.display='none';
+    $('gastoDate').value=''; $('gastoMotivo').value=''; $('gastoLocal').value=''; $('gastoValor').value=''; $('gastoAut').value='Francisco';
   });
-}
 
-/* ================== DIÁRIAS ================== */
-calcDiarias.onclick = ()=>{
-  const s = tripStart.value;
-  const e = tripEnd.value;
+  /* CRUD vales */
+  $('addVale').addEventListener('click', async () => {
+    const d = $('valeDate').value, m = $('valeMotivo').value.trim(), v = parseFloat($('valeValor').value || 0);
+    if(!d || !v){ alert("Preencha data e valor > 0"); return; }
+    const payload = { date:d, motivo:m, valor:v, criadoEm: serverTimestamp() };
+    if(editValeId){ await updateDoc(doc(db,"usuarios",uid,"vales",editValeId), payload); editValeId = null; $('cancelarEditVale').style.display='none'; }
+    else await addDoc(collection(db,"usuarios",uid,"vales"), payload);
+    $('valeDate').value=''; $('valeMotivo').value=''; $('valeValor').value='';
+  });
 
-  if(!s || !e || s > e){
-    alert("Selecione datas válidas.");
-    return;
+  $('cancelarEditVale').addEventListener('click', ()=> {
+    editValeId = null; $('cancelarEditVale').style.display='none';
+    $('valeDate').value=''; $('valeMotivo').value=''; $('valeValor').value='';
+  });
+
+  /* resumo + grafico */
+  function atualizarResumo(){
+    const bonusTotal = totalDiarias * DIARIA_VALOR;
+    const totalG = gastos.reduce((s,g)=> s + Number(g.valor || 0), 0);
+    const totalV = vales.reduce((s,v)=> s + Number(v.valor || 0), 0);
+    const saldo = (bonusTotal + totalG) - totalV;
+    $('totalDiariasText').textContent = `Total de Bônus: ${totalDiarias} — Valor total: R$ ${bonusTotal.toFixed(2)}`;
+    $('saldoTexto').textContent = saldo < 0 ? `Saldo: Motorista deve R$ ${Math.abs(saldo).toFixed(2)}` : `Saldo: Empresa deve R$ ${Math.abs(saldo).toFixed(2)}`;
+    const ctx = $('chartResumo').getContext('2d');
+    if(window._chartResumo) window._chartResumo.destroy();
+    window._chartResumo = new Chart(ctx, {
+      type: 'pie',
+      data: { labels: ['Bônus','Gastos','Vales'], datasets: [{ data: [bonusTotal, totalG, totalV] }] },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
   }
 
-  const sd = new Date(s+"T00:00:00");
-  const ed = new Date(e+"T00:00:00");
-  const days = Math.floor((ed - sd) / 86400000) + 1;
-
-  totalDiarias = days;
-
-  localStorage.setItem(`mp:${uid}:start`, s);
-  localStorage.setItem(`mp:${uid}:end`, e);
-  localStorage.setItem(`mp:${uid}:dias`, days);
-
-  atualizarResumo();
-};
-
-clearDiarias.onclick = ()=>{
-  tripStart.value = "";
-  tripEnd.value = "";
-  totalDiarias = 0;
-  localStorage.removeItem(`mp:${uid}:start`);
-  localStorage.removeItem(`mp:${uid}:end`);
-  localStorage.removeItem(`mp:${uid}:dias`);
-  atualizarResumo();
-};
-
-/* ================== CRUD GASTOS ================== */
-addGasto.onclick = async ()=>{
-  const d = gastoDate.value;
-  const m = gastoMotivo.value.trim();
-  const l = gastoLocal.value.trim();
-  const v = parseFloat(gastoValor.value);
-  const a = gastoAut.value;
-
-  if(!d||!m||!l||!v){
-    alert("Preencha todos os campos.");
-    return;
+  /* export helpers (CSV & XLSX) */
+  function downloadBlob(blob, filename){
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
   }
 
-  const item = { date:d, motivo:m, local:l, valor:v, aut:a, criadoEm:serverTimestamp() };
-
-  if(editGastoId){
-    await updateDoc(doc(db,"usuarios",uid,"gastos",editGastoId), item);
-    editGastoId = null;
-    cancelarEditGasto.style.display="none";
-  }else{
-    await addDoc(collection(db,"usuarios",uid,"gastos"), item);
+  function exportCsv(rows, headers, filename){
+    const lines = [];
+    lines.push(headers.join(","));
+    rows.forEach(r => lines.push(r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")));
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    downloadBlob(blob, filename);
   }
 
-  gastoDate.value="";
-  gastoMotivo.value="";
-  gastoLocal.value="";
-  gastoValor.value="";
-};
-
-/* ================== CRUD VALES ================== */
-addVale.onclick = async ()=>{
-  const d = valeDate.value;
-  const m = valeMotivo.value.trim();
-  const v = parseFloat(valeValor.value);
-
-  if(!d || !v){
-    alert("Preencha data e valor.");
-    return;
+  function exportXlsx(rows, headers, filename){
+    const ws_data = [headers].concat(rows);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    XLSX.utils.book_append_sheet(wb, ws, "Planilha");
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    downloadBlob(blob, filename);
   }
 
-  const item = { date:d, motivo:m, valor:v, criadoEm:serverTimestamp() };
+  $('exportGastosCsv').addEventListener('click', ()=> {
+    const headers = ["Data","Motivo","Local","Autorização","Valor"];
+    const rows = gastos.map(g => [fmtBR(g.date), g.motivo, g.local, g.aut, Number(g.valor).toFixed(2)]);
+    exportCsv(rows, headers, "gastos.csv");
+  });
+  $('exportGastosXls').addEventListener('click', ()=> {
+    const headers = ["Data","Motivo","Local","Autorização","Valor"];
+    const rows = gastos.map(g => [fmtBR(g.date), g.motivo, g.local, g.aut, Number(g.valor).toFixed(2)]);
+    exportXlsx(rows, headers, "gastos.xlsx");
+  });
 
-  if(editValeId){
-    await updateDoc(doc(db,"usuarios",uid,"vales",editValeId), item);
-    editValeId = null;
-    cancelarEditVale.style.display="none";
-  }else{
-    await addDoc(collection(db,"usuarios",uid,"vales"), item);
+  $('exportValesCsv').addEventListener('click', ()=> {
+    const headers = ["Data","Motivo","Valor"];
+    const rows = vales.map(v => [fmtBR(v.date), v.motivo, Number(v.valor).toFixed(2)]);
+    exportCsv(rows, headers, "vales.csv");
+  });
+  $('exportValesXls').addEventListener('click', ()=> {
+    const headers = ["Data","Motivo","Valor"];
+    const rows = vales.map(v => [fmtBR(v.date), v.motivo, Number(v.valor).toFixed(2)]);
+    exportXlsx(rows, headers, "vales.xlsx");
+  });
+
+  $('exportCsvAll').addEventListener('click', ()=> {
+    // combinar tudo em um CSV com seções
+    let text = "=== DIÁRIAS / BÔNUS ===\n";
+    text += `Dias:;${totalDiarias}\nValor unit.:;${DIARIA_VALOR}\n\n`;
+    text += "=== GASTOS ===\nData;Motivo;Local;Autorização;Valor\n";
+    gastos.forEach(g => { text += `${fmtBR(g.date)};${g.motivo};${g.local};${g.aut};${Number(g.valor).toFixed(2)}\n`; });
+    text += "\n=== VALES ===\nData;Motivo;Valor\n";
+    vales.forEach(v => { text += `${fmtBR(v.date)};${v.motivo};${Number(v.valor).toFixed(2)}\n`; });
+    const blob = new Blob([text], { type: "text/csv;charset=utf-8;" });
+    downloadBlob(blob, "todos_export.csv");
+  });
+
+  $('exportXlsAll').addEventListener('click', ()=> {
+    const headerG = ["Data","Motivo","Local","Autorização","Valor"];
+    const rowsG = gastos.map(g => [fmtBR(g.date), g.motivo, g.local, g.aut, Number(g.valor).toFixed(2)]);
+    const headerV = ["Data","Motivo","Valor"];
+    const rowsV = vales.map(v => [fmtBR(v.date), v.motivo, Number(v.valor).toFixed(2)]);
+    // criar livro com duas abas
+    const wb = XLSX.utils.book_new();
+    const wsG = XLSX.utils.aoa_to_sheet([headerG].concat(rowsG));
+    const wsV = XLSX.utils.aoa_to_sheet([headerV].concat(rowsV));
+    XLSX.utils.book_append_sheet(wb, wsG, "Gastos");
+    XLSX.utils.book_append_sheet(wb, wsV, "Vales");
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    downloadBlob(new Blob([wbout], { type: "application/octet-stream" }), "todos_export.xlsx");
+  });
+
+  /* gerar PDF */
+  async function gerarPDFPlanilhaComGrafico(){
+    if(window._chartResumo) await new Promise(r => setTimeout(r, 120));
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 40;
+    let y = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - margin*2;
+    doc.setFontSize(16);
+    doc.text("Planilha — Gastos & Bônus", margin, y);
+    y += 22;
+    doc.setFontSize(11);
+    doc.text(`Motorista: ${perfil?.nome || '—'}`, margin, y); doc.text(`Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`, margin + 300, y); y += 16;
+    doc.text(`Email: ${perfil?.email || '—'}`, margin, y); doc.text(`Telefone: ${perfil?.telefone || '—'}`, margin + 300, y); y += 20;
+    // diárias
+    const bonusTotal = totalDiarias * DIARIA_VALOR;
+    doc.setFontSize(12); doc.text("Diárias / Bônus", margin, y); y += 8;
+    doc.autoTable({
+      startY: y,
+      head: [["Dias", "Valor Unitário (R$)", "Total (R$)"]],
+      body: [[String(totalDiarias), DIARIA_VALOR.toFixed(2), bonusTotal.toFixed(2)]],
+      theme: 'striped',
+      headStyles: { fillColor: [243,146,32] },
+      margin: { left: margin, right: margin }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+    // gastos
+    doc.setFontSize(12); doc.text("Gastos", margin, y); y += 8;
+    const gastosBody = gastos.map(g => [fmtBR(g.date || '—'), g.motivo || '—', g.local || '—', g.aut || '—', Number(g.valor || 0).toFixed(2)]);
+    doc.autoTable({
+      startY: y,
+      head: [["Data","Motivo","Local","Autorização","Valor (R$)"]],
+      body: gastosBody,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [243,146,32] },
+      margin: { left: margin, right: margin }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+    // vales
+    doc.setFontSize(12); doc.text("Vales", margin, y); y += 8;
+    const valesBody = vales.map(v => [fmtBR(v.date || '—'), v.motivo || '—', Number(v.valor || 0).toFixed(2)]);
+    doc.autoTable({
+      startY: y,
+      head: [["Data","Motivo","Valor (R$)"]],
+      body: valesBody,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [243,146,32] },
+      margin: { left: margin, right: margin }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+    // resumo
+    const totalG = gastos.reduce((s,g)=> s + Number(g.valor || 0), 0);
+    const totalV = vales.reduce((s,v)=> s + Number(v.valor || 0), 0);
+    const saldo = (bonusTotal + totalG) - totalV;
+    doc.setFontSize(12); doc.text("Resumo Final", margin, y); y += 8;
+    doc.autoTable({
+      startY: y,
+      head: [["Bônus (R$)","Total Gastos (R$)","Total Vales (R$)","Saldo (R$)"]],
+      body: [[bonusTotal.toFixed(2), totalG.toFixed(2), totalV.toFixed(2), saldo.toFixed(2)]],
+      headStyles: { fillColor: [243,146,32] },
+      margin: { left: margin, right: margin }
+    });
+    y = doc.lastAutoTable.finalY + 16;
+    // gráfico
+    try {
+      const canvas = document.getElementById('chartResumo');
+      let imgData = null;
+      if (canvas && canvas.toDataURL) imgData = canvas.toDataURL("image/png", 1.0);
+      if (imgData) {
+        const imgWidth = Math.min(usableWidth, 420);
+        if (y + 240 > doc.internal.pageSize.getHeight()){ doc.addPage(); y = 40; }
+        doc.addImage(imgData, 'PNG', margin, y, imgWidth, imgWidth * (280/420) );
+        y += (imgWidth * (280/420)) + 18;
+      }
+    } catch(e){ console.warn("Erro ao inserir gráfico:", e); }
+    // assinatura (Opção A) - linha centralizada
+    if (y + 80 > doc.internal.pageSize.getHeight()) { doc.addPage(); y = 60; }
+    const lineY = y + 30; const lineWidth = 360; const centerX = pageWidth / 2;
+    doc.setDrawColor(0,0,0); doc.setLineWidth(0.6);
+    doc.line(centerX - lineWidth/2, lineY, centerX + lineWidth/2, lineY);
+    doc.setFontSize(11);
+    doc.text("Assinatura do Motorista", centerX, lineY + 16, { align: "center" });
+    doc.save("planilha_gastos_vales.pdf");
   }
 
-  valeDate.value="";
-  valeMotivo.value="";
-  valeValor.value="";
-};
+  $('gerarPDF').addEventListener('click', async () => {
+    atualizarResumo();
+    await new Promise(r => setTimeout(r, 150));
+    await gerarPDFPlanilhaComGrafico();
+  });
 
-/* ================== RESUMO ================== */
-function atualizarResumo(){
-  const bonusTotal = totalDiarias * DIARIA_VALOR;
-  const totalG = gastos.reduce((s,g)=> s+g.valor, 0);
-  const totalV = vales.reduce((s,v)=> s+v.valor, 0);
-  const diferenca = Math.abs((bonusTotal + totalG) - totalV).toFixed(2);
+  /* apagar tudo */
+  $('clearAll').addEventListener('click', async () => {
+    if(!confirm("Excluir TODOS os gastos e vales?")) return;
+    const gSnap = await getDocs(collection(db,"usuarios",uid,"gastos"));
+    const vSnap = await getDocs(collection(db,"usuarios",uid,"vales"));
+    const jobs = [];
+    gSnap.forEach(d => jobs.push(deleteDoc(d.ref)));
+    vSnap.forEach(d => jobs.push(deleteDoc(d.ref)));
+    await Promise.all(jobs);
+  });
 
-  saldoTexto.textContent =
-    totalV > (bonusTotal+totalG)
-    ? `Saldo: Motorista deve R$ ${diferenca}`
-    : `Saldo: Empresa deve R$ ${diferenca}`;
+  /* auth init */
+  onAuthStateChanged(auth, async user => {
+    if(!user){ window.location.href = "login.html"; return; }
+    uid = user.uid;
+    const s = localStorage.getItem(`mp:${uid}:start`) || "";
+    const e = localStorage.getItem(`mp:${uid}:end`) || "";
+    $('tripStart').value = s; $('tripEnd').value = e; totalDiarias = Number(localStorage.getItem(`mp:${uid}:dias`) || 0);
+    await carregarPerfil(); iniciarStream(); atualizarResumo();
+  });
 
-  if(window.chartResumoObj){
-    window.chartResumoObj.destroy();
-  }
-
-  const ctx = chartResumo.getContext("2d");
-  window.chartResumoObj = new Chart(ctx, {
-    type:"pie",
-    data:{
-      labels:["Bônus","Gastos","Vales"],
-      datasets:[{ data:[bonusTotal,totalG,totalV] }]
+  // onload small chart to ensure canvas exists
+  window.addEventListener('load', () => {
+    const ctx = $('chartResumo')?.getContext ? $('chartResumo').getContext('2d') : null;
+    if(ctx && !window._chartResumo){
+      window._chartResumo = new Chart(ctx, { type:'pie', data:{labels:['Bônus','Gastos','Vales'], datasets:[{data:[0,0,0]}] }, options:{plugins:{legend:{position:'bottom'}}} });
     }
   });
-
-  totalDiariasText.textContent =
-    `Total de Bônus: ${totalDiarias} — Valor total: R$ ${bonusTotal.toFixed(2)}`;
-}
-
-/* ================== PDF ================== */
-gerarPDF.onclick = ()=>{
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  let y = 20;
-
-  pdf.setFontSize(16);
-  pdf.text("Relatório — Gastos & Bônus", 20, y);
-  y+=20;
-
-  pdf.setFontSize(12);
-  pdf.text(`Motorista: ${perfil.nome}`,20,y); y+=14;
-  pdf.text(`Placas: ${perfil.placaCavalo} / ${perfil.placaReboque}`,20,y); y+=14;
-
-  pdf.text(`Período: ${tripStart.value ? fmtBR(tripStart.value) : "—"} a ${tripEnd.value ? fmtBR(tripEnd.value) : "—"}`,20,y);
-  y+=14;
-
-  pdf.text(`Diárias: ${totalDiarias} × R$ ${DIARIA_VALOR.toFixed(2)}`,20,y);
-  y+=14;
-
-  pdf.text("Gastos:",20,y); y+=14;
-
-  gastos.forEach(g=>{
-    pdf.text(`${fmtBR(g.date)} — ${g.motivo} — ${g.local} — R$ ${g.valor.toFixed(2)}`,20,y);
-    y+=12;
-  });
-
-  y+=10;
-  pdf.text("Vales:",20,y); y+=14;
-
-  vales.forEach(v=>{
-    pdf.text(`${fmtBR(v.date)} — ${v.motivo || "—"} — R$ ${v.valor.toFixed(2)}`,20,y);
-    y+=12;
-  });
-
-  pdf.save("gastos_diarias.pdf");
-};
-
-/* ================== LIMPAR TUDO ================== */
-clearAll.onclick = async ()=>{
-  if(!confirm("Excluir TODOS os registros?")) return;
-
-  const g = await getDocs(collection(db,"usuarios",uid,"gastos"));
-  const v = await getDocs(collection(db,"usuarios",uid,"vales"));
-
-  const jobs=[];
-  g.forEach(d=> jobs.push(deleteDoc(d.ref)));
-  v.forEach(d=> jobs.push(deleteDoc(d.ref)));
-
-  await Promise.all(jobs);
-};
-
-/* ================= AUTH ================= */
-onAuthStateChanged(auth, async user=>{
-  if(!user){ location.href="login.html"; return; }
-  uid = user.uid;
-
-  // Restaurar diárias salvas
-  tripStart.value = localStorage.getItem(`mp:${uid}:start`) || "";
-  tripEnd.value   = localStorage.getItem(`mp:${uid}:end`)   || "";
-  totalDiarias    = Number(localStorage.getItem(`mp:${uid}:dias`) || 0);
-
-  await carregarPerfil();
-  iniciarStream();
-  atualizarResumo();
-});
-
 </script>
 
 </body>
