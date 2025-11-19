@@ -1,143 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Viagem — Motorista Plus</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Viagem — Motorista Plus</title>
 
-  <!-- jsPDF + AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- jsPDF + AutoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <style>
-    :root {
-      --bg: #0b0f14;
-      --card: #161c23;
-      --primary: #f39220;
-      --outline: #2b3a49;
-      --text: #fff;
-      --muted: #b5bcc7;
-      --green: #2b9348;
-      --red: #dc3545;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-    header{background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));padding:28px 16px;text-align:center;border-bottom:1px solid var(--outline)}
-    header h1{font-weight:800;font-size:clamp(20px,4vw,30px)}
-    main{width:94%;max-width:1100px;margin:18px auto 40px;display:grid;gap:14px;flex:1}
-    .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px)}
-    h2{color:var(--primary);margin-bottom:8px}
-    label{display:block;margin-bottom:6px;color:#e8e8e8;font-size:13px}
-    input,textarea,button,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--outline);background:rgba(255,255,255,.06);color:#fff;font-size:14px;outline:none}
-    .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-    .resumo-box{background:rgba(255,255,255,.04);border:1px solid var(--outline);padding:10px;border-radius:8px;margin-top:10px;text-align:center}
-    .row{display:flex;gap:10px;align-items:center}
-    .btn{background:var(--primary);border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer}
-    .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
-    .btn-red{background:var(--red)}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    thead th{background:var(--primary);color:#fff;padding:8px}
-    td,th{border:1px solid var(--outline);padding:8px;text-align:center}
-    .edit-input{width:70px;background:rgba(255,255,255,.04);border-radius:6px;padding:6px}
-    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
-    @media(max-width:520px){ .row{flex-direction:column;align-items:stretch} }
-  </style>
+<style>
+:root{
+  --bg:#0b0f14; --bg2:#0f1418; --card:#16191d;
+  --primary:#f39220; --primary-700:#d47e16;
+  --outline:#22303a; --text:#fff; --muted:#b5bcc7;
+  --success:#2b9348; --danger:#dc3545;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+header{background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.6));padding:24px 12px;text-align:center;border-bottom:1px solid var(--outline)}
+header h1{font-size:clamp(18px,3vw,28px);font-weight:800}
+header .plus{color:var(--primary)}
+
+main{width:94%;max-width:1100px;margin:18px auto 40px;display:grid;gap:12px}
+
+/* card */
+.card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px)}
+h2{color:var(--primary);margin-bottom:8px}
+
+/* grid */
+.grid4{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:12px}
+@media(min-width:980px){ .grid4{grid-template-columns:repeat(4,minmax(120px,1fr))} }
+
+/* form controls */
+label{display:block;color:#e8e8e8;font-size:13px;margin-bottom:6px}
+input,select,textarea,button{
+  width:100%;padding:10px;border-radius:10px;border:1px solid var(--outline);
+  background:rgba(255,255,255,.04);color:var(--text);font-size:14px;
+}
+input[readonly], textarea[readonly]{background:rgba(255,255,255,.02);color:var(--muted)}
+.btn{background:var(--primary);border:none;color:#fff;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+.btn:hover{background:var(--primary-700)}
+.btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
+.btn-red{background:var(--danger)}
+.small-muted{color:var(--muted);font-size:13px;margin-top:6px}
+.resumo-box{background:rgba(255,255,255,.03);border:1px solid var(--outline);padding:10px;border-radius:8px;margin-top:8px;color:var(--muted)}
+
+.table-wrap{overflow:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border:1px solid var(--outline);text-align:center}
+thead th{background:var(--primary);color:#fff}
+
+/* mobile hiding voltar botão */
+#btnVoltar{display:block}
+@media(max-width:600px){
+  #btnVoltar{display:none}
+}
+
+/* small tweaks */
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+.signature-line{margin-top:28px}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Planilha de Viagem — Motorista <span style="color:var(--primary)">Plus</span></h1>
-  </header>
 
-  <main>
-    <!-- Dados do Motorista -->
-    <section class="card">
-      <h2>Dados do Motorista</h2>
-      <div id="dadosUsuarioCard">Carregando...</div>
-    </section>
+<header>
+  <h1>Planilha de Viagem — Motorista<span class="plus">Plus</span></h1>
+</header>
 
-    <!-- Viagem -->
-    <section class="card">
-      <h2>Viagem</h2>
-      <div class="grid2">
-        <div><label>Início</label><input type="date" id="viagemInicio"></div>
-        <div><label>Fim</label><input type="date" id="viagemFim"></div>
-        <div><label>KM Inicial</label><input type="number" id="kmInicio" placeholder="0"></div>
-        <div><label>KM Final</label><input type="number" id="kmFim" placeholder="0"></div>
+<main>
+  <!-- Dados do motorista -->
+  <section class="card">
+    <h2>Dados do Motorista</h2>
+    <div id="dadosUsuarioCard" class="small-muted">Carregando...</div>
+  </section>
+
+  <!-- Viagem -->
+  <section class="card">
+    <h2>Viagem</h2>
+
+    <div class="grid4">
+      <div>
+        <label>Início</label>
+        <input type="date" id="viagemInicio"/>
       </div>
-
-      <div class="grid2" style="margin-top:10px">
-        <div><label>Dias Viajados</label><input type="text" id="diasViajados" readonly></div>
-        <div><label>Folgas</label><input type="text" id="diasFolga" readonly></div>
-        <div><label>Retorno</label><input type="text" id="retornoFolga" readonly></div>
-        <div><label>KM Rodados</label><input type="text" id="kmRodados" readonly></div>
+      <div>
+        <label>Fim</label>
+        <input type="date" id="viagemFim"/>
       </div>
-
-      <!-- Dívidas anteriores -->
-      <div style="margin-top:12px">
-        <h3 style="margin-bottom:8px;color:var(--primary)">Dívidas Anteriores</h3>
-        <div class="grid2">
-          <div>
-            <label>Empresa devia (diárias)</label>
-            <input type="number" id="empresaDeviaAntes" min="0" value="0">
-          </div>
-          <div>
-            <label>Motorista devia (diárias)</label>
-            <input type="number" id="motoristaDeviaAntes" min="0" value="0">
-          </div>
-        </div>
-        <div class="resumo-box" id="resumoDiarias"></div>
+      <div>
+        <label>KM Inicial</label>
+        <input type="number" id="kmInicio" min="0"/>
       </div>
-
-      <div class="row" style="margin-top:12px">
-        <button id="editarViagemBtn" class="btn" style="display:none">Editar viagem</button>
-        <button id="salvarViagemBtn" class="btn" style="background:#2b9348">Salvar</button>
+      <div>
+        <label>KM Final</label>
+        <input type="number" id="kmFim" min="0"/>
       </div>
-    </section>
+    </div>
 
-    <!-- Diárias -->
-    <section class="card">
-      <h2>Diárias</h2>
-      <div class="grid2">
-        <div><label>Data</label><input type="date" id="diariaData"></div>
-        <div><label>Qtd</label><input type="number" id="diariaQtd" min="1" value="1"></div>
+    <div style="height:12px"></div>
+
+    <div class="grid4">
+      <div><label>Dias Viajados</label><input readonly id="diasViajados"/></div>
+      <div><label>Folgas</label><input readonly id="diasFolga"/></div>
+      <div><label>Retorno</label><input readonly id="retornoFolga"/></div>
+      <div><label>KM Rodados</label><input readonly id="kmRodados"/></div>
+    </div>
+
+    <div class="resumo-box" id="resumoViagem">Resumo: —</div>
+
+    <div style="margin-top:12px" class="actions">
+      <button id="editarViagemBtn" class="btn btn-ghost" style="display:none">Editar</button>
+      <button id="salvarViagemBtn" class="btn">Salvar Viagem</button>
+      <button id="limparViagemBtn" class="btn btn-red">Limpar Viagem</button>
+    </div>
+    <div class="note">Os dados de viagem ficam salvos no servidor (viagemAtual/dados). Saia da página que os valores permanecem.</div>
+  </section>
+
+  <!-- Dívidas anteriores & resumo de diárias -->
+  <section class="card">
+    <h2>Dívidas Anteriores & Resumo de Diárias</h2>
+
+    <div class="grid4">
+      <div><label>Empresa devia (diárias)</label><input type="number" id="empresaDevia" min="0" value="0"/></div>
+      <div><label>Motorista devia (diárias)</label><input type="number" id="motoristaDevia" min="0" value="0"/></div>
+      <div><label>Diárias recebidas (total)</label><input type="number" id="diariasRecebidas" min="0" value="0"/></div>
+      <div><label>Valor por diária (R$)</label><input type="number" id="valorDiaria" min="0" step="0.01" value="100.00"/></div>
+    </div>
+
+    <div class="resumo-box" id="resumoDiariasUI">Resumo diárias: —</div>
+
+    <div style="margin-top:12px" class="actions">
+      <button id="recalcularResumoBtn" class="btn">Recalcular Resumo</button>
+      <button id="salvarResumoBtn" class="btn btn-ghost">Salvar Resumo</button>
+      <button id="limparResumoBtn" class="btn btn-red">Limpar Resumo</button>
+    </div>
+
+    <div class="note">Resumo separado da viagem. Fica salvo no documento viagemAtual/dados até você limpar.</div>
+  </section>
+
+  <!-- Diárias (lista simples) -->
+  <section class="card">
+    <h2>Diárias (detalhes)</h2>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="flex:1 1 220px">
+        <label>Data</label>
+        <input type="date" id="diariaData"/>
       </div>
-
-      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-        <button id="addDiariaBtn" class="btn">Adicionar</button>
-        <button id="exportCsvBtn" class="btn btn-ghost">Exportar CSV</button>
-        <span style="align-self:center;color:var(--muted)">Valor por diária: <b>R$ 100,00</b></span>
+      <div style="flex:0 0 120px">
+        <label>Qtd</label>
+        <input type="number" id="diariaQtd" min="1" value="1"/>
       </div>
-
-      <div style="overflow-x:auto;margin-top:10px">
-        <table>
-          <thead>
-            <tr><th>Data</th><th>Tipo</th><th>Qtd</th><th>Valor (R$)</th><th>Ações</th></tr>
-          </thead>
-          <tbody id="tbodyDiarias"></tbody>
-        </table>
+      <div style="flex:0 0 160px;align-self:end">
+        <button id="addDiariaBtn" class="btn">Adicionar Diária</button>
       </div>
-    </section>
+    </div>
 
-    <!-- PDF -->
-    <section class="card" style="text-align:center">
-      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
-        <button id="gerarPDFButton" class="btn" style="width:220px">Gerar PDF</button>
-        <button id="limparTudoBtn" class="btn btn-red" style="width:220px">Limpar</button>
-      </div>
-    </section>
-  </main>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Qtd</th><th>Valor (R$)</th><th>Ações</th></tr></thead>
+        <tbody id="tbodyDiarias"></tbody>
+      </table>
+    </div>
+  </section>
 
-  <footer>© 2025 Motorista Plus</footer>
-  <script type="module">
-/* ========================= Firebase ========================= */
+  <!-- PDF e ações finais -->
+  <section class="card" style="text-align:center">
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button id="gerarPDFBtn" class="btn">Gerar PDF Completo</button>
+      <button id="exportCsvBtn" class="btn btn-ghost">Exportar CSV (Diárias)</button>
+    </div>
+    <div class="note">O PDF inclui resumo, folgas, tabela de folgas, diárias e uma linha para assinatura manual.</div>
+  </section>
+
+</main>
+
+<footer style="text-align:center;padding:12px;color:var(--muted)">© 2025 Motorista Plus</footer>
+
+<!-- SCRIPT -->
+<script type="module">
+/* ================= Firebase setup (v11) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc,
-  collection, addDoc, getDocs, deleteDoc, orderBy, query, serverTimestamp
+  getFirestore, doc, getDoc, setDoc, updateDoc, collection,
+  addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const app = initializeApp({
+/* ====== Sua configuração (já usada no projeto) ====== */
+const firebaseConfig = {
   apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
   authDomain: "motorista-plus-c53f4.firebaseapp.com",
   projectId: "motorista-plus-c53f4",
@@ -145,73 +198,74 @@ const app = initializeApp({
   messagingSenderId: "766097061342",
   appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
   measurementId: "G-CBT2D0CXPN"
-});
+};
 
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ====== Helpers UI ====== */
 const $ = id => document.getElementById(id);
-const DIARIA_VALOR = 100;
 
+/* ====== Estado local ====== */
 let uid = null;
 let perfil = null;
-let diarias = [];
-let viagemAtual = null;
+let diarias = []; // coleção local
+const DIARIA_DEFAULT_VALOR = () => Number($('valorDiaria').value || 100);
 
-/* ========================= Helpers data (no timezone issues) ========================= */
-const toISO = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth()+1).padStart(2,"0");
-  const d = String(date.getDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
+/* ====== Data helpers (seguros sem fuso) ====== */
+const toISO = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 };
-const parseISO = iso => {
+const parseISO = (iso) => {
   if(!iso) return null;
-  const [y,m,d] = iso.split("-").map(Number);
-  return new Date(y, m-1, d);
+  const [y,m,d] = iso.split('-').map(Number);
+  return new Date(y,m-1,d);
 };
-const fmtBR = iso => {
-  if(!iso) return "";
-  const [y,m,d] = iso.split("-");
+const fmtBR = (iso) => {
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
   return `${d}/${m}/${y}`;
 };
 const diasEntreInclusive = (iniISO, fimISO) => {
-  const ini = parseISO(iniISO);
-  const fim = parseISO(fimISO);
+  if(!iniISO || !fimISO) return 0;
+  const ini = parseISO(iniISO); const fim = parseISO(fimISO);
   ini.setHours(0,0,0,0); fim.setHours(0,0,0,0);
   return Math.round((fim - ini) / 86400000) + 1;
 };
-const calcularFolgasPelasFaixas = dias => {
-  if (dias <= 7) return 1;
-  if (dias <= 14) return 2;
-  if (dias <= 21) return 3;
-  if (dias <= 30) return 4;
-  if (dias <= 37) return 5;
-  if (dias <= 44) return 6;
-  if (dias <= 52) return 7;
-  if (dias <= 60) return 8;
-  return Math.ceil(dias/7);
-};
 
-/* ========================= cálculo retorno (correto) ========================= */
-const calcularRetorno = (iniISO, fimISO) => {
-  if(!iniISO || !fimISO) return null;
+/* ====== Lógica folgas (mantida igual a página de viagem) ====== */
+function calcularFolgasPelasFaixas(dias){
+  if(dias <= 7) return 1;
+  if(dias <= 14) return 2;
+  if(dias <= 21) return 3;
+  if(dias <= 30) return 4;
+  if(dias <= 37) return 5;
+  if(dias <= 44) return 6;
+  if(dias <= 52) return 7;
+  if(dias <= 60) return 8;
+  return Math.ceil(dias/7);
+}
+function calcularRetornoFolga(iniISO, fimISO){
   const dias = diasEntreInclusive(iniISO, fimISO);
   const folgas = calcularFolgasPelasFaixas(dias);
   const fim = parseISO(fimISO);
+  if(!fim) return null;
   const primeiro = new Date(fim); primeiro.setDate(primeiro.getDate() + 1);
   const ultimo = new Date(fim); ultimo.setDate(ultimo.getDate() + folgas);
   const retorno = new Date(fim); retorno.setDate(retorno.getDate() + folgas + 1);
   return {
-    dias,
-    folgas,
+    dias, folgas,
     primeiroFolgaISO: toISO(primeiro),
     ultimoFolgaISO: toISO(ultimo),
     retornoISO: toISO(retorno)
   };
-};
+}
 
-/* ========================= preencher UI derivado ========================= */
+/* ====== Preenchimento dinâmico do UI ao alterar inputs ====== */
 function preencherDerivadosUI(){
   const ini = $('viagemInicio').value;
   const fim = $('viagemFim').value;
@@ -223,320 +277,349 @@ function preencherDerivadosUI(){
     $('diasFolga').value = '';
     $('retornoFolga').value = '';
     $('kmRodados').value = '';
+    $('resumoViagem').textContent = 'Resumo: preencha início e fim';
     return;
   }
-  const info = calcularRetorno(ini, fim);
+
+  const info = calcularRetornoFolga(ini, fim);
   $('diasViajados').value = `${info.dias} dia(s)`;
   $('diasFolga').value = `${info.folgas} dia(s)`;
   $('retornoFolga').value = fmtBR(info.retornoISO);
-  $('kmRodados').value = (kmI && kmF) ? (kmF - kmI) : '';
-  atualizarResumoDiarias(); // atualiza o resumo sempre que datas/kms mudam
+  $('kmRodados').value = (kmF && kmI) ? String(kmF - kmI) : '';
+
+  $('resumoViagem').textContent = `Dias viajados: ${info.dias}. Folgas: ${info.folgas}. Retorno: ${fmtBR(info.retornoISO)}.`;
 }
-["viagemInicio","viagemFim","kmInicio","kmFim","empresaDeviaAntes","motoristaDeviaAntes"].forEach(id=>{
-  const el = $(id);
-  if(el) el.addEventListener('change', preencherDerivadosUI);
+['viagemInicio','viagemFim','kmInicio','kmFim'].forEach(id => {
+  $(id).addEventListener('change', preencherDerivadosUI);
 });
 
-/* ========================= carregar perfil ========================= */
-async function carregarPerfil(){
-  const snap = await getDoc(doc(db,"usuarios",uid));
-  if(!snap.exists()) return;
-  perfil = snap.data();
-  $('dadosUsuarioCard').innerHTML = `
-    <div class="item"><strong>Motorista</strong>${perfil.nome||''}</div>
-    <div class="item"><strong>Telefone</strong>${perfil.telefone||''}</div>
-    <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo||''}</div>
-    <div class="item"><strong>Reboque</strong>${perfil.placaReboque||''}</div>
-    <div class="item"><strong>Email</strong>${perfil.email||''}</div>
-  `;
+/* ====== Persistência: salvar / carregar viagemAtual/dados ====== */
+const viagemDocRef = () => doc(db, 'usuarios', uid, 'viagemAtual', 'dados');
+
+async function salvarViagemNoServidor(){
+  const data = {
+    inicio: $('viagemInicio').value || '',
+    fim: $('viagemFim').value || '',
+    kmInicio: $('kmInicio').value ? Number($('kmInicio').value) : null,
+    kmFim: $('kmFim').value ? Number($('kmFim').value) : null,
+    empresaDevia: Number($('empresaDevia').value || 0),
+    motoristaDevia: Number($('motoristaDevia').value || 0),
+    diariasRecebidas: Number($('diariasRecebidas').value || 0),
+    valorDiaria: Number($('valorDiaria').value || 0),
+    atualizadoEm: serverTimestamp()
+  };
+  await setDoc(viagemDocRef(), data, { merge:true });
+  alert('Viagem / resumo salvos no servidor.');
 }
 
-/* ========================= carregar viagem atual (inclui dívidas antigas) ========================= */
+async function limparViagemServidor(){
+  // sobrescreve com campos vazios (ou poderia usar delete, mas mantemos doc)
+  await setDoc(viagemDocRef(), {
+    inicio: '', fim:'', kmInicio:null, kmFim:null,
+    empresaDevia:0, motoristaDevia:0, diariasRecebidas:0, valorDiaria:DIARIA_DEFAULT_VALOR(),
+    atualizadoEm: serverTimestamp()
+  }, { merge:true });
+  carregarViagemAtual();
+}
+
+/* ====== Carregar viagem no load ====== */
 async function carregarViagemAtual(){
-  const snap = await getDoc(doc(db,"usuarios",uid,"viagemAtual","dados"));
-  if(snap.exists()){
-    viagemAtual = snap.data();
-    if(viagemAtual.inicio) $('viagemInicio').value = viagemAtual.inicio;
-    if(viagemAtual.fim) $('viagemFim').value = viagemAtual.fim;
-    $('kmInicio').value = viagemAtual.kmInicio ?? '';
-    $('kmFim').value = viagemAtual.kmFim ?? '';
-    $('empresaDeviaAntes').value = viagemAtual.empresaDeviaAntes ?? 0;
-    $('motoristaDeviaAntes').value = viagemAtual.motoristaDeviaAntes ?? 0;
-
-    setFieldsReadonly(true);
-    $('editarViagemBtn').style.display = 'inline-block';
-    $('salvarViagemBtn').style.display = 'none';
-  } else {
-    setFieldsReadonly(false);
-    $('editarViagemBtn').style.display = 'none';
-    $('salvarViagemBtn').style.display = 'inline-block';
+  const snap = await getDoc(viagemDocRef());
+  if(!snap.exists()){
+    // sem documento: deixar inputs vazios
+    $('viagemInicio').value = '';
+    $('viagemFim').value = '';
+    $('kmInicio').value = '';
+    $('kmFim').value = '';
+    $('empresaDevia').value = 0;
+    $('motoristaDevia').value = 0;
+    $('diariasRecebidas').value = 0;
+    $('valorDiaria').value = 100.00;
+    preencherDerivadosUI();
+    return;
   }
+  const d = snap.data();
+
+  // preencher campos (faz fallback)
+  if(d.inicio) $('viagemInicio').value = d.inicio;
+  else $('viagemInicio').value = '';
+  if(d.fim) $('viagemFim').value = d.fim;
+  else $('viagemFim').value = '';
+  $('kmInicio').value = d.kmInicio ?? '';
+  $('kmFim').value = d.kmFim ?? '';
+  $('empresaDevia').value = d.empresaDevia ?? 0;
+  $('motoristaDevia').value = d.motoristaDevia ?? 0;
+  $('diariasRecebidas').value = d.diariasRecebidas ?? 0;
+  $('valorDiaria').value = Number(d.valorDiaria ?? 100.00);
+
   preencherDerivadosUI();
+  recalcularResumo(); // atualiza resumoUI
 }
 
-/* ========================= bloquear/desbloquear campos ========================= */
-function setFieldsReadonly(readonly){
-  ['viagemInicio','viagemFim','kmInicio','kmFim','empresaDeviaAntes','motoristaDeviaAntes'].forEach(id=>{
-    const el = $(id);
-    if(!el) return;
-    if(readonly){ el.setAttribute('readonly','readonly'); el.setAttribute('disabled','disabled'); }
-    else { el.removeAttribute('readonly'); el.removeAttribute('disabled'); }
-  });
+/* ====== Resumo diárias (separado) ====== */
+function recalcularResumo(){
+  const diasRecebidas = Number($('diariasRecebidas').value || 0);
+  const diasViajados = ( $('viagemInicio').value && $('viagemFim').value ) ? diasEntreInclusive($('viagemInicio').value, $('viagemFim').value) : 0;
+  const empresaAnterior = Number($('empresaDevia').value || 0);
+  const motoristaAnterior = Number($('motoristaDevia').value || 0);
+
+  // regra: se recebeu a mais -> motorista deve; se recebeu a menos -> empresa deve
+  // totalRecebidas - diasViajados = saldoAtual
+  const saldoAtual = diasRecebidas - diasViajados; // positivo -> recebeu a mais
+  // incorporar dívidas anteriores:
+  // Empresa devia X => acrescenta ao que empresa deve
+  // Motorista devia Y => acrescenta ao que motorista deve
+  // Calculamos situação final:
+  let empresaFinal = 0;
+  let motoristaFinal = 0;
+  if(saldoAtual < 0){
+    // recebeu menos que viajou -> empresa deve (abs)
+    empresaFinal = Math.abs(saldoAtual) + motoristaAnterior; // se motorista devia, soma à dívida final da empresa? (entendemos que dívidas anteriores são independentes)
+    motoristaFinal = motoristaAnterior;
+  } else {
+    // recebeu igual ou mais -> motorista recebeu a mais
+    motoristaFinal = saldoAtual + motoristaAnterior;
+    empresaFinal = empresaAnterior;
+  }
+
+  const valorDiaria = DIARIA_DEFAULT_VALOR();
+  const valorTotal = ( (empresaFinal - motoristaFinal) > 0 ? (empresaFinal - motoristaFinal) * valorDiaria : Math.abs(motoristaFinal - companyOrZero(empresaFinal,0)) * valorDiaria );
+
+  // Build readable message
+  let situacao = '';
+  if(empresaFinal > motoristaFinal){
+    const diff = empresaFinal - motoristaFinal;
+    situacao = `SITUAÇÃO: A EMPRESA DEVE ${diff} diária(s) (R$ ${(diff*valorDiaria).toFixed(2)}).`;
+  } else if(motoristaFinal > empresaFinal){
+    const diff = motoristaFinal - companyOrZero(empresaFinal,0);
+    situacao = `SITUAÇÃO: O MOTORISTA DEVE ${diff} diária(s) (R$ ${(diff*valorDiaria).toFixed(2)}).`;
+  } else {
+    situacao = `SITUAÇÃO: Sem pendências.`;
+  }
+
+  const mensagem = `Diárias recebidas: ${diasRecebidas}. Dias viajados: ${diasViajados}. (anteriores — empresa: ${empresaAnterior}, motorista: ${motoristaAnterior}). ${situacao}`;
+  $('resumoDiariasUI').textContent = mensagem;
+  return {
+    diasRecebidas, diasViajados, empresaAnterior, motoristaAnterior, empresaFinal, motoristaFinal, valorDiaria, situacao
+  };
 }
 
-/* ========================= Diárias (CRUD) ========================= */
-async function carregarDiarias(){
-  const q = query(collection(db,"usuarios",uid,"diarias"), orderBy("data","asc"));
-  const snap = await getDocs(q);
-  diarias = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-  renderDiarias();
-  atualizarResumoDiarias();
+// helper fallback to avoid undefined arithmetic
+function companyOrZero(v, def=0){ return (typeof v === 'number' && !isNaN(v)) ? v : def; }
+
+/* ====== salvar resumo no servidor (mesmo documento) ====== */
+async function salvarResumoNoServidor(){
+  const resumo = recalcularResumo();
+  const payload = {
+    resumoDiarias: {
+      diasRecebidas: resumo.diasRecebidas,
+      diasViajados: resumo.diasViajados,
+      empresaAnterior: resumo.empresaAnterior,
+      motoristaAnterior: resumo.motoristaAnterior,
+      empresaFinal: resumo.empresaFinal,
+      motoristaFinal: resumo.motoristaFinal,
+      valorDiaria: resumo.valorDiaria,
+      situacao: resumo.situacao
+    },
+    atualizadoResumoEm: serverTimestamp()
+  };
+  await setDoc(viagemDocRef(), payload, { merge:true });
+  alert('Resumo salvo no servidor.');
 }
 
+/* ====== limpar resumo (mantém viagem) ====== */
+async function limparResumoServidor(){
+  await setDoc(viagemDocRef(), {
+    resumoDiarias: {
+      diasRecebidas:0, diasViajados:0, empresaAnterior:0, motoristaAnterior:0,
+      empresaFinal:0, motoristaFinal:0, valorDiaria: DIARIA_DEFAULT_VALOR(), situacao: ''
+    },
+    atualizadoResumoEm: serverTimestamp()
+  }, { merge:true });
+  carregarViagemAtual(); // recarrega para refletir limpeza
+}
+
+/* ====== Diárias (coleção) ====== */
 function renderDiarias(){
-  const tbody = $('tbodyDiarias');
-  tbody.innerHTML = '';
-  if(!diarias.length){ tbody.innerHTML = '<tr><td colspan="5">(nenhuma)</td></tr>'; return; }
+  const tbody = $('tbodyDiarias'); tbody.innerHTML = '';
+  if(!diarias.length){ tbody.innerHTML = '<tr><td colspan="4" class="small-muted">(nenhuma)</td></tr>'; return; }
   diarias.forEach(d=>{
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${fmtBR(d.data)}</td>
-      <td>Diária</td>
-      <td><input data-id="${d.id}" class="edit-input" type="number" min="1" value="${d.qtd}"></td>
-      <td>${(Number(d.qtd)*DIARIA_VALOR).toFixed(2)}</td>
+    const valor = (d.qtd * DIARIA_DEFAULT_VALOR()).toFixed(2);
+    tr.innerHTML = `<td>${fmtBR(d.data)}</td><td>${d.qtd}</td><td>${valor}</td>
       <td>
-        <button class="btn" data-act="save" data-id="${d.id}">Salvar</button>
-        <button class="btn btn-red" data-act="del" data-id="${d.id}">Excluir</button>
-      </td>
-    `;
+        <button data-id="${d.id}" data-act="del" class="btn btn-ghost">Remover</button>
+      </td>`;
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('button').forEach(btn=>{
-    btn.onclick = async ()=>{
+    btn.onclick = async ()=> {
       const id = btn.dataset.id;
-      if(btn.dataset.act === 'del'){
-        await deleteDoc(doc(db,"usuarios",uid,"diarias",id));
-      } else {
-        const qtd = Number(document.querySelector(`input[data-id="${id}"]`).value) || 0;
-        await updateDoc(doc(db,"usuarios",uid,"diarias",id), { qtd });
-      }
-      await carregarDiarias();
+      if(!confirm('Remover esta diária?')) return;
+      await deleteDoc(doc(db,'usuarios',uid,'viagemAtual','diarias', id));
+      await carregarDiariasColecao();
     };
   });
 }
 
-/* ========================= atualizar resumo de diárias (tela) ========================= */
-function atualizarResumoDiarias(){
-  const ini = $('viagemInicio').value;
-  const fim = $('viagemFim').value;
-  if(!ini || !fim){ $('resumoDiarias').textContent = 'Preencha período para ver resumo.'; return; }
-
-  const info = calcularRetorno(ini,fim);
-  const diasViajados = info.dias;
-  const recebidas = diarias.reduce((s,d)=>s + Number(d.qtd||0), 0);
-
-  const empresaAntes = Number($('empresaDeviaAntes').value || 0);
-  const motoristaAntes = Number($('motoristaDeviaAntes').value || 0);
-
-  // net diárias após considerar anteriores: positivo => empresa deve ao motorista
-  const netDiarias = (recebidas - diasViajados) + (empresaAntes - motoristaAntes);
-  const netValor = Math.abs(netDiarias) * DIARIA_VALOR;
-
-  let msg = `Diárias recebidas: ${recebidas}. Dias viajados: ${diasViajados}.`;
-  if(empresaAntes || motoristaAntes) msg += ` (anteriores — empresa: ${empresaAntes}, motorista: ${motoristaAntes})`;
-
-  if(netDiarias === 0) {
-    msg += ` Situação: Tudo quites (0 diárias pendentes).`;
-  } else if(netDiarias > 0) {
-    msg += ` Situação: A EMPRESA DEVE ${netDiarias} diária(s) (R$ ${netValor.toFixed(2)}).`;
-  } else {
-    msg += ` Situação: O MOTORISTA DEVE ${Math.abs(netDiarias)} diária(s) (R$ ${netValor.toFixed(2)}).`;
-  }
-
-  $('resumoDiarias').textContent = msg;
+async function carregarDiariasColecao(){
+  const q = query(collection(db,'usuarios',uid,'viagemAtual','diarias'), orderBy('data','asc'));
+  const snap = await getDocs(q);
+  diarias = snap.docs.map(x=>({ id:x.id, ...x.data() }));
+  renderDiarias();
 }
 
-/* ========================= salvar/atualizar viagem ========================= */
-$('editarViagemBtn').onclick = ()=>{
-  setFieldsReadonly(false);
-  $('editarViagemBtn').style.display = 'none';
-  $('salvarViagemBtn').style.display = 'inline-block';
-};
+async function adicionarDiaria(){
+  const d = $('diariaData').value;
+  const q = Number($('diariaQtd').value || 1);
+  if(!d){ alert('Escolha a data da diária'); return; }
+  await addDoc(collection(db,'usuarios',uid,'viagemAtual','diarias'), { data:d, qtd:q, createdAt: serverTimestamp() });
+  $('diariaData').value = ''; $('diariaQtd').value = 1;
+  await carregarDiariasColecao();
+}
 
-$('salvarViagemBtn').onclick = async ()=>{
-  const ini = $('viagemInicio').value;
-  const fim = $('viagemFim').value;
-  const kmI = $('kmInicio').value ? Number($('kmInicio').value) : null;
-  const kmF = $('kmFim').value ? Number($('kmFim').value) : null;
-  const empresaAntes = Number($('empresaDeviaAntes').value || 0);
-  const motoristaAntes = Number($('motoristaDeviaAntes').value || 0);
+/* ====== PDF generation ====== */
+async function gerarPDFCompleto(){
+  // carrega dados mais recentes
+  const docSnap = await getDoc(viagemDocRef());
+  const viagemData = docSnap.exists() ? docSnap.data() : {};
+  await carregarDiariasColecao();
 
-  if(!ini){ alert("Preencha pelo menos a data inicial."); return; }
-
-  const dados = {
-    inicio: ini,
-    kmInicio: kmI,
-    updatedAt: serverTimestamp(),
-    empresaDeviaAntes,
-    motoristaDeviaAntes
-  };
-  if(fim) dados.fim = fim;
-  if(kmF !== null) dados.kmFim = kmF;
-
-  await setDoc(doc(db,"usuarios",uid,"viagemAtual","dados"), dados, { merge:true });
-
-  setFieldsReadonly(true);
-  $('editarViagemBtn').style.display = 'inline-block';
-  $('salvarViagemBtn').style.display = 'none';
-  await carregarViagemAtual();
-};
-
-/* ========================= adicionar diária ========================= */
-$('addDiariaBtn').onclick = async ()=>{
-  const data = $('diariaData').value;
-  const qtd = Number($('diariaQtd').value || 0);
-  if(!data || qtd <= 0){ alert("Selecione data e quantidade >= 1"); return; }
-  await addDoc(collection(db,"usuarios",uid,"diarias"), { data, qtd, createdAt: serverTimestamp() });
-  $('diariaQtd').value = 1;
-  $('diariaData').value = '';
-  await carregarDiarias();
-};
-
-/* ========================= export CSV ========================= */
-$('exportCsvBtn').onclick = ()=>{
-  if(!diarias.length){ alert("Nenhuma diária para exportar."); return; }
-  let csv = "Data,Tipo,Qtd,Valor\n";
-  diarias.forEach(d => csv += `${d.data},Diária,${d.qtd},${(d.qtd*DIARIA_VALOR).toFixed(2)}\n`);
-  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'diarias.csv'; a.click();
-  URL.revokeObjectURL(url);
-};
-
-/* ========================= limpar tudo ========================= */
-$('limparTudoBtn').onclick = async ()=>{
-  if(!confirm("Realmente limpar toda a viagem e diárias?")) return;
-  await setDoc(doc(db,"usuarios",uid,"viagemAtual","dados"), {}, { merge:false });
-  const snap = await getDocs(collection(db,"usuarios",uid,"diarias"));
-  await Promise.all(snap.docs.map(d=> deleteDoc(d.ref)));
-  location.reload();
-};
-
-/* ========================= gerar PDF ========================= */
-$('gerarPDFButton').onclick = async ()=>{
-  await carregarDiarias();
-
-  const ini = $('viagemInicio').value;
-  const fim = $('viagemFim').value;
-  if(!ini || !fim){ alert("Preencha período de viagem."); return; }
-
-  const info = calcularRetorno(ini,fim);
-  const kmInicial = $('kmInicio').value ? Number($('kmInicio').value) : null;
-  const kmFinal = $('kmFim').value ? Number($('kmFim').value) : null;
-
-  const recebidas = diarias.reduce((s,d)=>s + Number(d.qtd||0), 0);
-  const empresaAntes = Number($('empresaDeviaAntes').value || 0);
-  const motoristaAntes = Number($('motoristaDeviaAntes').value || 0);
-  const diasViajados = info.dias;
-  const netDiarias = (recebidas - diasViajados) + (empresaAntes - motoristaAntes);
-  const netValor = Math.abs(netDiarias) * DIARIA_VALOR;
+  const ini = viagemData.inicio || $('viagemInicio').value || '';
+  const fim = viagemData.fim || $('viagemFim').value || '';
+  const kmI = viagemData.kmInicio ?? $('kmInicio').value ?? '';
+  const kmF = viagemData.kmFim ?? $('kmFim').value ?? '';
+  const infoFolga = (ini && fim) ? calcularRetornoFolga(ini, fim) : null;
 
   const { jsPDF } = window.jspdf;
-  const docpdf = new jsPDF({ unit:"pt", format:"a4" });
-  const x = 40;
-  let y = 40;
+  const docPdf = new jsPDF({ unit:'pt', format:'a4' });
+  const left = 40; let y = 40;
+  docPdf.setFontSize(16).text('Planilha de Viagem — Motorista Plus', left, y); y += 26;
+  docPdf.setFontSize(11);
+  docPdf.text(`Motorista: ${perfil?.nome || '—'}`, left, y);
+  docPdf.text(`Telefone: ${perfil?.telefone || '—'}`, left + 300, y); y += 16;
+  docPdf.text(`Placas: ${perfil?.placaCavalo || '—'} / ${perfil?.placaReboque || '—'}`, left, y); y += 20;
 
-  docpdf.setFontSize(16).text("Planilha de Viagem — Motorista Plus", x, y); y += 26;
-  docpdf.setFontSize(12);
-  docpdf.text(`Motorista: ${perfil?.nome || ''}`, x, y); y += 16;
-  docpdf.text(`Placas: ${(perfil?.placaCavalo || '')} / ${(perfil?.placaReboque || '')}`, x, y); y += 16;
-  docpdf.text(`Período: ${fmtBR(ini)}  —  ${fmtBR(fim)}`, x, y); y += 18;
+  // Viagem resumo tabela
+  const vHead = [['Início','Fim','1ª Folga','Última Folga','Retorno','KM Inicial','KM Final','KM Rodado']];
+  const vBody = [[
+    fmtBR(ini), fmtBR(fim),
+    infoFolga ? fmtBR(infoFolga.primeiroFolgaISO) : '—',
+    infoFolga ? fmtBR(infoFolga.ultimoFolgaISO) : '—',
+    infoFolga ? fmtBR(infoFolga.retornoISO) : '—',
+    kmI ? String(kmI) : '-',
+    kmF ? String(kmF) : '-',
+    (kmI && kmF) ? String(Number(kmF) - Number(kmI)) : '-'
+  ]];
 
-  // tabela resumo viagem (uma linha)
-  docpdf.autoTable({
-    startY: y,
-    head: [["Data Início","Data Final","1º Folga","Últ Dia Folga","Retorno","KM Início","KM Final","KM Rodado"]],
-    body: [[
-      fmtBR(ini),
-      fmtBR(fim),
-      fmtBR(info.primeiroFolgaISO),
-      fmtBR(info.ultimoFolgaISO),
-      fmtBR(info.retornoISO),
-      kmInicial ?? "-",
-      kmFinal ?? "-",
-      (kmInicial && kmFinal) ? (kmFinal - kmInicial) : "-"
-    ]],
-    margin:{ left:x, right:x },
-    headStyles:{ fillColor:[243,146,32] },
-    styles:{ fontSize:10 }
-  });
-  y = docpdf.lastAutoTable.finalY + 14;
+  docPdf.autoTable({ startY: y, head:vHead, body:vBody, margin:{left, right:left}, headStyles:{fillColor:[243,146,32]} });
+  y = docPdf.lastAutoTable.finalY + 18;
 
-  // tabela folgas (linhas)
-  const folgasBody = [];
-  let d = parseISO(info.primeiroFolgaISO);
-  const ultimo = parseISO(info.ultimoFolgaISO);
-  while(d <= ultimo){
-    folgasBody.push([ fmtBR(toISO(d)), "Folga" ]);
-    d.setDate(d.getDate() + 1);
+  // tabela de dias de folga (lista de datas)
+  if(infoFolga){
+    const bodyFolgas = [];
+    let d = parseISO(infoFolga.primeiroFolgaISO);
+    const ultimo = parseISO(infoFolga.ultimoFolgaISO);
+    while(d <= ultimo){
+      bodyFolgas.push([fmtBR(toISO(d)), 'Folga']);
+      d.setDate(d.getDate()+1);
+    }
+    docPdf.autoTable({ startY: y, head:[['Data','Tipo']], body: bodyFolgas, margin:{left, right:left}, headStyles:{fillColor:[243,146,32]} });
+    y = docPdf.lastAutoTable.finalY + 18;
   }
-  docpdf.autoTable({
-    startY: y,
-    head: [["Data","Tipo"]],
-    body: folgasBody,
-    margin:{ left:x, right:x },
-    headStyles:{ fillColor:[243,146,32] },
-    styles:{ fontSize:10 }
-  });
-  y = docpdf.lastAutoTable.finalY + 14;
 
-  // tabela diárias
-  docpdf.autoTable({
-    startY: y,
-    head: [["Data","Tipo","Qtd","Valor (R$)"]],
-    body: diarias.map(d=>[ fmtBR(d.data), "Diária", d.qtd, (Number(d.qtd)*DIARIA_VALOR).toFixed(2) ]),
-    margin:{ left:x, right:x },
-    headStyles:{ fillColor:[243,146,32] },
-    styles:{ fontSize:10 }
-  });
-  y = docpdf.lastAutoTable.finalY + 14;
+  // diárias tabela
+  const diariasBody = diarias.map(d=>[ fmtBR(d.data), String(d.qtd), (d.qtd * DIARIA_DEFAULT_VALOR()).toFixed(2) ]);
+  docPdf.autoTable({ startY: y, head:[['Data','Qtd','Valor (R$)']], body: diariasBody, margin:{left, right:left}, headStyles:{fillColor:[243,146,32]} });
+  y = docPdf.lastAutoTable.finalY + 26;
 
-  // resumo financeiro das diárias (com dívidas anteriores)
-  docpdf.setFontSize(12).text("Resumo de Diárias e Situação", x, y); y += 16;
-  docpdf.setFontSize(10);
-  docpdf.text(`Diárias recebidas: ${recebidas} (R$ ${(recebidas*DIARIA_VALOR).toFixed(2)})`, x, y); y += 14;
-  docpdf.text(`Dias viajados: ${diasViajados}`, x, y); y += 14;
-  docpdf.text(`Empresa devia antes: ${empresaAntes} diária(s)`, x, y); y += 14;
-  docpdf.text(`Motorista devia antes: ${motoristaAntes} diária(s)`, x, y); y += 14;
-
-  if(netDiarias === 0){
-    docpdf.text(`Situação final: Tudo quites (0 diárias pendentes).`, x, y); y += 14;
-  } else if(netDiarias > 0){
-    docpdf.text(`Situação final: A EMPRESA DEVE ${netDiarias} diária(s) — R$ ${netValor.toFixed(2)}`, x, y); y += 14;
-  } else {
-    docpdf.text(`Situação final: O MOTORISTA DEVE ${Math.abs(netDiarias)} diária(s) — R$ ${netValor.toFixed(2)}`, x, y); y += 14;
-  }
-  y += 18;
+  // resumo e situação (carregar do doc salvo se existir)
+  const resumo = viagemData.resumoDiarias || {};
+  const resumoText = resumo.situacao || $('resumoDiariasUI').textContent || '—';
+  docPdf.setFontSize(11).text('Resumo de diárias e situação:', left, y); y += 14;
+  const split = docPdf.splitTextToSize(resumoText, 520);
+  docPdf.setFontSize(10).text(split, left, y); y += (split.length * 12) + 18;
 
   // assinatura
-  const pageWidth = docpdf.internal.pageSize.getWidth();
-  docpdf.line(pageWidth/2 - 140, y, pageWidth/2 + 140, y);
-  docpdf.setFontSize(11);
-  docpdf.text("Assinatura do Motorista", pageWidth/2, y + 16, { align: "center" });
+  const pageWidth = docPdf.internal.pageSize.getWidth();
+  const center = pageWidth/2;
+  docPdf.setLineWidth(0.5);
+  docPdf.line(left, y+20, left+320, y+20); // linha
+  docPdf.setFontSize(10);
+  docPdf.text('Assinatura do Motorista', left+80, y+36);
 
-  docpdf.save("planilha_viagem.pdf");
+  // salvar (não inclui IDs)
+  docPdf.save('planilha_viagem.pdf');
+}
+
+/* ====== Carregar perfil do usuário ====== */
+async function carregarPerfilUsuario(userId){
+  const snap = await getDoc(doc(db,'usuarios', userId));
+  if(!snap.exists()) { $('dadosUsuarioCard').textContent = 'Perfil não encontrado'; return; }
+  perfil = snap.data();
+  $('dadosUsuarioCard').innerHTML = `
+    <div><strong>Motorista</strong> ${perfil.nome || '—'}</div>
+    <div class="small-muted"><strong>Telefone</strong> ${perfil.telefone || '—'}</div>
+    <div class="small-muted"><strong>Cavalo</strong> ${perfil.placaCavalo || '—'}</div>
+    <div class="small-muted"><strong>Reboque</strong> ${perfil.placaReboque || '—'}</div>
+  `;
+}
+
+/* ====== Binding botões ====== */
+$('salvarViagemBtn').onclick = salvarViagemNoServidor;
+$('limparViagemBtn').onclick = async ()=> {
+  if(!confirm('Limpar todos os dados de viagem (inclui resumo)?')) return;
+  await limparViagemServidor();
+};
+$('recalcularResumoBtn').onclick = recalcularResumo;
+$('salvarResumoBtn').onclick = salvarResumoNoServidor;
+$('limparResumoBtn').onclick = async ()=> {
+  if(!confirm('Limpar somente o resumo de diárias?')) return;
+  await limparResumoServidor();
+};
+$('addDiariaBtn').onclick = adicionarDiaria;
+$('gerarPDFBtn').onclick = gerarPDFCompleto;
+$('exportCsvBtn').onclick = ()=> {
+  // simples export CSV
+  let csv = 'data;qtd;valor\n';
+  diarias.forEach(d=> csv += `${d.data};${d.qtd};${(d.qtd * DIARIA_DEFAULT_VALOR()).toFixed(2)}\n`);
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'diarias.csv'; a.click(); URL.revokeObjectURL(url);
 };
 
-/* ========================= Login (inicia) ========================= */
-onAuthStateChanged(auth, async user=>{
-  if(!user) return window.location.href = "index.html";
-  uid = user.uid;
-  await carregarPerfil();
-  await carregarViagemAtual();
-  await carregarDiarias();
-});
+/* ====== carregar coleção de diárias e stream de viagemAtual (opcional) ====== */
+async function carregarDiariasColecao(){
+  // Recarrega coleção de diárias
+  const q = query(collection(db,'usuarios',uid,'viagemAtual','diarias'), orderBy('data','asc'));
+  const snap = await getDocs(q);
+  diarias = snap.docs.map(x=>({ id:x.id, ...x.data() }));
+  renderDiarias();
+}
 
+/* ====== Autenticação ====== */
+onAuthStateChanged(auth, async (user) => {
+  if(!user){ location.href = 'login.html'; return; }
+  uid = user.uid;
+  await carregarPerfilUsuario(uid);
+  await carregarViagemAtual();        // carrega dados de viagemAtual/dados
+  await carregarDiariasColecao();     // carrega diárias
+  // escuta mudanças no documento (opcional) para refletir alterações em tempo real
+  const ref = viagemDocRef();
+  onSnapshot(ref, snap => {
+    if(!snap.exists()) return;
+    // atualiza resumo UI se houver
+    const d = snap.data();
+    if(d.resumoDiarias){
+      // atualiza campos inputs sem sobrescrever edição do usuário (somente quando vazio)
+      $('diariasRecebidas').value = d.resumoDiarias.diasRecebidas ?? $('diariasRecebidas').value;
+      $('empresaDevia').value = d.resumoDiarias.empresaAnterior ?? $('empresaDevia').value;
+      $('motoristaDevia').value = d.resumoDiarias.motoristaAnterior ?? $('motoristaDevia').value;
+      if(d.resumoDiarias.situacao) $('resumoDiariasUI').textContent = d.resumoDiarias.situacao;
+    }
+  });
+});
 </script>
+
 </body>
 </html>
