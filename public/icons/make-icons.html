@@ -1,74 +1,87 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<title>Gerar Ícones PNG</title>
-<style>
-    body { font-family: Arial; padding: 20px; background:#111; color:#fff; }
-    button { padding: 12px; font-size: 16px; margin-top: 10px; }
-</style>
+    <meta charset="UTF-8">
+    <title>Gerar Ícones PNG</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #111;
+            color: #111;
+        }
+
+        button {
+            padding: 12px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Gerador de Ícones — Motorista Plus</h2>
-<p>Usando o arquivo: <b>public/icons/icon.svg</b></p>
+    <h2>Gerador de Ícones — Motorista Plus</h2>
+    <p>Usando o arquivo: <b>public/icons/icon.svg</b></p>
 
-<button onclick="gerar()">Gerar Arquivos PNG</button>
+    <button onclick="gerar()">Gerar Arquivos PNG</button>
 
-<div id="out"></div>
+    <div id="out"></div>
 
-<script>
-async function gerar() {
-    const sizes = [192, 512, 1024];
-    const svgUrl = "icons/icon.svg";    
+    <script>
+        async function gerar() {
+            const sizes = [192, 512, 1024];
+            const svgUrl = "icons/icon.svg";
 
-    const out = document.getElementById("out");
-    out.innerHTML = "<p>Gerando ícones...</p>";
+            const out = document.getElementById("out");
+            out.innerHTML = "<p>Gerando ícones...</p>";
 
-    const svg = await fetch(svgUrl).then(r => r.text());
-    const svgBlob = new Blob([svg], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(svgBlob);
+            const svg = await fetch(svgUrl).then(r => r.text());
+            const svgBlob = new Blob([svg], { type: "image/svg+xml" });
+            const url = URL.createObjectURL(svgBlob);
 
-    for (const size of sizes) {
-        const img = new Image();
-        img.src = url;
+            for (const size of sizes) {
+                const img = new Image();
+                img.src = url;
 
-        await new Promise(res => img.onload = res);
+                await new Promise(res => img.onload = res);
 
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
+                const canvas = document.createElement("canvas");
+                canvas.width = size;
+                canvas.height = size;
 
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, size, size);
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, size, size);
 
-        const png = canvas.toDataURL("image/png");
+                const png = canvas.toDataURL("image/png");
 
-        baixar(png, `icon-${size}.png`);
-        baixar(png, `maskable-${size}.png`);
-    }
+                baixar(png, `icon-${size}.png`);
+                baixar(png, `maskable-${size}.png`);
+            }
 
-    // Favicon 64 px
-    const imgFav = new Image();
-    imgFav.src = url;
-    await new Promise(res => imgFav.onload = res);
+            // Favicon 64 px
+            const imgFav = new Image();
+            imgFav.src = url;
+            await new Promise(res => imgFav.onload = res);
 
-    const c2 = document.createElement("canvas");
-    c2.width = 64;
-    c2.height = 64;
-    c2.getContext("2d").drawImage(imgFav, 0, 0, 64, 64);
-    baixar(c2.toDataURL("image/png"), "favicon.png");
+            const c2 = document.createElement("canvas");
+            c2.width = 64;
+            c2.height = 64;
+            c2.getContext("2d").drawImage(imgFav, 0, 0, 64, 64);
+            baixar(c2.toDataURL("image/png"), "favicon.png");
 
-    out.innerHTML = "<p>✅ Ícones gerados (192,512,1024 + favicon)</p>";
-}
+            out.innerHTML = "<p>✅ Ícones gerados (192,512,1024 + favicon)</p>";
+        }
 
-function baixar(dataUrl, nome) {
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = nome;
-    a.click();
-}
-</script>
+        function baixar(dataUrl, nome) {
+            const a = document.createElement("a");
+            a.href = dataUrl;
+            a.download = nome;
+            a.click();
+        }
+    </script>
 
 </body>
+
 </html>
