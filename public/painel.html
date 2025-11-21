@@ -30,8 +30,9 @@
   }
   .menu-lateral.active{ left:0 }
   .menu-lateral h3{ text-align:center; color:var(--primary); margin-bottom:10px }
+  .menu-lateral label{display:block;margin-top:8px;font-size:14px}
   .menu-lateral input{
-    width:100%; padding:12px; margin-top:6px; border-radius:10px;
+    width:100%; padding:10px; margin-top:4px; border-radius:10px;
     background:#0f141a; border:1px solid var(--outline); color:#fff;
   }
   .menu-lateral button{
@@ -50,7 +51,7 @@
     text-align:center; padding:20px;
   }
 
-  /* Nome Motorista Plus restaurado */
+  /* Nome Motorista Plus */
   .brand{
     font-size:clamp(38px,6vw,60px);
     font-weight:800;
@@ -68,23 +69,60 @@
     text-align:center;
   }
 
-  /* Cartão de perfil (sem foto agora) */
+  /* Cartão de perfil */
   .card-perfil{
     background:var(--card); border:1px solid var(--outline); border-radius:16px;
     padding:22px; width:min(90%,450px); backdrop-filter:blur(6px);
     box-shadow:0 10px 35px rgba(0,0,0,.35);
+    margin-top:10px;
   }
+
+  /* Avatar redondo pequeno */
+  .avatar-wrapper{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .avatar-circle,
+  .avatar-img{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    border:2px solid var(--primary);
+    object-fit:cover;
+    cursor:pointer;
+  }
+  .avatar-circle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#1c2530,#253446);
+    color:#fff;
+    font-weight:800;
+    font-size:26px;
+  }
+  .avatar-hint{
+    font-size:11px;
+    color:#ccc;
+  }
+
   .info{
     background:rgba(255,255,255,.06); border:1px solid var(--outline);
     padding:10px; margin:8px 0; border-radius:10px;
+    font-size:14px;
   }
 
-  /* Conteúdo (cards mais para baixo – opção A) */
+  /* Conteúdo (cards) */
   .conteudo{
     max-width:1100px; margin:80px auto 40px;
     padding:20px;
   }
-  .titulo-sessao{ text-align:center; font-size:22px; color:var(--primary); margin-bottom:20px; font-weight:800 }
+  .titulo-sessao{
+    text-align:center; font-size:22px; color:var(--primary);
+    margin-bottom:20px; font-weight:800
+  }
 
   .links-grid{
     display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -97,7 +135,6 @@
     font-size:18px; font-weight:700;
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  /* Hover suave */
   .links-grid a:hover{
     transform:translateY(-3px) scale(1.03);
     box-shadow:0 10px 26px rgba(0,0,0,.35);
@@ -107,7 +144,8 @@
 
   /* Botão sair */
   #logoutBtn{
-    margin:40px auto; background:#d94343; padding:14px 20px; border-radius:12px; color:#fff;
+    margin:40px auto; background:#d94343; padding:14px 20px;
+    border-radius:12px; color:#fff;
     border:none; font-weight:700; cursor:pointer; transition:.25s; display:block; width:220px;
   }
   #logoutBtn:hover{ background:#b93636; transform:scale(1.05) }
@@ -130,11 +168,20 @@
 
 <header class="hero">
 
-  <!-- ✅ Nome Motorista Plus restaurado -->
   <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
   <p class="slogan">SEMPRE EM MOVIMENTO</p>
 
   <div class="card-perfil">
+    <div class="avatar-wrapper">
+      <!-- Círculo com iniciais (fallback) -->
+      <div id="avatarCircle" class="avatar-circle">MP</div>
+      <!-- Foto do usuário (aparece quando tiver URL) -->
+      <img id="userFoto" class="avatar-img" alt="Foto do motorista" style="display:none;">
+      <!-- Input oculto para upload -->
+      <input type="file" id="inputFoto" accept="image/*" style="display:none;">
+      <small class="avatar-hint">Toque na foto para alterar</small>
+    </div>
+
     <h2 id="boasVindas" style="text-align:center;">Bem-vindo(a)</h2>
 
     <div class="info" id="userNome"></div>
@@ -165,6 +212,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
   /* ✅ motorista-plus-c53f4 */
   const firebaseConfig = {
@@ -179,9 +227,15 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   const menu = document.getElementById("menuLateral");
-  abrirMenu.onclick = ()=> menu.classList.toggle("active");
+  const abrirMenuBtn = document.getElementById("abrirMenu");
+  const avatarCircle = document.getElementById("avatarCircle");
+  const userFoto = document.getElementById("userFoto");
+  const inputFoto = document.getElementById("inputFoto");
+
+  abrirMenuBtn.onclick = ()=> menu.classList.toggle("active");
 
   onAuthStateChanged(auth, async (user)=>{
     if(!user){ window.location.href="login.html"; return; }
@@ -192,20 +246,75 @@
     if(!snap.exists()){ alert("Erro ao carregar perfil."); return; }
     const u = snap.data();
 
+    // Texto de boas-vindas e informações
     boasVindas.textContent = "Bem-vindo(a), " + (u.nome || "");
-
     userNome.textContent = "Nome: " + (u.nome || "—");
     userTelefone.textContent = "Telefone: " + (u.telefone || "—");
     userPlacaCavalo.textContent = "Placa Cavalo: " + (u.placaCavalo || "—");
     userPlacaReboque.textContent = "Placa Reboque: " + (u.placaReboque || "—");
     userEmail.textContent = "Email: " + (u.email || "—");
 
+    // Preencher campos de edição
     editarNome.value = u.nome || "";
     editarTelefone.value = u.telefone || "";
     editarPlacaCavalo.value = u.placaCavalo || "";
     editarPlacaReboque.value = u.placaReboque || "";
     editarEmail.value = u.email || "";
 
+    // FOTO DE PERFIL
+    if (u.fotoUrl) {
+      userFoto.src = u.fotoUrl;
+      userFoto.style.display = "block";
+      avatarCircle.style.display = "none";
+    } else {
+      userFoto.style.display = "none";
+      avatarCircle.style.display = "flex";
+      // se tiver nome, mostra iniciais
+      if (u.nome) {
+        const partes = u.nome.trim().split(" ");
+        const iniciais = (partes[0]?.[0] || "") + (partes[1]?.[0] || "");
+        avatarCircle.textContent = iniciais.toUpperCase() || "MP";
+      }
+    }
+
+    // Clique na foto ou no círculo abre o seletor de arquivo
+    const abrirUpload = () => inputFoto.click();
+    avatarCircle.onclick = abrirUpload;
+    userFoto.onclick = abrirUpload;
+
+    // Upload da nova foto
+    inputFoto.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const caminho = `usuarios/${user.uid}/perfil/foto_${Date.now()}`;
+        const fotoRef = storageRef(storage, caminho);
+
+        // Envia arquivo pro Storage
+        await uploadBytes(fotoRef, file);
+
+        // Pega URL pública
+        const url = await getDownloadURL(fotoRef);
+
+        // Salva URL no Firestore
+        await updateDoc(refUser, { fotoUrl: url });
+
+        // Atualiza UI
+        userFoto.src = url;
+        userFoto.style.display = "block";
+        avatarCircle.style.display = "none";
+
+        alert("Foto atualizada com sucesso!");
+      } catch (err) {
+        console.error("Erro ao enviar foto:", err);
+        alert("Erro ao enviar foto. Tente novamente.");
+      } finally {
+        inputFoto.value = ""; // limpa input
+      }
+    });
+
+    // Salvar perfil (texto)
     salvarPerfil.onclick = async ()=>{
       await updateDoc(refUser,{
         nome: editarNome.value,
@@ -220,7 +329,6 @@
   });
 
   logoutBtn.onclick = async ()=>{ await signOut(auth); window.location.href="login.html"; };
-
 </script>
 
 </body>
