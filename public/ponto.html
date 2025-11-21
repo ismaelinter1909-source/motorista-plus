@@ -490,10 +490,22 @@
         tableWidth: "auto",
         pageBreak: "avoid"
       });
+      // ===== Assinatura Manual =====
+      let finalY = docpdf.lastAutoTable.finalY + 40;
 
+      docpdf.setLineWidth(0.5);
+
+      // linha para assinatura
+      docpdf.line(80, finalY, 350, finalY);
+
+      // texto abaixo da linha
+      docpdf.setFontSize(10);
+      docpdf.text("Assinatura do Motorista", 140, finalY + 14);
+
+      
       docpdf.save(`ponto_${meses[mesIdx]}_${ano}.pdf`);
     };
-
+    
     // Botões de registro rápido
     document.querySelectorAll('button[data-tipo]').forEach(b => {
       b.onclick = () => marcar(b.dataset.tipo);
