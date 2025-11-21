@@ -490,17 +490,27 @@
         tableWidth: "auto",
         pageBreak: "avoid"
       });
-      // ===== Assinatura Manual =====
-      let finalY = docpdf.lastAutoTable.finalY + 40;
+      /* ===== ASSINATURA MANUAL (CENTRALIZADA) ===== */
 
-      docpdf.setLineWidth(0.5);
+        // Y logo após a última tabela
+        let finalY = docpdf.lastAutoTable.finalY + 50;
 
-      // linha para assinatura
-      docpdf.line(80, finalY, 350, finalY);
+        // largura da página
+        const pageWidth = docpdf.internal.pageSize.getWidth();
 
-      // texto abaixo da linha
-      docpdf.setFontSize(10);
-      docpdf.text("Assinatura do Motorista", 140, finalY + 14);
+        // largura da linha da assinatura
+        const lineWidth = 300;
+
+        // cálculo para centralizar a linha
+        const lineX = (pageWidth - lineWidth) / 2;
+
+        // linha
+        docpdf.setLineWidth(0.7);
+        docpdf.line(lineX, finalY, lineX + lineWidth, finalY);
+
+        // texto centralizado
+        docpdf.setFontSize(11);
+        docpdf.text("Assinatura do Motorista", pageWidth / 2, finalY + 16, { align: "center" });
 
       
       docpdf.save(`ponto_${meses[mesIdx]}_${ano}.pdf`);
