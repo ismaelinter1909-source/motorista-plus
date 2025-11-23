@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -10,70 +11,217 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    :root{
-      --bg:#0b0f14; --bg2:#10161d; --card:#161c23;
-      --primary:#f39220; --primary-700:#d47e16;
-      --outline:#2b3a49; --text:#fff; --muted:#b5bcc7;
-      --green:#2b9348; --red:#dc3545; --info:#0077b6;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
-    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-
-    #voltarPainel{
-      position:fixed; top:12px; left:12px; z-index:9999;
-      padding:10px 14px;width:auto;
-      border-radius:10px;border:1px solid rgba(255,255,255,.25);
-      background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-weight:700;
-      backdrop-filter:blur(4px);transition:.25s;
-    }
-    #voltarPainel:hover{background:rgba(255,255,255,.16)}
-    header{
-      background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,.6));
-      padding:28px 16px;text-align:center;border-bottom:1px solid var(--outline)
-    }
-    header h1{font-weight:800;font-size:clamp(20px,4vw,30px)}
-    header .plus{color:var(--primary)}
-
-    main{width:94%;max-width:1100px;margin:70px auto 24px;display:grid;gap:14px;flex:1}
-    .card{background:var(--card);border:1px solid var(--outline);padding:16px;border-radius:12px;backdrop-filter:blur(6px)}
-    h2{color:var(--primary);font-size:1.15rem;margin-bottom:8px}
-
-    label{display:block;font-size:13px;margin-top:8px;color:#e8e8e8}
-    input,select,textarea,button{
-      width:100%;padding:12px;border-radius:10px;border:1px solid var(--outline);
-      background:rgba(255,255,255,.08);color:#fff;font-size:14px;
+    :root {
+      --bg: #0b0f14;
+      --bg2: #10161d;
+      --card: #161c23;
+      --primary: #f39220;
+      --primary-700: #d47e16;
+      --outline: #2b3a49;
+      --text: #fff;
+      --muted: #b5bcc7;
+      --green: #2b9348;
+      --red: #dc3545;
+      --info: #0077b6;
     }
 
-    .btn{background:var(--primary);border:none;font-weight:700;color:#fff}
-    .btn-green{background:var(--green)}
-    .btn-red{background:var(--red)}
-    .btn-ghost{background:transparent;border:1px solid var(--outline);color:var(--muted)}
-
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    @media(max-width:900px){.grid2{grid-template-columns:1fr}}
-
-    #dadosUsuarioCard{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, Arial, sans-serif
     }
-    #dadosUsuarioCard .item{
-      background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px;text-align:center
-    }
-    #dadosUsuarioCard .item strong{color:var(--primary)}
 
-    ul{list-style:none;margin-top:8px;padding-left:0}
-    li{
-      background:rgba(255,255,255,.05);border:1px solid var(--outline);
-      padding:10px;border-radius:10px;margin:6px 0;
-      display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column
     }
-    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .tag{font-size:.8rem;color:var(--muted)}
 
-    footer{padding:12px;text-align:center;color:var(--muted);border-top:1px solid var(--outline)}
+    #voltarPainel {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      padding: 10px 14px;
+      width: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      backdrop-filter: blur(4px);
+      transition: .25s;
+    }
+
+    #voltarPainel:hover {
+      background: rgba(255, 255, 255, .16)
+    }
+
+    header {
+      background: linear-gradient(180deg, rgba(0, 0, 0, .3), rgba(0, 0, 0, .6));
+      padding: 28px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--outline)
+    }
+
+    header h1 {
+      font-weight: 800;
+      font-size: clamp(20px, 4vw, 30px)
+    }
+
+    header .plus {
+      color: var(--primary)
+    }
+
+    main {
+      width: 94%;
+      max-width: 1100px;
+      margin: 70px auto 24px;
+      display: grid;
+      gap: 14px;
+      flex: 1
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--outline);
+      padding: 16px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px)
+    }
+
+    h2 {
+      color: var(--primary);
+      font-size: 1.15rem;
+      margin-bottom: 8px
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-top: 8px;
+      color: #e8e8e8
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--outline);
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .btn {
+      background: var(--primary);
+      border: none;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .btn-green {
+      background: var(--green)
+    }
+
+    .btn-red {
+      background: var(--red)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--outline);
+      color: var(--muted)
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px
+    }
+
+    @media(max-width:900px) {
+      .grid2 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    #dadosUsuarioCard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px
+    }
+
+    #dadosUsuarioCard .item {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--outline);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center
+    }
+
+    #dadosUsuarioCard .item strong {
+      color: var(--primary)
+    }
+
+    ul {
+      list-style: none;
+      margin-top: 8px;
+      padding-left: 0
+    }
+
+    li {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--outline);
+      padding: 10px;
+      border-radius: 10px;
+      margin: 6px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .tag {
+      font-size: .8rem;
+      color: var(--muted)
+    }
+
+    @media (max-width: 768px) {
+      #voltarPainel {
+        display: none !important;
+      }
+    }
+
+    footer {
+      padding: 12px;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--outline)
+    }
   </style>
 </head>
+
 <body>
 
   <button id="voltarPainel" onclick="window.location.href='painel.html'">← Voltar</button>
@@ -165,16 +313,16 @@
     let entregas = [];
     let editId = null;
 
-    function fmtBR(d){
+    function fmtBR(d) {
       const x = new Date(d);
       return isNaN(x) ? "" :
-        `${String(x.getDate()).padStart(2,"0")}/${String(x.getMonth()+1).padStart(2,"0")}/${x.getFullYear()}`;
+        `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
     }
-    const asDateOnly = v => !v ? "" : new Date(v).toISOString().slice(0,10);
+    const asDateOnly = v => !v ? "" : new Date(v).toISOString().slice(0, 10);
 
-    async function carregarPerfil(){
-      const snap = await getDoc(doc(db,"usuarios",uid));
-      if(!snap.exists()) return;
+    async function carregarPerfil() {
+      const snap = await getDoc(doc(db, "usuarios", uid));
+      if (!snap.exists()) return;
 
       perfil = snap.data();
       $('dadosUsuarioCard').innerHTML = `
@@ -186,13 +334,13 @@
       `;
     }
 
-    function iniciarStream(){
+    function iniciarStream() {
       const qRef = query(
-        collection(db,"usuarios",uid,"entregas"),
-        orderBy("criadoEm","desc")
+        collection(db, "usuarios", uid, "entregas"),
+        orderBy("criadoEm", "desc")
       );
-      onSnapshot(qRef, snap=>{
-        entregas = snap.docs.map(d=>{
+      onSnapshot(qRef, snap => {
+        entregas = snap.docs.map(d => {
           const x = d.data();
           return {
             id: d.id,
@@ -200,26 +348,26 @@
             client: x.client,
             origin: x.origin,
             destination: x.destination,
-            kmStart: Number(x.kmStart||0),
-            kmEnd: Number(x.kmEnd||0),
+            kmStart: Number(x.kmStart || 0),
+            kmEnd: Number(x.kmEnd || 0),
             kmPercorrido: Number(x.kmPercorrido || (x.kmEnd - x.kmStart)),
             plate: x.plate,
             product: x.product,
-            weight: Number(x.weight||0)
+            weight: Number(x.weight || 0)
           };
         });
         renderLista();
       });
     }
 
-    function renderLista(){
+    function renderLista() {
       const ul = $('listaEntregas');
-      if(!entregas.length){
+      if (!entregas.length) {
         ul.innerHTML = '<li>Nenhuma entrega registrada.</li>';
         return;
       }
 
-      ul.innerHTML = entregas.map(e=>`
+      ul.innerHTML = entregas.map(e => `
         <li>
           <div style="flex:1;min-width:260px">
             <div style="font-weight:700">${fmtBR(e.date)} — ${e.client}</div>
@@ -234,13 +382,13 @@
         </li>
       `).join("");
 
-      ul.querySelectorAll("button").forEach(btn=>{
-        btn.onclick = async ()=>{
+      ul.querySelectorAll("button").forEach(btn => {
+        btn.onclick = async () => {
           const id = btn.dataset.id;
           const act = btn.dataset.act;
 
-          if(act === "edit"){
-            const e = entregas.find(x=>x.id===id);
+          if (act === "edit") {
+            const e = entregas.find(x => x.id === id);
             $('deliveryDate').value = e.date;
             $('clientName').value = e.client;
             $('origin').value = e.origin;
@@ -254,16 +402,16 @@
             $('statusEdicao').textContent = `Editando ${e.client}`;
             $('cancelarEdicao').style.display = "inline-block";
 
-          } else if(act === "del"){
-            if(confirm("Excluir esta entrega?")){
-              await deleteDoc(doc(db,"usuarios",uid,"entregas",id));
+          } else if (act === "del") {
+            if (confirm("Excluir esta entrega?")) {
+              await deleteDoc(doc(db, "usuarios", uid, "entregas", id));
             }
           }
         };
       });
     }
 
-    $('salvarEntrega').onclick = async ()=>{
+    $('salvarEntrega').onclick = async () => {
       const date = $('deliveryDate').value;
       const client = $('clientName').value;
       const origin = $('origin').value;
@@ -274,7 +422,7 @@
       const product = $('product').value;
       const weight = Number($('weight').value);
 
-      if(!date || !client || !origin || !destination){
+      if (!date || !client || !origin || !destination) {
         alert("Preencha todos os campos.");
         return;
       }
@@ -293,47 +441,47 @@
         criadoEm: serverTimestamp()
       };
 
-      if(editId){
-        await updateDoc(doc(db,"usuarios",uid,"entregas",editId), registro);
+      if (editId) {
+        await updateDoc(doc(db, "usuarios", uid, "entregas", editId), registro);
         $('statusEdicao').textContent = "Entrega atualizada.";
       } else {
-        await addDoc(collection(db,"usuarios",uid,"entregas"), registro);
+        await addDoc(collection(db, "usuarios", uid, "entregas"), registro);
         $('statusEdicao').textContent = "Entrega adicionada.";
       }
 
       editId = null;
       $('cancelarEdicao').style.display = "none";
 
-      ['deliveryDate','clientName','origin','destination','initialKm','finalKm','implementPlate','product','weight']
-        .forEach(id=> $(id).value = "");
+      ['deliveryDate', 'clientName', 'origin', 'destination', 'initialKm', 'finalKm', 'implementPlate', 'product', 'weight']
+        .forEach(id => $(id).value = "");
     };
 
-    $('cancelarEdicao').onclick = ()=>{
+    $('cancelarEdicao').onclick = () => {
       editId = null;
       $('cancelarEdicao').style.display = "none";
       $('statusEdicao').textContent = "";
-      ['deliveryDate','clientName','origin','destination','initialKm','finalKm','implementPlate','product','weight']
-        .forEach(id=> $(id).value = "");
+      ['deliveryDate', 'clientName', 'origin', 'destination', 'initialKm', 'finalKm', 'implementPlate', 'product', 'weight']
+        .forEach(id => $(id).value = "");
     };
 
-    $('apagarTodos').onclick = async ()=>{
-      if(!confirm("Excluir TODAS as entregas?")) return;
-      const snap = await getDocs(collection(db,"usuarios",uid,"entregas"));
+    $('apagarTodos').onclick = async () => {
+      if (!confirm("Excluir TODAS as entregas?")) return;
+      const snap = await getDocs(collection(db, "usuarios", uid, "entregas"));
       const tasks = [];
-      snap.forEach(d=> tasks.push(deleteDoc(d.ref)));
+      snap.forEach(d => tasks.push(deleteDoc(d.ref)));
       await Promise.all(tasks);
     };
 
-    function construirLinhasPDF(arr){
-      return arr.map(e=>[
+    function construirLinhasPDF(arr) {
+      return arr.map(e => [
         fmtBR(e.date), e.client, e.origin, e.destination,
         e.kmStart, e.kmEnd, e.kmPercorrido, e.plate, e.product, e.weight
       ]);
     }
 
-    async function gerarPDF(lista, titulo=""){
+    async function gerarPDF(lista, titulo = "") {
       const { jsPDF } = window.jspdf;
-      const docpdf = new jsPDF({ unit:"pt", format:"a4", orientation:"landscape" });
+      const docpdf = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
 
       docpdf.setFontSize(16);
       docpdf.text(`Relatório de Entregas — Motorista Plus ${titulo}`, 32, 34);
@@ -344,33 +492,33 @@
 
       docpdf.autoTable({
         startY: 70,
-        head: [["Data","Cliente","Origem","Destino","KM Inicial","KM Final","KM Percorrido","Placa","Produto","Peso"]],
+        head: [["Data", "Cliente", "Origem", "Destino", "KM Inicial", "KM Final", "KM Percorrido", "Placa", "Produto", "Peso"]],
         body: construirLinhasPDF(lista),
-        headStyles:{ fillColor:[243,146,32] },
-        margin:{ left:32, right:32 }
+        headStyles: { fillColor: [243, 146, 32] },
+        margin: { left: 32, right: 32 }
       });
 
       docpdf.save("entregas.pdf");
     }
 
-    $('gerarPDFFiltro').onclick = ()=>{
+    $('gerarPDFFiltro').onclick = () => {
       let lista = [...entregas];
       const s = $('filterStart').value ? new Date($('filterStart').value) : null;
       const e = $('filterEnd').value ? new Date($('filterEnd').value) : null;
-      if(s || e){
-        lista = lista.filter(x=>{
+      if (s || e) {
+        lista = lista.filter(x => {
           const d = new Date(x.date);
-          return (!s || d>=s) && (!e || d<=e);
+          return (!s || d >= s) && (!e || d <= e);
         });
       }
-      const titulo = (s||e) ? `(${s?fmtBR(s):'…'} a ${e?fmtBR(e):'…'})` : "";
+      const titulo = (s || e) ? `(${s ? fmtBR(s) : '…'} a ${e ? fmtBR(e) : '…'})` : "";
       gerarPDF(lista, titulo);
     };
 
-    $('gerarPDFCompleto').onclick = ()=> gerarPDF(entregas, "(Completo)");
+    $('gerarPDFCompleto').onclick = () => gerarPDF(entregas, "(Completo)");
 
-    onAuthStateChanged(auth, async user=>{
-      if(!user) return window.location.href="login.html";
+    onAuthStateChanged(auth, async user => {
+      if (!user) return window.location.href = "login.html";
       uid = user.uid;
       await carregarPerfil();
       iniciarStream();
@@ -379,4 +527,5 @@
   </script>
 
 </body>
+
 </html>

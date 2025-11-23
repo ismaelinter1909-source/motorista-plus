@@ -313,15 +313,59 @@ footer{
   border-top:1px solid var(--outline);
 }
 
-/* AÇÕES DO MOTORISTA (links para páginas) */
-.acoes-motorista{
+/* PAINEL LATERAL DE EDIÇÃO (A3) */
+.edit-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
   display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:6px;
+  justify-content:flex-end;
+  align-items:stretch;
+  z-index:9999;
 }
-.acoes-motorista button{
-  font-size:11px;
+.hidden{
+  display:none;
+}
+.edit-panel{
+  width:100%;
+  max-width:360px;
+  background:#0c1218;
+  border-left:1px solid var(--outline);
+  box-shadow:-4px 0 18px rgba(0,0,0,.7);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.edit-panel h3{
+  margin-bottom:4px;
+  font-size:16px;
+}
+.edit-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.edit-panel-header button{
+  font-size:18px;
+  line-height:1;
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  cursor:pointer;
+}
+.edit-panel-header button:hover{
+  color:#fff;
+}
+.edit-panel .grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.edit-panel .actions{
+  display:flex;
+  gap:8px;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -351,11 +395,53 @@ footer{
   <section id="conteudo">
     <div class="card">
       <h2>Selecione um motorista</h2>
-      <p class="small">Use a lista ao lado para escolher um motorista e acessar abastecimentos, média, gastos, ponto, entregas, manutenção, viagens e as próprias páginas do aplicativo.</p>
+      <p class="small">Use a lista ao lado para escolher um motorista e acessar abastecimentos, média, gastos, ponto, entregas, manutenção e viagens.</p>
     </div>
   </section>
 
 </main>
+
+<!-- PAINEL LATERAL DE EDIÇÃO DO MOTORISTA -->
+<div id="editOverlay" class="edit-overlay hidden">
+  <div id="editPanel" class="edit-panel">
+    <div class="edit-panel-header">
+      <h3>Editar motorista</h3>
+      <button type="button" id="btnFecharPainel">&times;</button>
+    </div>
+    <form id="formEditMotorista">
+      <div class="grid">
+        <div>
+          <label for="editNome">Nome</label>
+          <input type="text" id="editNome" required>
+        </div>
+        <div>
+          <label for="editTelefone">Telefone</label>
+          <input type="text" id="editTelefone">
+        </div>
+        <div>
+          <label for="editCPF">CPF</label>
+          <input type="text" id="editCPF">
+        </div>
+        <div>
+          <label for="editCavalo">Placa Cavalo</label>
+          <input type="text" id="editCavalo">
+        </div>
+        <div>
+          <label for="editReboque">Placa Reboque</label>
+          <input type="text" id="editReboque">
+        </div>
+        <div>
+          <label for="editEmail">E-mail</label>
+          <input type="email" id="editEmail">
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="btnCancelarEdicao">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <footer>© 2025 Motorista Plus — Painel do Gestor</footer>
 
@@ -402,6 +488,20 @@ let editManutId = null;
 let editViagemId = null;
 let editMediaId = null;
 
+/* ELEMENTOS DO PAINEL LATERAL */
+const editOverlay      = $("editOverlay");
+const editPanel        = $("editPanel");
+const formEditMotorista = $("formEditMotorista");
+const btnFecharPainel  = $("btnFecharPainel");
+const btnCancelarEdicao = $("btnCancelarEdicao");
+
+const inputEditNome    = $("editNome");
+const inputEditTelefone= $("editTelefone");
+const inputEditCPF     = $("editCPF");
+const inputEditCavalo  = $("editCavalo");
+const inputEditReboque = $("editReboque");
+const inputEditEmail   = $("editEmail");
+
 /* HELPERS */
 const fmtBR = iso => iso ? iso.split("-").reverse().join("/") : "—";
 function parseNum(v){
@@ -416,6 +516,58 @@ $("btnSair").onclick = async ()=>{
   }catch(e){}
   window.location.href = "login_admin.html";
 };
+
+/* FUNÇÕES PAINEL LATERAL */
+function abrirPainelEdicao(){
+  if(!motoristaAtual) return;
+  inputEditNome.value     = motoristaAtual.nome || "";
+  inputEditTelefone.value = motoristaAtual.telefone || "";
+  inputEditCPF.value      = motoristaAtual.cpf || "";
+  inputEditCavalo.value   = motoristaAtual.placaCavalo || "";
+  inputEditReboque.value  = motoristaAtual.placaReboque || "";
+  inputEditEmail.value    = motoristaAtual.email || "";
+  editOverlay.classList.remove("hidden");
+}
+
+function fecharPainelEdicao(){
+  formEditMotorista.reset();
+  editOverlay.classList.add("hidden");
+}
+
+btnFecharPainel?.addEventListener("click", fecharPainelEdicao);
+btnCancelarEdicao?.addEventListener("click", fecharPainelEdicao);
+
+editOverlay?.addEventListener("click", (e)=>{
+  if(e.target === editOverlay){
+    fecharPainelEdicao();
+  }
+});
+editPanel?.addEventListener("click", (e)=> e.stopPropagation());
+
+formEditMotorista?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(!motoristaAtual) return;
+  const uref = doc(db,"usuarios",motoristaAtual.id);
+
+  const payload = {
+    nome: inputEditNome.value.trim(),
+    telefone: inputEditTelefone.value.trim(),
+    cpf: inputEditCPF.value.trim(),
+    placaCavalo: inputEditCavalo.value.trim(),
+    placaReboque: inputEditReboque.value.trim(),
+    email: inputEditEmail.value.trim()
+  };
+
+  await updateDoc(uref,payload);
+
+  // atualizar lista e reabrir motorista
+  await carregarMotoristas();
+  const atualizado = motoristas.find(x=>x.id === motoristaAtual.id);
+  if(atualizado){
+    abrirMotorista(atualizado);
+  }
+  fecharPainelEdicao();
+});
 
 /* AUTENTICAÇÃO E VALIDAÇÃO ADMIN */
 async function validarAdmin(user){
@@ -472,7 +624,7 @@ $("busca").addEventListener("input", e=>{
 /* ABRIR MOTORISTA */
 async function abrirMotorista(m){
   motoristaAtual = m;
-  // monta estrutura com abas
+
   $("conteudo").innerHTML = `
     <div class="card">
       <h2>${m.nome || "Motorista"}</h2>
@@ -488,19 +640,6 @@ async function abrirMotorista(m){
       <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
         <button class="btn btn-primary" id="btnEditarUsuario">Editar dados do motorista</button>
         <button class="btn btn-danger" id="btnExcluirUsuario">Excluir motorista</button>
-      </div>
-
-      <div style="margin-top:12px;">
-        <span class="small">Abrir as mesmas telas do app para este motorista:</span>
-        <div class="acoes-motorista">
-          <button class="btn-ghost" data-tela="abastecimento">Abastecimento</button>
-          <button class="btn-ghost" data-tela="gastos">Gastos & Bônus</button>
-          <button class="btn-ghost" data-tela="ponto">Ponto</button>
-          <button class="btn-ghost" data-tela="entregas">Entregas</button>
-          <button class="btn-ghost" data-tela="manutencao">Manutenção</button>
-          <button class="btn-ghost" data-tela="viagem">Viagem</button>
-          <button class="btn-ghost" data-tela="media">Média</button>
-        </div>
       </div>
     </div>
 
@@ -547,28 +686,6 @@ async function abrirMotorista(m){
     btnExcluir.onclick = excluirUsuarioAtual;
   }
 
-  // eventos abrir telas originais
-  const mapasPaginas = {
-    abastecimento: "abastecimento.html",
-    gastos: "gastos.html",
-    ponto: "ponto.html",
-    entregas: "entregas.html",
-    manutencao: "manutencao.html",
-    viagem: "viagem.html",
-    media: "media.html"
-  };
-
-  document.querySelectorAll(".acoes-motorista button[data-tela]").forEach(btn=>{
-    btn.onclick = ()=>{
-      if(!motoristaAtual) return;
-      const tipo = btn.getAttribute("data-tela");
-      const arquivo = mapasPaginas[tipo];
-      if(!arquivo) return;
-      const url = `${arquivo}?uid=${encodeURIComponent(motoristaAtual.id)}&from=admin`;
-      window.open(url,"_blank");
-    };
-  });
-
   // carregar dados das subcoleções
   await Promise.all([
     carregarAbastecimentos(),
@@ -582,32 +699,8 @@ async function abrirMotorista(m){
 }
 
 /* ===== EDITAR / EXCLUIR USUÁRIO ===== */
-async function editarUsuarioAtual(){
-  if(!motoristaAtual) return;
-  const uref = doc(db,"usuarios",motoristaAtual.id);
-
-  const novoNome = prompt("Nome do motorista:", motoristaAtual.nome || "") ?? motoristaAtual.nome;
-  const novoTel = prompt("Telefone:", motoristaAtual.telefone || "") ?? motoristaAtual.telefone;
-  const novoCavalo = prompt("Placa do cavalo:", motoristaAtual.placaCavalo || "") ?? motoristaAtual.placaCavalo;
-  const novoReboque = prompt("Placa do reboque:", motoristaAtual.placaReboque || "") ?? motoristaAtual.placaReboque;
-  const novoCPF = prompt("CPF:", motoristaAtual.cpf || "") ?? motoristaAtual.cpf;
-
-  const payload = {
-    nome: novoNome,
-    telefone: novoTel,
-    placaCavalo: novoCavalo,
-    placaReboque: novoReboque,
-    cpf: novoCPF
-  };
-
-  await updateDoc(uref,payload);
-
-  // atualizar lista e reabrir
-  await carregarMotoristas();
-  const atualizado = motoristas.find(x=>x.id===motoristaAtual.id);
-  if(atualizado){
-    abrirMotorista(atualizado);
-  }
+function editarUsuarioAtual(){
+  abrirPainelEdicao();
 }
 
 async function excluirUsuarioAtual(){
@@ -775,12 +868,18 @@ window._pdfAbast = ()=>{
   const docPDF = new jsPDF({unit:"pt",format:"a4"});
   const margin = 40;
   let y = 40;
+
   docPDF.setFontSize(14);
   docPDF.text(`Abastecimentos — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=10;
+  y += 16;
+
   docPDF.setFontSize(10);
-  docPDF.text(`Gerado pelo gestor`, margin, y);
-  y+=20;
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosAbastecimentos.map(a=>[
     fmtBR(a.data||""), a.quilometragem||"", a.litros||"", a.valor||"", a.tipo||"", a.pagamento||""
   ]);
@@ -933,13 +1032,21 @@ window._pdfGastos = ()=>{
   let y = 40;
   docPDF.setFontSize(14);
   docPDF.text(`Gastos — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosGastos.map(g=>[
     fmtBR(g.date||""), g.motivo||"", g.local||"", g.aut||"", g.valor||""
   ]);
   docPDF.autoTable({
     startY:y,
-    head:[["Data","Motivo","Local","Aut.","Valor"]], 
+    head:[["Data","Motivo","Local","Aut.","Valor"]],
     body,
     headStyles:{fillColor:[243,146,32]},
     styles:{fontSize:9}
@@ -1079,7 +1186,15 @@ window._pdfPonto = ()=>{
   let y = 40;
   docPDF.setFontSize(14);
   docPDF.text(`Folha de Ponto — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosPonto.map(p=>[
     fmtBR(p.data||""), p.horaEntrada||"", p.horaSaida||"", p.totalHoras||""
   ]);
@@ -1216,10 +1331,14 @@ window._pdfEntregas = ()=>{
   let y = 40;
   docPDF.setFontSize(16);
   docPDF.text(`Relatório de Entregas — ${motoristaAtual?.nome||""}`, 32, y);
-  y += 18;
+  y += 16;
+
   docPDF.setFontSize(10);
-  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo||""}  |  Reboque: ${motoristaAtual?.placaReboque||""}`, 32, y);
-  y += 10;
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, 32, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, 32, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, 32, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, 32, y);
+  y += 14;
 
   const body = dadosEntregas.map(e=>[
     fmtBR(e.data||""), e.cliente||"", e.cidade||"", e.nota||"", e.status||""
@@ -1358,7 +1477,15 @@ window._pdfManut = ()=>{
   let y = 40;
   docPDF.setFontSize(14);
   docPDF.text(`Manutenções — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosManutencao.map(m=>[
     fmtBR(m.data||""), m.tipo||"", m.oficina||"", m.veiculo||"", m.valor||""
   ]);
@@ -1500,7 +1627,15 @@ window._pdfViagem = ()=>{
   let y = 40;
   docPDF.setFontSize(14);
   docPDF.text(`Viagens / Diárias — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosViagem.map(v=>[
     fmtBR(v.inicio||""), fmtBR(v.fim||""), v.origem||"", v.destino||"", v.diarias||"", v.valorDiaria||""
   ]);
@@ -1642,7 +1777,15 @@ window._pdfMedia = ()=>{
   let y = 40;
   docPDF.setFontSize(14);
   docPDF.text(`Média de Consumo — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
   const body = dadosMedia.map(m=>[
     fmtBR(m.data||""), m.kmInicial||"", m.kmFinal||"", m.litros||"", m.media||""
   ]);
