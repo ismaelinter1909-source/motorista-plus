@@ -1,844 +1,251 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel Administrador — Motorista Plus</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel Gestor — Motorista Plus</title>
 
-  <!-- Chart.js (para pequenos gráficos se quiser depois) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#0b0f14;
+  --bg2:#10161d;
+  --card:#161c23;
+  --primary:#f39220;
+  --outline:#2b3a49;
+  --text:#fff;
+  --muted:#b5bcc7;
+}
 
-  <style>
-    :root {
-      --bg: #0b0f14;
-      --bg2: #10161d;
-      --card: #161c23;
-      --primary: #f39220;
-      --primary-700: #d47e16;
-      --outline: #2b3a49;
-      --text: #fff;
-      --muted: #b5bcc7;
-      --green: #2b9348;
-      --red: #dc3545;
-    }
+body{
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+  color: var(--text);
+  font-family: system-ui, Arial;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display:flex;
+  flex-direction:column;
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    }
+/* ==================== HEADER ==================== */
+header{
+  padding:18px;
+  background:#000;
+  color:#fff;
+  font-size:22px;
+  font-weight:800;
+  border-bottom:1px solid var(--outline);
+}
+.plus{ color:var(--primary); }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+/* ==================== LAYOUT ==================== */
+main{
+  flex:1;
+  display:grid;
+  grid-template-columns:280px 1fr;
+}
 
-    header {
-      background: #000;
-      border-bottom: 1px solid var(--outline);
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
+.sidebar{
+  border-right:1px solid var(--outline);
+  padding:14px;
+  overflow-y:auto;
+  background:#0c1218;
+}
 
-    header h1 {
-      font-size: clamp(18px, 3vw, 24px);
-      font-weight: 800;
-    }
+input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  font-size:15px;
+  margin-bottom:12px;
+}
 
-    header .plus {
-      color: var(--primary);
-    }
+input:focus{
+  border-color:var(--primary);
+}
 
-    header .admin-info {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: right;
-    }
+/* ==================== LISTA DE MOTORISTAS ==================== */
+.motorista-item{
+  padding:12px;
+  border-radius:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--outline);
+  margin-bottom:10px;
+  cursor:pointer;
+  transition:.2s;
+}
+.motorista-item:hover{
+  background:rgba(255,255,255,.10);
+}
 
-    .btn-top {
-      padding: 8px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--outline);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      font-size: 13px;
-      cursor: pointer;
-    }
+/* ==================== CONTEÚDO ==================== */
+#conteudo{
+  padding:20px;
+}
 
-    .btn-top:hover {
-      background: rgba(255,255,255,.12);
-    }
+.card{
+  background:var(--card);
+  border:1px solid var(--outline);
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:18px;
+}
 
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 0;
-      min-height: 0;
-    }
+.card h2{
+  margin:0;
+  font-size:22px;
+  color:var(--primary);
+  margin-bottom:10px;
+}
 
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
+.info{
+  font-size:16px;
+  margin:4px 0;
+}
 
-    /* Sidebar */
-    .sidebar {
-      border-right: 1px solid var(--outline);
-      background: var(--bg2);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+.small{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:4px;
+}
 
-    .sidebar h2 {
-      font-size: 15px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .search {
-      position: relative;
-    }
-
-    .search input {
-      width: 100%;
-      padding: 8px 10px;
-      padding-left: 26px;
-      border-radius: 8px;
-      border: 1px solid var(--outline);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-    }
-
-    .search span {
-      position: absolute;
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .lista-motoristas {
-      margin-top: 6px;
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      border-radius: 8px;
-      border: 1px solid var(--outline);
-      background: rgba(0,0,0,.3);
-    }
-
-    .motorista-item {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.04);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .motorista-item:last-child {
-      border-bottom: none;
-    }
-
-    .motorista-item:hover {
-      background: rgba(255,255,255,.06);
-    }
-
-    .motorista-item.ativo {
-      border-left: 3px solid var(--primary);
-      padding-left: 7px;
-      background: rgba(243,146,32,.08);
-    }
-
-    .motorista-nome {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .motorista-email {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .motorista-status {
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .tag-ativo {
-      color: #9cff9c;
-    }
-
-    .tag-inativo {
-      color: #ff9c9c;
-    }
-
-    /* Conteúdo principal */
-    .content {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      border: 1px solid var(--outline);
-      padding: 14px;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .card-header h2 {
-      font-size: 16px;
-      color: var(--primary);
-    }
-
-    .card-header small {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .dados-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
-      gap: 8px;
-    }
-
-    .dado {
-      background: rgba(255,255,255,.03);
-      border-radius: 10px;
-      border: 1px solid var(--outline);
-      padding: 8px;
-      font-size: 13px;
-    }
-
-    .dado span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      margin-bottom: 2px;
-    }
-
-    .dado strong {
-      font-size: 13px;
-    }
-
-    .resumo-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
-      gap: 10px;
-    }
-
-    .resumo-card {
-      background: rgba(255,255,255,.03);
-      border-radius: 10px;
-      border: 1px solid var(--outline);
-      padding: 10px;
-      font-size: 13px;
-    }
-
-    .resumo-card span {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .resumo-card strong {
-      display: block;
-      margin-top: 2px;
-      font-size: 14px;
-    }
-
-    .resumo-card small {
-      display: block;
-      margin-top: 2px;
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* Botões */
-    .btn {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #000;
-      font-weight: 600;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-700);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--outline);
-    }
-
-    .btn-ghost:hover {
-      background: rgba(255,255,255,.05);
-    }
-
-    .btn-danger {
-      background: var(--red);
-      color: #fff;
-    }
-
-    .btn-danger:hover {
-      background: #b02a37;
-    }
-
-    /* Switch ativo/inativo */
-    .switch {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .switch input {
-      width: 36px;
-      height: 18px;
-      appearance: none;
-      -webkit-appearance: none;
-      background: #555;
-      border-radius: 999px;
-      position: relative;
-      cursor: pointer;
-      outline: none;
-      border: 1px solid #666;
-    }
-
-    .switch input::before {
-      content: "";
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #fff;
-      top: 1px;
-      left: 1px;
-      transition: .2s;
-    }
-
-    .switch input:checked {
-      background: var(--green);
-      border-color: var(--green);
-    }
-
-    .switch input:checked::before {
-      transform: translateX(16px);
-    }
-
-    /* Tabela simples */
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .table th, .table td {
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      padding: 4px 3px;
-      text-align: left;
-    }
-
-    .table th {
-      color: var(--muted);
-      font-weight: 500;
-      font-size: 11px;
-    }
-
-    .table td.valor-pos {
-      color: #7bff7b;
-    }
-
-    .table td.valor-neg {
-      color: #ff9c9c;
-    }
-
-    .table tbody tr:hover {
-      background: rgba(255,255,255,.04);
-    }
-
-    .texto-central {
-      font-size: 13px;
-      color: var(--muted);
-      text-align: center;
-      margin: 10px 0 2px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 10px;
-      border-top: 1px solid var(--outline);
-      font-size: 11px;
-      color: var(--muted);
-    }
-  </style>
+/* RESPONSIVIDADE */
+@media(max-width:820px){
+  main{
+    grid-template-columns:1fr;
+  }
+  .sidebar{
+    border-right:none;
+    border-bottom:1px solid var(--outline);
+  }
+}
+</style>
 </head>
+
 <body>
 
-<header>
-  <div>
-    <h1>Painel Admin — Motorista<span class="plus">Plus</span></h1>
-  </div>
-  <div class="admin-info">
-    <div id="adminNome">Admin: —</div>
-    <div style="font-size:11px;">Apenas administradores têm acesso</div>
-  </div>
-</header>
+<header>Painel Gestor — Motorista<span class="plus">Plus</span></header>
 
 <main>
-  <!-- Sidebar: lista de motoristas -->
-  <aside class="sidebar">
-    <div class="search">
-      <span>🔍</span>
-      <input id="buscaMotorista" placeholder="Buscar motorista..." />
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-      <h2>Motoristas</h2>
-      <button class="btn-ghost" id="btnReload" style="padding:4px 8px;font-size:11px;">Atualizar</button>
-    </div>
-    <div class="lista-motoristas" id="listaMotoristas">
-      <!-- itens via JS -->
-    </div>
-  </aside>
 
-  <!-- Conteúdo principal -->
-  <section class="content">
-    <!-- Info motorista -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h2 id="tituloMotorista">Selecione um motorista</h2>
-          <small id="subtituloMotorista">Nenhum motorista selecionado.</small>
-        </div>
-        <div id="acoesMotorista" style="display:none;align-items:center;gap:8px;">
-          <label class="switch">
-            <input type="checkbox" id="toggleAtivo" />
-            <span id="labelAtivo">Ativo</span>
-          </label>
-          <button class="btn btn-danger" id="btnExcluirMotorista">Excluir</button>
-        </div>
-      </div>
-      <div id="dadosMotorista" class="dados-grid">
-        <!-- preenchido via JS -->
-      </div>
-    </div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <input id="busca" placeholder="Buscar motorista...">
+  <div id="listaMotoristas"></div>
+</div>
 
-    <!-- Resumos -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h2>Resumo Financeiro</h2>
-          <small>Totais calculados para o motorista selecionado</small>
-        </div>
-      </div>
-      <div id="resumoFinanceiro" class="resumo-grid">
-        <!-- via JS -->
-      </div>
-    </div>
+<!-- CONTEÚDO -->
+<div id="conteudo">
+  <div class="card">
+    <h2>Selecione um motorista</h2>
+    <p class="small">Use o campo de busca ao lado para localizar pelo nome.</p>
+  </div>
+</div>
 
-    <!-- Últimos lançamentos -->
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h2>Últimos Lançamentos</h2>
-          <small>Gastos, vales e abastecimentos recentes</small>
-        </div>
-      </div>
-      <div id="ultimosLancamentos">
-        <p class="texto-central">Selecione um motorista para ver lançamentos.</p>
-      </div>
-    </div>
-  </section>
 </main>
 
-<footer>© 2025 Motorista Plus — Painel Administrativo</footer>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import {
-    getFirestore,
-    doc, getDoc, updateDoc, deleteDoc,
-    collection, getDocs, query, orderBy, limit
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+/* ==================== IMPORTS FIREBASE ==================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { 
+  getFirestore, getDocs, collection, doc, getDoc 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  /* ===== Firebase config (mesmo projeto) ===== */
-  const app = initializeApp({
-    apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-    authDomain: "motorista-plus-c53f4.firebaseapp.com",
-    projectId: "motorista-plus-c53f4",
-    storageBucket: "motorista-plus-c53f4.firebasestorage.app",
-    messagingSenderId: "766097061342",
-    appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
-  });
+/* CONFIG DO PROJETO */
+const app = initializeApp({
+  apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain:"motorista-plus-c53f4.firebaseapp.com",
+  projectId:"motorista-plus-c53f4"
+});
 
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  const $ = id => document.getElementById(id);
+let motoristas = [];
 
-  let adminUid = null;
-  let adminPerfil = null;
-  let motoristas = [];
-  let motoristaSelecionado = null;
+/* ==================== CARREGAR MOTORISTAS ==================== */
+async function carregarMotoristas(){
+  const snap = await getDocs(collection(db,"usuarios"));
+  motoristas = snap.docs.map(d=>({
+    id:d.id,
+    ...d.data()
+  }));
+  renderLista(motoristas);
+}
 
-  /* --------- Helpers --------- */
-  const fmtBR = iso => iso ? iso.split("-").reverse().join("/") : "—";
+/* ==================== RENDER LISTA ==================== */
+function renderLista(lista){
+  const box = document.getElementById("listaMotoristas");
+  box.innerHTML = "";
 
-  function formatCurrencyBR(n){
-    if (isNaN(n)) n = 0;
-    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  lista.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "motorista-item";
 
-  /* --------- Carregar perfil admin + checar permissão --------- */
-  async function carregarPerfilAdmin(uid){
-    const ref = doc(db,"usuarios",uid);
-    const snap = await getDoc(ref);
-    if(!snap.exists()){
-      alert("Usuário sem cadastro de perfil. Acesso negado.");
-      window.location.href = "login.html";
-      return;
-    }
-    adminPerfil = snap.data();
-    $("adminNome").textContent = "Admin: " + (adminPerfil.nome || adminPerfil.email || "—");
-
-    // Checagem simples: precisa ter isAdmin = true
-    if(!adminPerfil.isAdmin){
-      alert("Você não tem permissão de administrador.");
-      window.location.href = "painel.html";
-    }
-  }
-
-  /* --------- Carregar motoristas --------- */
-  async function carregarMotoristas(){
-    const col = collection(db,"usuarios");
-    const snap = await getDocs(col);
-    motoristas = snap.docs.map(d => ({
-      uid: d.id,
-      ...d.data()
-    }));
-
-    renderMotoristas();
-  }
-
-  function renderMotoristas(filtro = ""){
-    const lista = $("listaMotoristas");
-    lista.innerHTML = "";
-
-    const termo = filtro.trim().toLowerCase();
-    const filtrados = termo
-      ? motoristas.filter(m =>
-          (m.nome || "").toLowerCase().includes(termo) ||
-          (m.email || "").toLowerCase().includes(termo)
-        )
-      : motoristas;
-
-    if(!filtrados.length){
-      lista.innerHTML = '<div class="texto-central" style="padding:8px;">Nenhum motorista encontrado.</div>';
-      return;
-    }
-
-    filtrados.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "motorista-item" + (motoristaSelecionado?.uid === m.uid ? " ativo" : "");
-      div.dataset.uid = m.uid;
-
-      const status = m.ativo === false ? "Inativo" : "Ativo";
-
-      div.innerHTML = `
-        <div class="motorista-nome">${m.nome || "Sem nome"}</div>
-        <div class="motorista-email">${m.email || ""}</div>
-        <div class="motorista-status">
-          Status:
-          <span class="${m.ativo === false ? 'tag-inativo' : 'tag-ativo'}">
-            ${status}
-          </span>
-        </div>
-      `;
-
-      div.onclick = () => selecionarMotorista(m.uid);
-      lista.appendChild(div);
-    });
-  }
-
-  /* --------- Selecionar motorista --------- */
-  async function selecionarMotorista(uid){
-    const m = motoristas.find(x => x.uid === uid);
-    if(!m) return;
-    motoristaSelecionado = m;
-    renderMotoristas($("buscaMotorista").value || "");
-
-    // Atualizar cabeçalho
-    $("tituloMotorista").textContent = m.nome || "Motorista sem nome";
-    $("subtituloMotorista").textContent = m.email || "Sem e-mail cadastrado";
-
-    // Mostrar ações (switch + excluir)
-    $("acoesMotorista").style.display = "flex";
-    $("toggleAtivo").checked = m.ativo !== false;
-    $("labelAtivo").textContent = m.ativo === false ? "Inativo" : "Ativo";
-
-    // Dados básicos
-    $("dadosMotorista").innerHTML = `
-      <div class="dado">
-        <span>Telefone</span>
-        <strong>${m.telefone || "—"}</strong>
-      </div>
-      <div class="dado">
-        <span>Cavalo</span>
-        <strong>${m.placaCavalo || "—"}</strong>
-      </div>
-      <div class="dado">
-        <span>Reboque</span>
-        <strong>${m.placaReboque || "—"}</strong>
-      </div>
-      <div class="dado">
-        <span>CPF</span>
-        <strong>${m.cpf || "—"}</strong>
-      </div>
-      <div class="dado">
-        <span>Cadastro</span>
-        <strong>${m.criadoEm ? (m.criadoEm.toDate ? fmtBR(m.criadoEm.toDate().toISOString().slice(0,10)) : "—") : "—"}</strong>
-      </div>
+    div.innerHTML = `
+      <strong>${m.nome || "Sem nome"}</strong><br>
+      <span class="small">${m.email || ""}</span>
     `;
 
-    // Carregar resumos e ultimos lançamentos
-    await carregarResumoFinanceiro(m.uid);
-    await carregarUltimosLancamentos(m.uid);
+    div.onclick = () => abrirMotorista(m);
+    box.appendChild(div);
+  });
+}
+
+/* ==================== ABRIR DETALHES ==================== */
+function abrirMotorista(m){
+  document.getElementById("conteudo").innerHTML = `
+    <div class="card">
+      <h2>${m.nome}</h2>
+      <p class="small">${m.email || ""}</p>
+
+      <p class="info"><strong>Telefone:</strong> ${m.telefone || "—"}</p>
+      <p class="info"><strong>CPF:</strong> ${m.cpf || "—"}</p>
+      <p class="info"><strong>Cavalo:</strong> ${m.placaCavalo || "—"}</p>
+      <p class="info"><strong>Reboque:</strong> ${m.placaReboque || "—"}</p>
+    </div>
+  `;
+}
+
+/* ==================== BUSCA EM TEMPO REAL ==================== */
+document.getElementById("busca").addEventListener("input", e =>{
+  const termo = e.target.value.toLowerCase();
+
+  const filtrados = motoristas.filter(m =>
+    (m.nome || "").toLowerCase().includes(termo)
+  );
+
+  renderLista(filtrados);
+});
+
+/* ==================== VERIFICAR SE É ADMIN ==================== */
+async function validarAdmin(){
+  const user = auth.currentUser;
+
+  if(!user){
+    window.location.href = "login_admin.html";
+    return;
   }
 
-  /* --------- Resumo financeiro --------- */
-  async function carregarResumoFinanceiro(uidMotorista){
-    const resumoEl = $("resumoFinanceiro");
-    resumoEl.innerHTML = "Carregando...";
-
-    // Subcoleções:
-    const gastosCol = collection(db,"usuarios",uidMotorista,"gastos");
-    const valesCol = collection(db,"usuarios",uidMotorista,"vales");
-    const abastecCol = collection(db,"usuarios",uidMotorista,"abastecimentos");
-
-    const [gastosSnap, valesSnap, abastecSnap] = await Promise.all([
-      getDocs(gastosCol),
-      getDocs(valesCol),
-      getDocs(abastecCol)
-    ]);
-
-    let totalGastos = 0;
-    let totalVales = 0;
-    let totalAbastecimentos = 0;
-    let totalLitros = 0;
-
-    gastosSnap.forEach(d => {
-      totalGastos += Number(d.data().valor || 0);
-    });
-
-    valesSnap.forEach(d => {
-      totalVales += Number(d.data().valor || 0);
-    });
-
-    abastecSnap.forEach(d => {
-      const v = d.data();
-      totalAbastecimentos += Number(v.valor || 0);
-      totalLitros += Number(v.litros || 0);
-    });
-
-    resumoEl.innerHTML = `
-      <div class="resumo-card">
-        <span>Gastos</span>
-        <strong>R$ ${formatCurrencyBR(totalGastos)}</strong>
-        <small>Soma de todos os lançamentos de gastos.</small>
-      </div>
-      <div class="resumo-card">
-        <span>Vales</span>
-        <strong>R$ ${formatCurrencyBR(totalVales)}</strong>
-        <small>Todos os vales cadastrados.</small>
-      </div>
-      <div class="resumo-card">
-        <span>Abastecimentos (R$)</span>
-        <strong>R$ ${formatCurrencyBR(totalAbastecimentos)}</strong>
-        <small>Valor total em combustível.</small>
-      </div>
-      <div class="resumo-card">
-        <span>Litros abastecidos</span>
-        <strong>${formatCurrencyBR(totalLitros)} L</strong>
-        <small>Somatório de litros registrados.</small>
-      </div>
-    `;
+  const docAdmin = await getDoc(doc(db,"admins",user.uid));
+  if(!docAdmin.exists()){
+    alert("Acesso negado!");
+    window.location.href = "login_admin.html";
+    return;
   }
 
-  /* --------- Últimos lançamentos --------- */
-  async function carregarUltimosLancamentos(uidMotorista){
-    const cont = $("ultimosLancamentos");
-    cont.innerHTML = "Carregando...";
+  carregarMotoristas();
+}
 
-    const [gastosSnap, valesSnap, abastecSnap] = await Promise.all([
-      getDocs(query(collection(db,"usuarios",uidMotorista,"gastos"), orderBy("date","desc"), limit(5))),
-      getDocs(query(collection(db,"usuarios",uidMotorista,"vales"), orderBy("date","desc"), limit(5))),
-      getDocs(query(collection(db,"usuarios",uidMotorista,"abastecimentos"), orderBy("data","desc"), limit(5)))
-    ]);
-
-    let html = "";
-
-    // GASTOS
-    html += `<h3 style="font-size:14px;margin-top:4px;">Gastos recentes</h3>`;
-    if(gastosSnap.empty){
-      html += `<p class="texto-central">Nenhum gasto encontrado.</p>`;
-    } else {
-      html += `<table class="table"><thead><tr>
-        <th>Data</th><th>Motivo</th><th>Local</th><th>Valor</th>
-      </tr></thead><tbody>`;
-      gastosSnap.forEach(d => {
-        const g = d.data();
-        html += `<tr>
-          <td>${fmtBR(g.date || "")}</td>
-          <td>${g.motivo || "—"}</td>
-          <td>${g.local || "—"}</td>
-          <td class="valor-neg">R$ ${formatCurrencyBR(Number(g.valor || 0))}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-    }
-
-    // VALES
-    html += `<h3 style="font-size:14px;margin-top:10px;">Vales recentes</h3>`;
-    if(valesSnap.empty){
-      html += `<p class="texto-central">Nenhum vale encontrado.</p>`;
-    } else {
-      html += `<table class="table"><thead><tr>
-        <th>Data</th><th>Motivo</th><th>Valor</th>
-      </tr></thead><tbody>`;
-      valesSnap.forEach(d => {
-        const v = d.data();
-        html += `<tr>
-          <td>${fmtBR(v.date || "")}</td>
-          <td>${v.motivo || "—"}</td>
-          <td class="valor-pos">R$ ${formatCurrencyBR(Number(v.valor || 0))}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-    }
-
-    // ABASTECIMENTOS
-    html += `<h3 style="font-size:14px;margin-top:10px;">Abastecimentos recentes</h3>`;
-    if(abastecSnap.empty){
-      html += `<p class="texto-central">Nenhum abastecimento encontrado.</p>`;
-    } else {
-      html += `<table class="table"><thead><tr>
-        <th>Data</th><th>KM</th><th>Litros</th><th>Valor</th><th>Tipo</th>
-      </tr></thead><tbody>`;
-      abastecSnap.forEach(d => {
-        const a = d.data();
-        html += `<tr>
-          <td>${fmtBR(a.data || "")}</td>
-          <td>${a.quilometragem || 0}</td>
-          <td>${formatCurrencyBR(Number(a.litros || 0))}</td>
-          <td>R$ ${formatCurrencyBR(Number(a.valor || 0))}</td>
-          <td>${a.tipo || "—"}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-    }
-
-    cont.innerHTML = html;
-  }
-
-  /* --------- Alternar ativo/inativo --------- */
-  $("toggleAtivo").addEventListener("change", async (e) => {
-    if(!motoristaSelecionado) return;
-    const novoAtivo = e.target.checked;
-    $("labelAtivo").textContent = novoAtivo ? "Ativo" : "Inativo";
-
-    try {
-      await updateDoc(doc(db,"usuarios",motoristaSelecionado.uid), {
-        ativo: novoAtivo
-      });
-      motoristaSelecionado.ativo = novoAtivo;
-      const idx = motoristas.findIndex(m => m.uid === motoristaSelecionado.uid);
-      if(idx > -1) motoristas[idx].ativo = novoAtivo;
-      renderMotoristas($("buscaMotorista").value || "");
-    } catch (err) {
-      alert("Erro ao atualizar status.");
-      console.error(err);
-    }
-  });
-
-  /* --------- Excluir motorista (somente doc principal) --------- */
-  $("btnExcluirMotorista").addEventListener("click", async () => {
-    if(!motoristaSelecionado) return;
-    if(!confirm("Tem certeza que deseja excluir este motorista? (Subcoleções não serão removidas automaticamente)")) return;
-
-    try {
-      await deleteDoc(doc(db,"usuarios",motoristaSelecionado.uid));
-      motoristas = motoristas.filter(m => m.uid !== motoristaSelecionado.uid);
-      motoristaSelecionado = null;
-
-      $("tituloMotorista").textContent = "Selecione um motorista";
-      $("subtituloMotorista").textContent = "Nenhum motorista selecionado.";
-      $("dadosMotorista").innerHTML = "";
-      $("resumoFinanceiro").innerHTML = "";
-      $("ultimosLancamentos").innerHTML = '<p class="texto-central">Selecione um motorista para ver lançamentos.</p>';
-      $("acoesMotorista").style.display = "none";
-
-      renderMotoristas($("buscaMotorista").value || "");
-    } catch (err) {
-      alert("Erro ao excluir motorista.");
-      console.error(err);
-    }
-  });
-
-  /* --------- Busca motoristas --------- */
-  $("buscaMotorista").addEventListener("input", (e) => {
-    renderMotoristas(e.target.value);
-  });
-
-  $("btnReload").addEventListener("click", () => {
-    carregarMotoristas();
-  });
-
-  /* --------- Auth --------- */
-  onAuthStateChanged(auth, async user => {
-    if(!user){
-      window.location.href = "login.html";
-      return;
-    }
-    adminUid = user.uid;
-    await carregarPerfilAdmin(adminUid);
-    await carregarMotoristas();
-  });
+/* MONITORAR LOGIN */
+onAuthStateChanged(auth, ()=>{
+  validarAdmin();
+});
 </script>
 
 </body>
