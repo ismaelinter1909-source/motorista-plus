@@ -57,6 +57,26 @@ header small{
   color:var(--muted);
 }
 
+#infoAdminWrap{
+  text-align:right;
+  font-size:12px;
+  color:var(--muted);
+}
+#btnSair{
+  margin-top:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--outline);
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  cursor:pointer;
+}
+#btnSair:hover{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+}
+
 /* LAYOUT */
 main{
   flex:1;
@@ -292,6 +312,17 @@ footer{
   padding:8px;
   border-top:1px solid var(--outline);
 }
+
+/* AÇÕES DO MOTORISTA (links para páginas) */
+.acoes-motorista{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:6px;
+}
+.acoes-motorista button{
+  font-size:11px;
+}
 </style>
 </head>
 
@@ -302,8 +333,9 @@ footer{
     <h1>Painel Gestor — Motorista<span class="plus">Plus</span></h1>
     <small>Administração completa de motoristas e registros</small>
   </div>
-  <div style="text-align:right;font-size:12px;color:var(--muted);" id="infoAdmin">
-    Gestor: —
+  <div id="infoAdminWrap">
+    <div id="infoAdmin">Gestor: —</div>
+    <button id="btnSair">Sair</button>
   </div>
 </header>
 
@@ -319,7 +351,7 @@ footer{
   <section id="conteudo">
     <div class="card">
       <h2>Selecione um motorista</h2>
-      <p class="small">Use a lista ao lado para escolher um motorista e acessar abastecimentos, média, gastos, ponto, entregas, manutenção e viagens.</p>
+      <p class="small">Use a lista ao lado para escolher um motorista e acessar abastecimentos, média, gastos, ponto, entregas, manutenção, viagens e as próprias páginas do aplicativo.</p>
     </div>
   </section>
 
@@ -329,7 +361,7 @@ footer{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getFirestore,
   collection, getDocs, doc, getDoc,
@@ -376,6 +408,14 @@ function parseNum(v){
   if(!v) return 0;
   return Number( String(v).replace(/\./g,"").replace(",",".") );
 }
+
+/* BOTÃO SAIR */
+$("btnSair").onclick = async ()=>{
+  try{
+    await signOut(auth);
+  }catch(e){}
+  window.location.href = "login_admin.html";
+};
 
 /* AUTENTICAÇÃO E VALIDAÇÃO ADMIN */
 async function validarAdmin(user){
@@ -437,11 +477,30 @@ async function abrirMotorista(m){
     <div class="card">
       <h2>${m.nome || "Motorista"}</h2>
       <p class="small">${m.email || "Sem e-mail"}</p>
+
       <div class="dados-grid">
         <div class="dado"><span>Telefone</span><strong>${m.telefone || "—"}</strong></div>
         <div class="dado"><span>CPF</span><strong>${m.cpf || "—"}</strong></div>
         <div class="dado"><span>Cavalo</span><strong>${m.placaCavalo || "—"}</strong></div>
         <div class="dado"><span>Reboque</span><strong>${m.placaReboque || "—"}</strong></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="btn btn-primary" id="btnEditarUsuario">Editar dados do motorista</button>
+        <button class="btn btn-danger" id="btnExcluirUsuario">Excluir motorista</button>
+      </div>
+
+      <div style="margin-top:12px;">
+        <span class="small">Abrir as mesmas telas do app para este motorista:</span>
+        <div class="acoes-motorista">
+          <button class="btn-ghost" data-tela="abastecimento">Abastecimento</button>
+          <button class="btn-ghost" data-tela="gastos">Gastos & Bônus</button>
+          <button class="btn-ghost" data-tela="ponto">Ponto</button>
+          <button class="btn-ghost" data-tela="entregas">Entregas</button>
+          <button class="btn-ghost" data-tela="manutencao">Manutenção</button>
+          <button class="btn-ghost" data-tela="viagem">Viagem</button>
+          <button class="btn-ghost" data-tela="media">Média</button>
+        </div>
       </div>
     </div>
 
@@ -477,6 +536,39 @@ async function abrirMotorista(m){
     };
   });
 
+  // eventos editar/excluir usuário
+  const btnEditar = $("btnEditarUsuario");
+  const btnExcluir = $("btnExcluirUsuario");
+
+  if(btnEditar){
+    btnEditar.onclick = editarUsuarioAtual;
+  }
+  if(btnExcluir){
+    btnExcluir.onclick = excluirUsuarioAtual;
+  }
+
+  // eventos abrir telas originais
+  const mapasPaginas = {
+    abastecimento: "abastecimento.html",
+    gastos: "gastos.html",
+    ponto: "ponto.html",
+    entregas: "entregas.html",
+    manutencao: "manutencao.html",
+    viagem: "viagem.html",
+    media: "media.html"
+  };
+
+  document.querySelectorAll(".acoes-motorista button[data-tela]").forEach(btn=>{
+    btn.onclick = ()=>{
+      if(!motoristaAtual) return;
+      const tipo = btn.getAttribute("data-tela");
+      const arquivo = mapasPaginas[tipo];
+      if(!arquivo) return;
+      const url = `${arquivo}?uid=${encodeURIComponent(motoristaAtual.id)}&from=admin`;
+      window.open(url,"_blank");
+    };
+  });
+
   // carregar dados das subcoleções
   await Promise.all([
     carregarAbastecimentos(),
@@ -487,6 +579,51 @@ async function abrirMotorista(m){
     carregarManutencao(),
     carregarViagem()
   ]);
+}
+
+/* ===== EDITAR / EXCLUIR USUÁRIO ===== */
+async function editarUsuarioAtual(){
+  if(!motoristaAtual) return;
+  const uref = doc(db,"usuarios",motoristaAtual.id);
+
+  const novoNome = prompt("Nome do motorista:", motoristaAtual.nome || "") ?? motoristaAtual.nome;
+  const novoTel = prompt("Telefone:", motoristaAtual.telefone || "") ?? motoristaAtual.telefone;
+  const novoCavalo = prompt("Placa do cavalo:", motoristaAtual.placaCavalo || "") ?? motoristaAtual.placaCavalo;
+  const novoReboque = prompt("Placa do reboque:", motoristaAtual.placaReboque || "") ?? motoristaAtual.placaReboque;
+  const novoCPF = prompt("CPF:", motoristaAtual.cpf || "") ?? motoristaAtual.cpf;
+
+  const payload = {
+    nome: novoNome,
+    telefone: novoTel,
+    placaCavalo: novoCavalo,
+    placaReboque: novoReboque,
+    cpf: novoCPF
+  };
+
+  await updateDoc(uref,payload);
+
+  // atualizar lista e reabrir
+  await carregarMotoristas();
+  const atualizado = motoristas.find(x=>x.id===motoristaAtual.id);
+  if(atualizado){
+    abrirMotorista(atualizado);
+  }
+}
+
+async function excluirUsuarioAtual(){
+  if(!motoristaAtual) return;
+  if(!confirm("Tem certeza que deseja excluir esse motorista? Os registros podem ficar órfãos no banco.")) return;
+
+  await deleteDoc(doc(db,"usuarios",motoristaAtual.id));
+  motoristaAtual = null;
+  await carregarMotoristas();
+
+  $("conteudo").innerHTML = `
+    <div class="card">
+      <h2>Selecione um motorista</h2>
+      <p class="small">Use a lista ao lado para escolher um motorista e acessar todos os registros.</p>
+    </div>
+  `;
 }
 
 /* ==================== ABASTECIMENTOS ==================== */
@@ -802,7 +939,7 @@ window._pdfGastos = ()=>{
   ]);
   docPDF.autoTable({
     startY:y,
-    head:[["Data","Motivo","Local","Aut.","Valor"]],
+    head:[["Data","Motivo","Local","Aut.","Valor"]], 
     body,
     headStyles:{fillColor:[243,146,32]},
     styles:{fontSize:9}
@@ -1075,21 +1212,24 @@ window._delEntrega = async id=>{
 
 window._pdfEntregas = ()=>{
   const { jsPDF } = window.jspdf;
-  const docPDF = new jsPDF({unit:"pt",format:"a4"});
-  const margin = 40;
+  const docPDF = new jsPDF({unit:"pt",format:"a4",orientation:"landscape"});
   let y = 40;
-  docPDF.setFontSize(14);
-  docPDF.text(`Entregas — ${motoristaAtual?.nome||""}`, margin, y);
-  y+=20;
+  docPDF.setFontSize(16);
+  docPDF.text(`Relatório de Entregas — ${motoristaAtual?.nome||""}`, 32, y);
+  y += 18;
+  docPDF.setFontSize(10);
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo||""}  |  Reboque: ${motoristaAtual?.placaReboque||""}`, 32, y);
+  y += 10;
+
   const body = dadosEntregas.map(e=>[
-    fmtBR(e.data||""), e.cliente||e.destino||"", e.cidade||e.local||"", e.nota||e.nf||"", e.status||""
+    fmtBR(e.data||""), e.cliente||"", e.cidade||"", e.nota||"", e.status||""
   ]);
   docPDF.autoTable({
     startY:y,
     head:[["Data","Cliente","Cidade","Nota","Status"]],
     body,
-    headStyles:{fillColor:[243,146,32]},
-    styles:{fontSize:9}
+    margin:{left:32,right:32},
+    headStyles:{fillColor:[243,146,32]}
   });
   docPDF.save("entregas_admin.pdf");
 };
@@ -1375,8 +1515,6 @@ window._pdfViagem = ()=>{
 };
 
 /* ==================== MÉDIA ==================== */
-/* Aqui como admin: edição simples de registros da coleção "media".
-   Você pode adaptar conforme a estrutura exata da sua tela de média. */
 async function carregarMedia(){
   if(!motoristaAtual) return;
   const uid = motoristaAtual.id;
