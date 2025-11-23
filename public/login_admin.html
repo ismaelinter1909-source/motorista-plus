@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login Gestor — Motorista Plus</title>
+
+<style>
+:root{
+  --bg:#0b0f14;
+  --bg2:#10161d;
+  --card:#161c23;
+  --primary:#f39220;
+  --primary-700:#d47e16;
+  --outline:#2b3a49;
+  --text:#fff;
+}
+
+/* ===== FUNDO IGUAL AO PROJETO MOTORISTA PLUS ===== */
+body{
+  background: linear-gradient(180deg, #0b0f14 0%, #10161d 100%);
+  color: var(--text);
+  font-family: system-ui, Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+/* ===== CARD IGUAL AO PADRÃO DO PROJETO ===== */
+.card{
+  background: var(--card);
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid var(--outline);
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.4);
+}
+
+/* Título */
+h1{
+  text-align:center;
+  margin-bottom:20px;
+  color: var(--primary);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* Inputs */
+input,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  margin-top:10px;
+  font-size:15px;
+  outline: none;
+  transition: .2s;
+}
+
+input:focus{
+  border-color: var(--primary);
+  background: rgba(255,255,255,.15);
+}
+
+/* Botão */
+button{
+  background: var(--primary);
+  font-weight:700;
+  cursor:pointer;
+}
+
+button:hover{
+  background: var(--primary-700);
+  transform: translateY(-1px);
+}
+
+/* Mensagem */
+.msg{
+  margin-top:10px;
+  color: var(--primary);
+  text-align:center;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Gestor</h1>
+  <input id="email" type="email" placeholder="Email do gestor">
+  <input id="senha" type="password" placeholder="Senha">
+  <button id="entrar">Entrar</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+/* CONFIG DO SEU PROJETO */
+const app = initializeApp({
+  apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain:"motorista-plus-c53f4.firebaseapp.com",
+  projectId:"motorista-plus-c53f4"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+document.getElementById("entrar").onclick = async () =>{
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
+  const msg = document.getElementById("msg");
+  msg.textContent = "Validando...";
+
+  try{
+    const cred = await signInWithEmailAndPassword(auth,email,senha);
+    const uid = cred.user.uid;
+
+    // Verifica se o gestor existe na coleção admins
+    const adminDoc = await getDoc(doc(db,"admins",uid));
+    if(!adminDoc.exists()){
+      msg.textContent = "Usuário não autorizado!";
+      return;
+    }
+
+    msg.textContent = "Acesso liberado ✓";
+    setTimeout(()=>{
+      window.location.href = "admin.html";
+    },500);
+
+  }catch(e){
+    msg.textContent = "Email ou senha inválidos";
+  }
+};
+</script>
+
+</body>
+</html>
