@@ -10,9 +10,10 @@
 
 </head>
 
+
 <body>
 
-  <button id="abrirMenu">Perfil</button>
+  <button id="abrirMenu">Menu</button>
 
  <div class="menu-lateral" id="menuLateral">
 
@@ -68,30 +69,62 @@
 
 </div>
   <header class="hero">
+     <h2 id="BoasVindas"></h2>
 
     <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
     <p class="slogan">SEMPRE EM MOVIMENTO</p>
-
-    <div class="card-perfil">
-      <div class="avatar-wrapper">
-        <!-- Círculo com iniciais (fallback) -->
-        <div id="avatarCircle" class="avatar-circle">MP</div>
-        <!-- Foto do usuário (aparece quando tiver URL) -->
-        <img id="userFoto" class="avatar-img" alt="Foto do motorista" style="display:none;">
-        <!-- Input oculto para upload -->
-        <input type="file" id="inputFoto" accept="image/*" style="display:none;">
-        <small class="avatar-hint">Toque na foto para alterar</small>
-      </div>
-
-      <h2 id="boasVindas" style="text-align:center;">Bem-vindo(a)</h2>
-
-      <div class="info" id="userNome"></div>
-      <div class="info" id="userTelefone"></div>
-      <div class="info" id="userPlacaCavalo"></div>
-      <div class="info" id="userPlacaReboque"></div>
-      <div class="info" id="userEmail"></div>
-    </div>
+     
   </header>
+  <section class="dashboard">
+
+    <div class="dashboard-grid">
+
+        <div class="dash-card">
+            <span>🚛</span>
+            <h3>KM Rodados</h3>
+            <strong id="kmRodados">0 km</strong>
+        </div>
+
+        <div class="dash-card">
+            <span>⛽</span>
+            <h3>Média</h3>
+            <strong id="mediaGeral">0,00 km/L</strong>
+        </div>
+
+        <div class="dash-card">
+            <span>💰</span>
+            <h3>Gastos</h3>
+            <strong id="gastosMes">R$ 0,00</strong>
+        </div>
+
+        <div class="dash-card">
+            <span>📦</span>
+            <h3>Entregas</h3>
+            <strong id="entregasMes">0</strong>
+        </div>
+
+    </div>
+
+</section>
+<section class="dashboard">
+
+<div class="painel-alertas">
+
+<h2>⚠ Alertas</h2>
+
+<p>Nenhum alerta pendente.</p>
+
+</div>
+
+<div class="painel-atividade">
+
+<h2>📋 Última atividade</h2>
+
+<p>Nenhuma atividade registrada.</p>
+
+</div>
+
+</section>
 
   
   <script type="module" src="js/painel.js"></script>
