@@ -103,7 +103,7 @@
     /* Hero */
   .hero{
 
-    min-height:280px;
+    min-height:260px;
 
     display:flex;
 
@@ -514,5 +514,28 @@
     color:#f39220;
 
     margin-bottom:15px;
+
+}
+.menu-links a.ativo{
+
+    background:#f39220;
+
+    color:#fff;
+
+    border-radius:10px;
+
+    font-weight:bold;
+
+}
+
+.menu-links a{
+
+    transition:.25s;
+
+}
+
+.menu-links a:hover{
+
+    background:#252f3c;
 
 }

@@ -9,13 +9,14 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-s
 
 // Configuração do projeto
  const firebaseConfig = {
-      apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-      authDomain: "motorista-plus-c53f4.firebaseapp.com",
-      projectId: "motorista-plus-c53f4",
-      storageBucket: "motorista-plus-c53f4.appspot.com",
-      messagingSenderId: "766097061342",
-      appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
-    };
+  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain: "motorista-plus-c53f4.firebaseapp.com",
+  projectId: "motorista-plus-c53f4",
+  storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+  messagingSenderId: "766097061342",
+  appId: "1:766097061342:web:36d999bec6d9fe8c46994f",
+  measurementId: "G-CBT2D0CXPN"
+};
 
 // Inicializa apenas uma vez
 const app = initializeApp(firebaseConfig);

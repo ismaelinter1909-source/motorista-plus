@@ -13,7 +13,9 @@
 
 <body>
 
-  <button id="abrirMenu">Menu</button>
+ <button id="abrirMenu">
+☰ Menu
+</button>
 
  <div class="menu-lateral" id="menuLateral">
 
@@ -21,9 +23,11 @@
 
         <div id="avatarCircleMenu" class="avatar-circle">MP</div>
 
-        <img id="userFotoMenu"
-             class="avatar-img"
-             style="display:none;">
+            <input
+            type="file"
+            id="inputFoto"
+            accept="image/*"
+            style="display:none;">
 
         <h3 id="menuNome">Motorista</h3>
 
@@ -69,10 +73,15 @@
 
 </div>
   <header class="hero">
-     <h2 id="BoasVindas"></h2>
+    
 
     <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
     <p class="slogan">SEMPRE EM MOVIMENTO</p>
+
+     <h2 id="boasVindas"></h2>
+      <p class="subtitulo">
+        Gerencie sua viagem de forma inteligente.
+    </p>
      
   </header>
   <section class="dashboard">
@@ -110,9 +119,13 @@
 
 <div class="painel-alertas">
 
-<h2>⚠ Alertas</h2>
+    <h2>⚠ Alertas</h2>
 
-<p>Nenhum alerta pendente.</p>
+    <div class="alerta-ok">
+
+        ✅ Nenhum alerta pendente.
+
+    </div>
 
 </div>
 
@@ -120,7 +133,10 @@
 
 <h2>📋 Última atividade</h2>
 
-<p>Nenhuma atividade registrada.</p>
+<p>
+📋 Ainda não existem registros.
+
+Quando você cadastra uma nova atividade, ela aparecerá aqui.</p>
 
 </div>
 
