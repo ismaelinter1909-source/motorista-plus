@@ -1,0 +1,189 @@
+:root {
+    --bg: #0b0f14;
+    --card: #16191d;
+    --outline: #22303a;
+    --primary: #f39220;
+    --primary-700: #d47e16;
+    --text: #fff;
+    --muted: #b5bcc7;
+    --danger: #dc3545;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, Arial, sans-serif
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column
+}
+
+header {
+    background: linear-gradient(180deg, rgba(0, 0, 0, .25), rgba(0, 0, 0, .6));
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--outline)
+}
+
+header h1 {
+    font-size: clamp(18px, 3vw, 28px);
+    font-weight: 800
+}
+
+header .plus {
+    color: var(--primary)
+}
+
+main {
+    width: 94%;
+    max-width: 1100px;
+    margin: 18px auto 40px;
+    display: grid;
+    gap: 12px
+}
+
+/* card */
+.card {
+    background: var(--card);
+    border: 1px solid var(--outline);
+    padding: 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(6px)
+}
+
+h2 {
+    color: var(--primary);
+    margin-bottom: 8px
+}
+
+/* grid */
+.grid4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 12px
+}
+
+@media(min-width:980px) {
+    .grid4 {
+        grid-template-columns: repeat(4, minmax(120px, 1fr))
+    }
+}
+
+/* form controls */
+label {
+    display: block;
+    color: #e8e8e8;
+    font-size: 13px;
+    margin-bottom: 6px
+}
+
+input,
+select,
+textarea,
+button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--outline);
+    background: rgba(255, 255, 255, .04);
+    color: var(--text);
+    font-size: 14px
+}
+
+input[readonly] {
+    background: rgba(255, 255, 255, .02);
+    color: var(--muted)
+}
+
+.btn {
+    background: var(--primary);
+    border: none;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700
+}
+
+.btn:hover {
+    background: var(--primary-700)
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--outline);
+    color: var(--muted)
+}
+
+.btn-red {
+    background: var(--danger)
+}
+
+.small-muted {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px
+}
+
+.resumo-box {
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid var(--outline);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+    color: var(--muted)
+}
+
+.table-wrap {
+    overflow: auto;
+    margin-top: 12px
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse
+}
+
+th,
+td {
+    padding: 8px;
+    border: 1px solid var(--outline);
+    text-align: center
+}
+
+thead th {
+    background: var(--primary);
+    color: #fff
+}
+
+/* mobile hiding voltar botão */
+
+
+@media(max-width:600px) {
+    #btnVoltar {
+        display: none
+    }
+}
+
+/* small tweaks */
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+}
+
+.note {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px
+}
+
+.signature-line {
+    margin-top: 28px
+}

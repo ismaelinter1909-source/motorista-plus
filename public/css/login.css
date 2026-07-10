@@ -1,0 +1,110 @@
+
+    :root{
+      --mp-bg:#0b0f14;
+      --mp-card-alpha: rgba(16,22,29,.85);
+      --mp-primary:#f39220;
+      --mp-primary-700:#d47e16;
+      --mp-outline:#2b3a49;
+      --mp-text:white;
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      font-family:system-ui, Arial, sans-serif;
+      background:var(--mp-bg);
+      color:white;
+    }
+
+    header.hero{
+      height:100vh;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+      padding:20px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.85) 100%),
+        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+    }
+
+    .brand{
+      font-weight:800;
+      font-size:clamp(36px, 6vw, 60px);
+      text-align:center;
+    }
+    .brand .plus{ color:var(--mp-primary); }
+
+    .slogan{
+      margin-top:-6px;
+      font-size:clamp(14px, 2vw, 20px);
+      letter-spacing:.20em;
+      color:#eef1f5;
+    }
+
+    .card{
+      width:min(90vw, 420px);
+      padding:24px;
+      background:var(--mp-card-alpha);
+      border-radius:14px;
+      border:1px solid var(--mp-outline);
+      box-shadow:0 20px 40px rgba(0,0,0,.35);
+      backdrop-filter:blur(6px);
+    }
+
+    .card h2{
+      text-align:center;
+      margin-bottom:14px;
+      font-size:22px;
+      font-weight:700;
+      color:var(--mp-primary);
+    }
+
+    label{ display:block; margin-top:10px; font-weight:600; }
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:5px;
+      border-radius:10px;
+      border:1px solid var(--mp-outline);
+      background:rgba(255,255,255,.08);
+      color:white;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:20px;
+      background:var(--mp-primary);
+      border:none;
+      border-radius:10px;
+      font-weight:700;
+      color:white;
+      cursor:pointer;
+    }
+    button:hover{ background:var(--mp-primary-700); }
+
+    .reset{
+      margin-top:10px;
+      text-align:center;
+      color:#ffb37a;
+      cursor:pointer;
+    }
+
+    a{
+      display:block;
+      text-align:center;
+      margin-top:14px;
+      color:#ffd9ad;
+      text-decoration:none;
+    }
+
+    footer{
+      text-align:center;
+      padding:12px;
+      color:#b5bcc7;
+      font-size:12px;
+    }
+

@@ -1,0 +1,81 @@
+
+:root{
+  --bg:#0b0f14;
+  --bg2:#10161d;
+  --card:#161c23;
+  --primary:#f39220;
+  --primary-700:#d47e16;
+  --outline:#2b3a49;
+  --text:#fff;
+}
+
+/* ===== FUNDO IGUAL AO PROJETO MOTORISTA PLUS ===== */
+body{
+  background: linear-gradient(180deg, #0b0f14 0%, #10161d 100%);
+  color: var(--text);
+  font-family: system-ui, Arial;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+/* ===== CARD IGUAL AO PADRÃO DO PROJETO ===== */
+.card{
+  background: var(--card);
+  padding: 28px;
+  border-radius: 14px;
+  border: 1px solid var(--outline);
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.4);
+}
+
+/* Título */
+h1{
+  text-align:center;
+  margin-bottom:20px;
+  color: var(--primary);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+/* Inputs */
+input,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  margin-top:10px;
+  font-size:15px;
+  outline: none;
+  transition: .2s;
+}
+
+input:focus{
+  border-color: var(--primary);
+  background: rgba(255,255,255,.15);
+}
+
+/* Botão */
+button{
+  background: var(--primary);
+  font-weight:700;
+  cursor:pointer;
+}
+
+button:hover{
+  background: var(--primary-700);
+  transform: translateY(-1px);
+}
+
+/* Mensagem */
+.msg{
+  margin-top:10px;
+  color: var(--primary);
+  text-align:center;
+  font-size:14px;
+}

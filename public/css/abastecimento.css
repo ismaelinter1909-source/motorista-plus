@@ -1,0 +1,52 @@
+
+@media(max-width:768px){
+
+    #voltarPainel{
+        display:none;
+    }
+
+}
+
+ul{
+    list-style:none;
+}
+
+li{
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid var(--outline);
+
+    padding:12px;
+
+    border-radius:10px;
+
+    margin-bottom:10px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+
+}
+
+#graficoAbastecimento{
+
+    width:100%!important;
+
+    height:240px!important;
+
+}
+
+@media(min-width:769px){
+
+#graficoAbastecimento{
+
+    height:320px!important;
+
+}
+
+}

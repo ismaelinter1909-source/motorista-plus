@@ -1,0 +1,358 @@
+
+:root{
+  --bg:#0b0f14;
+  --bg2:#10161d;
+  --card:#161c23;
+  --primary:#f39220;
+  --primary-700:#d47e16;
+  --outline:#2b3a49;
+  --text:#fff;
+  --muted:#b5bcc7;
+  --green:#2b9348;
+  --red:#dc3545;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:system-ui,Arial,sans-serif;
+}
+
+body{
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER */
+header{
+  padding:16px 18px;
+  background:#000;
+  border-bottom:1px solid var(--outline);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header h1{
+  font-size:20px;
+  font-weight:800;
+}
+.plus{color:var(--primary);}
+header small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+#infoAdminWrap{
+  text-align:right;
+  font-size:12px;
+  color:var(--muted);
+}
+#btnSair{
+  margin-top:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--outline);
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  cursor:pointer;
+}
+#btnSair:hover{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+}
+
+/* LAYOUT */
+main{
+  flex:1;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  min-height:0;
+}
+
+@media(max-width:860px){
+  main{
+    grid-template-columns:1fr;
+  }
+}
+
+/* SIDEBAR */
+.sidebar{
+  border-right:1px solid var(--outline);
+  padding:12px;
+  background:#0c1218;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sidebar input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-size:14px;
+}
+.sidebar input:focus{
+  border-color:var(--primary);
+}
+#listaMotoristas{
+  flex:1;
+  overflow-y:auto;
+  margin-top:6px;
+}
+.motorista-item{
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--outline);
+  margin-bottom:6px;
+  cursor:pointer;
+  transition:.2s;
+}
+.motorista-item:hover{
+  background:rgba(255,255,255,.12);
+}
+.motorista-item strong{
+  font-size:14px;
+}
+.small{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* CONTEÚDO PRINCIPAL */
+#conteudo{
+  padding:14px;
+  overflow-y:auto;
+}
+
+/* CARDS */
+.card{
+  background:var(--card);
+  border-radius:12px;
+  border:1px solid var(--outline);
+  padding:14px;
+  margin-bottom:14px;
+}
+.card h2{
+  font-size:18px;
+  color:var(--primary);
+  margin-bottom:6px;
+}
+
+/* GRID DADOS */
+.dados-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:8px;
+}
+.dado{
+  background:rgba(255,255,255,.03);
+  border-radius:10px;
+  border:1px solid var(--outline);
+  padding:8px;
+  font-size:13px;
+}
+.dado span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  margin-bottom:2px;
+}
+.dado strong{
+  font-size:13px;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:10px;
+}
+.tab-btn{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:12px;
+  cursor:pointer;
+}
+.tab-btn.active{
+  background:var(--primary);
+  color:#000;
+  border-color:var(--primary);
+}
+.tab-content{
+  display:none;
+}
+.tab-content.active{
+  display:block;
+}
+
+/* FORM / BOTÕES */
+form{
+  margin-bottom:10px;
+}
+form .grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:8px;
+}
+label{
+  font-size:11px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:2px;
+}
+input,select,textarea{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid var(--outline);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:13px;
+}
+textarea{min-height:60px; resize:vertical;}
+.btn{
+  padding:8px 12px;
+  border-radius:8px;
+  border:none;
+  font-size:13px;
+  cursor:pointer;
+}
+.btn-primary{
+  background:var(--primary);
+  color:#000;
+  font-weight:600;
+}
+.btn-primary:hover{
+  background:var(--primary-700);
+}
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--outline);
+  color:var(--muted);
+}
+.btn-ghost:hover{
+  background:rgba(255,255,255,.06);
+}
+.btn-danger{
+  background:var(--red);
+  color:#fff;
+}
+.btn-danger:hover{
+  background:#b02a37;
+}
+
+/* TABELAS */
+.table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+.table th,.table td{
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:4px 3px;
+  text-align:left;
+}
+.table th{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:500;
+}
+.table tbody tr:hover{
+  background:rgba(255,255,255,.05);
+}
+.table td .mini-btn{
+  font-size:11px;
+  padding:3px 6px;
+  border-radius:6px;
+  border:none;
+  cursor:pointer;
+}
+.mini-editar{
+  background:var(--primary);
+  color:#000;
+}
+.mini-remover{
+  background:var(--red);
+  color:#fff;
+}
+
+.texto-central{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin:10px 0;
+}
+footer{
+  text-align:center;
+  font-size:11px;
+  color:var(--muted);
+  padding:8px;
+  border-top:1px solid var(--outline);
+}
+
+/* PAINEL LATERAL DE EDIÇÃO (A3) */
+.edit-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;
+  justify-content:flex-end;
+  align-items:stretch;
+  z-index:9999;
+}
+.hidden{
+  display:none;
+}
+.edit-panel{
+  width:100%;
+  max-width:360px;
+  background:#0c1218;
+  border-left:1px solid var(--outline);
+  box-shadow:-4px 0 18px rgba(0,0,0,.7);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.edit-panel h3{
+  margin-bottom:4px;
+  font-size:16px;
+}
+.edit-panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.edit-panel-header button{
+  font-size:18px;
+  line-height:1;
+  background:transparent;
+  border:none;
+  color:var(--muted);
+  cursor:pointer;
+}
+.edit-panel-header button:hover{
+  color:#fff;
+}
+.edit-panel .grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.edit-panel .actions{
+  display:flex;
+  gap:8px;
+  margin-top:6px;
+}

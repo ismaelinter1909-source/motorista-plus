@@ -1,0 +1,149 @@
+:root {
+  --bg: #0b0f14;
+  --card: #12171e;
+  --primary: #f39220;
+  --outline: #2b3a49;
+  --text: white;
+  --muted: #b5bcc7;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, Arial;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container {
+  width: 94%;
+  margin: 12px auto 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.card h2 {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+input,
+button,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--outline);
+  background: #0f141a;
+  color: white;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+button {
+  background: var(--primary);
+  font-weight: 700;
+}
+
+button:hover {
+  filter: brightness(.92);
+}
+
+#backBtn {
+  position: fixed;
+  top: 10px;
+  width: auto;
+  left: 10px;
+  z-index: 999;
+  width: auto;
+  padding: 6px 14px;
+  background: #ffffff20;
+  border: 1px solid #ffffff30;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+textarea {
+  height: 90px;
+  resize: none;
+}
+
+/* Dados do motorista */
+#dadosUsuarioCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#dadosUsuarioCard .item {
+  background: rgba(255, 255, 255, .05);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--outline);
+  font-size: 14px;
+}
+
+#dadosUsuarioCard b {
+  color: var(--primary);
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+/* Tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  background: var(--primary);
+  padding: 6px;
+  color: white;
+  font-size: 13px;
+}
+
+td {
+  padding: 6px;
+  border-bottom: 1px solid var(--outline);
+  text-align: center;
+}
+
+/* Gráfico */
+canvas {
+  max-height: 180px !important;
+  height: 180px !important;
+  background: #0f141a;
+  padding: 8px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+#limparPagina {
+  background: #333;
+}
+
+footer {
+  text-align: center;
+  padding: 14px;
+  margin-top: 26px;
+  color: var(--muted);
+  border-top: 1px solid var(--outline);
+}

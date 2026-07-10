@@ -1,0 +1,107 @@
+
+    :root{
+      --mp-bg:#0b0f14;
+      --mp-card-alpha: rgba(16,22,29,.85);
+      --mp-primary:#f39220;
+      --mp-primary-700:#d47e16;
+      --mp-outline:#2b3a49;
+      --mp-text:white;
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      background:var(--mp-bg);
+      color:white;
+      font-family:system-ui, Arial;
+    }
+
+    header.hero{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+      padding:20px;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.55) 40%, rgba(0,0,0,.85) 100%),
+        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+    }
+
+    .brand{
+      font-size:clamp(36px, 6vw, 60px);
+      font-weight:800;
+      text-align:center;
+    }
+    .brand .plus{ color:var(--mp-primary); }
+
+    .slogan{
+      letter-spacing:.20em;
+      text-align:center;
+      margin-top:-6px;
+      font-size:clamp(14px, 2vw, 20px);
+    }
+
+    .card{
+      width:min(90vw,460px);
+      background:var(--mp-card-alpha);
+      padding:24px;
+      border-radius:14px;
+      border:1px solid var(--mp-outline);
+      box-shadow:0 20px 40px rgba(0,0,0,.35);
+      backdrop-filter:blur(6px);
+    }
+
+    .card h2{
+      text-align:center;
+      color:var(--mp-primary);
+      margin-bottom:14px;
+    }
+
+    label{
+      margin-top:10px;
+      display:block;
+      font-weight:600;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:5px;
+      border-radius:10px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--mp-outline);
+      color:white;
+    }
+
+    button{
+      width:100%;
+      margin-top:18px;
+      padding:12px;
+      background:var(--mp-primary);
+      border:none;
+      border-radius:10px;
+      font-weight:bold;
+      font-size:16px;
+      color:white;
+      cursor:pointer;
+    }
+    button:hover{
+      background:var(--mp-primary-700);
+    }
+
+    a{
+      display:block;
+      margin-top:14px;
+      text-align:center;
+      color:#ffd9ad;
+      text-decoration:none;
+    }
+
+    footer{
+      text-align:center;
+      margin-top:20px;
+      color:#aaa;
+    }
+

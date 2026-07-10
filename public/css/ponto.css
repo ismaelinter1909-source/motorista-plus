@@ -1,0 +1,176 @@
+
+    :root {
+      --bg: #0b0f14;
+      --bg2: #10161d;
+      --card: #161c23;
+      --primary: #f39220;
+      --primary-700: #d47e16;
+      --outline: #2b3a49;
+      --text: #fff;
+      --muted: #b5bcc7;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, Arial, sans-serif
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh
+    }
+
+
+    header {
+      text-align: center;
+      padding: 30px 16px;
+      border-bottom: 1px solid var(--outline);
+      background: linear-gradient(180deg, rgba(0, 0, 0, .35), rgba(0, 0, 0, .85))
+    }
+
+    header h1 {
+      font-size: clamp(22px, 5vw, 34px);
+      font-weight: 800
+    }
+
+    header .plus {
+      color: var(--primary)
+    }
+
+    main {
+      width: 95%;
+      max-width: 1000px;
+      margin: 18px auto 36px
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--outline);
+      padding: 16px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      margin-bottom: 14px
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 8px
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin: 6px 0 4px
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--outline);
+      background: #0f141a;
+      color: #fff
+    }
+
+    select option {
+      background: #0f141a;
+      color: #fff
+    }
+
+    .btn {
+      background: var(--primary);
+      border: none;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .btn:hover {
+      background: var(--primary-700)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted)
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, .06)
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px
+    }
+
+    #dadosUsuarioCard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px
+    }
+
+    #dadosUsuarioCard .item {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--outline);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center
+    }
+
+    #dadosUsuarioCard .item strong {
+      color: var(--primary);
+      display: block;
+      margin-bottom: 4px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px
+    }
+
+    th,
+    td {
+      border: 1px solid var(--outline);
+      padding: 8px;
+      text-align: center
+    }
+
+    th {
+      background: var(--primary);
+      color: #fff
+    }
+
+    .edit {
+      background: #ffa500;
+      color: #000;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer
+    }
+    @media (max-width: 768px) {
+  #btnVoltar {
+    display: none !important;
+  }
+}
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--outline)
+    }

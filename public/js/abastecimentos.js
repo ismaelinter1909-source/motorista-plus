@@ -1,0 +1,208 @@
+/* Firebase */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, addDoc, deleteDoc,
+  collection, getDocs, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain: "motorista-plus-c53f4.firebaseapp.com",
+  projectId: "motorista-plus-c53f4",
+  storageBucket: "motorista-plus-c53f4.firebasestorage.app",
+  messagingSenderId: "766097061342",
+  appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+let uid = null;
+let perfil = null;
+let abastecimentos = [];
+
+/* Converte valores br → número */
+function parseValor(v){
+  if(!v) return 0;
+  return Number(
+    v.replace(/\./g,"")
+     .replace(",",".")
+  );
+}
+
+/* PERFIL */
+async function carregarPerfil(){
+  const snap = await getDoc(doc(db,"usuarios",uid));
+  if(!snap.exists()) return;
+  perfil = snap.data();
+
+  $("dadosUsuarioCard").innerHTML = `
+    <div><strong>Motorista</strong><br>${perfil.nome}</div>
+    <div><strong>Telefone</strong><br>${perfil.telefone}</div>
+    <div><strong>Cavalo</strong><br>${perfil.placaCavalo}</div>
+    <div><strong>Reboque</strong><br>${perfil.placaReboque}</div>
+    <div><strong>Email</strong><br>${perfil.email}</div>
+  `;
+}
+
+/* CARREGAR */
+async function carregarAbastecimentos(){
+  const q = query(collection(db,"usuarios",uid,"abastecimentos"), orderBy("data","asc"));
+  const snap = await getDocs(q);
+
+  abastecimentos = snap.docs.map(d=>({
+    id: d.id,
+    data: d.data().data,
+    quilometragem: Number(d.data().quilometragem),
+    litros: Number(d.data().litros),
+    valor: Number(d.data().valor),
+    tipo: d.data().tipo,
+    pagamento: d.data().pagamento
+  }));
+
+  renderLista();
+  atualizarGrafico();
+}
+
+/* SALVAR — aceita valores altos e 0 */
+$("adicionar").onclick = async ()=>{
+  const data = $("data").value;
+  const km = Number($("km").value || 0);
+  const litros = parseValor($("litros").value || 0);
+  const valor = parseValor($("valor").value || 0);
+  const tipo = $("tipoCombustivel").value;
+  const pagamento = $("pagamento").value;
+
+  if(!data){
+    alert("Selecione uma data.");
+    return;
+  }
+
+  await addDoc(collection(db,"usuarios",uid,"abastecimentos"),{
+    data,
+    quilometragem: km,
+    litros,
+    valor,
+    tipo,
+    pagamento,
+    criadoEm: serverTimestamp()
+  });
+
+  $("data").value="";
+  $("km").value="";
+  $("litros").value="";
+  $("valor").value="";
+
+  carregarAbastecimentos();
+};
+
+/* REMOVER */
+window.remover = async(id)=>{
+  if(!confirm("Excluir registro?")) return;
+  await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
+  carregarAbastecimentos();
+};
+
+/* LISTA */
+function renderLista(){
+  const ul = $("listaAbastecimentos");
+  ul.innerHTML = "";
+
+  abastecimentos.forEach(r=>{
+    ul.innerHTML += `
+      <li>
+        <div style="flex:1;min-width:230px">
+          <strong>${r.data}</strong><br>
+          KM: ${r.quilometragem}<br>
+          Litros: ${r.litros.toFixed(2)}<br>
+          Valor: R$ ${r.valor.toFixed(2).replace(".",",")}<br>
+          <span style="padding:3px 8px;border-radius:6px;background:${r.tipo==="Diesel"?"#1b5e20":"#0d47a1"}">
+            ${r.tipo}
+          </span>
+        </div>
+        <button class="btn-red" onclick="remover('${r.id}')">Excluir</button>
+      </li>
+    `;
+  });
+}
+
+/* GRÁFICO */
+let grafico=null;
+function atualizarGrafico(){
+  const ctx = $("graficoAbastecimento").getContext("2d");
+
+  if(grafico) grafico.destroy();
+
+  grafico = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels: abastecimentos.map(a=>a.data),
+      datasets:[{ label:"Litros", data:abastecimentos.map(a=>a.litros) }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false }
+  });
+}
+
+/* PDF COMPLETO */
+$("gerarPDFButton").onclick = ()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
+
+  let y = 40;
+  const margin = 40;
+
+  /* TÍTULO */
+  doc.setFontSize(16);
+  doc.text("Relatório de Abastecimentos — Motorista Plus", margin, y);
+  y+=25;
+
+  /* DADOS MOTORISTA */
+  doc.setFontSize(11);
+  doc.text(`Motorista: ${perfil?.nome||""}`, margin, y); y+=15;
+  doc.text(`Cavalo: ${perfil?.placaCavalo||""}`, margin, y);
+  doc.text(`Reboque: ${perfil?.placaReboque||""}`, margin+240, y); y+=15;
+  doc.text(`Telefone: ${perfil?.telefone||""}`, margin, y);
+  doc.text(`Email: ${perfil?.email||""}`, margin+240, y); y+=25;
+
+  /* TABELA */
+  doc.autoTable({
+    startY:y,
+    head:[["Data","KM","Litros","Valor","Tipo","Pagamento"]],
+    body: abastecimentos.map(a=>[
+      a.data,
+      a.quilometragem,
+      a.litros.toFixed(2),
+      "R$ "+a.valor.toFixed(2),
+      a.tipo,
+      a.pagamento
+    ]),
+    headStyles:{ fillColor:[243,146,32], textColor:[0,0,0], halign:"center" },
+    bodyStyles:{ fillColor:[245,245,245], textColor:[0,0,0] },
+    alternateRowStyles:{ fillColor:[230,230,230] },
+    styles:{ fontSize:10, lineWidth:0.4, lineColor:[43,58,73] },
+    margin:{ left:margin, right:margin }
+  });
+
+  y = doc.lastAutoTable.finalY + 50;
+
+  /* ASSINATURA */
+  const pageW = doc.internal.pageSize.width;
+  const lineW = 300;
+  const cx = pageW/2;
+
+  doc.line(cx-lineW/2, y, cx+lineW/2, y);
+  doc.setFontSize(12);
+  doc.text("Assinatura do Motorista", cx, y+18, { align:"center" });
+
+  doc.save("abastecimentos.pdf");
+};
+
+/* AUTENTICAÇÃO */
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href="login.html";
+  uid = user.uid;
+  await carregarPerfil();
+  await carregarAbastecimentos();
+});

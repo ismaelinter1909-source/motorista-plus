@@ -1,0 +1,1357 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection, getDocs, doc, getDoc,
+  addDoc, updateDoc, deleteDoc, query, orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+/* CONFIG FIREBASE */
+const app = initializeApp({
+  apiKey:"AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
+  authDomain:"motorista-plus-c53f4.firebaseapp.com",
+  projectId:"motorista-plus-c53f4"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+
+let adminUser = null;
+let motoristas = [];
+let motoristaAtual = null;
+
+// caches de subcoleções
+let dadosAbastecimentos = [];
+let dadosMedia = [];
+let dadosGastos = [];
+let dadosPonto = [];
+let dadosEntregas = [];
+let dadosManutencao = [];
+let dadosViagem = [];
+
+// edições
+let editAbastId = null;
+let editGastoId = null;
+let editPontoId = null;
+let editEntregaId = null;
+let editManutId = null;
+let editViagemId = null;
+let editMediaId = null;
+
+/* ELEMENTOS DO PAINEL LATERAL */
+const editOverlay      = $("editOverlay");
+const editPanel        = $("editPanel");
+const formEditMotorista = $("formEditMotorista");
+const btnFecharPainel  = $("btnFecharPainel");
+const btnCancelarEdicao = $("btnCancelarEdicao");
+
+const inputEditNome    = $("editNome");
+const inputEditTelefone= $("editTelefone");
+const inputEditCPF     = $("editCPF");
+const inputEditCavalo  = $("editCavalo");
+const inputEditReboque = $("editReboque");
+const inputEditEmail   = $("editEmail");
+
+/* HELPERS */
+const fmtBR = iso => iso ? iso.split("-").reverse().join("/") : "—";
+function parseNum(v){
+  if(!v) return 0;
+  return Number( String(v).replace(/\./g,"").replace(",",".") );
+}
+
+/* BOTÃO SAIR */
+$("btnSair").onclick = async ()=>{
+  try{
+    await signOut(auth);
+  }catch(e){}
+  window.location.href = "login_admin.html";
+};
+
+/* FUNÇÕES PAINEL LATERAL */
+function abrirPainelEdicao(){
+  if(!motoristaAtual) return;
+  inputEditNome.value     = motoristaAtual.nome || "";
+  inputEditTelefone.value = motoristaAtual.telefone || "";
+  inputEditCPF.value      = motoristaAtual.cpf || "";
+  inputEditCavalo.value   = motoristaAtual.placaCavalo || "";
+  inputEditReboque.value  = motoristaAtual.placaReboque || "";
+  inputEditEmail.value    = motoristaAtual.email || "";
+  editOverlay.classList.remove("hidden");
+}
+
+function fecharPainelEdicao(){
+  formEditMotorista.reset();
+  editOverlay.classList.add("hidden");
+}
+
+btnFecharPainel?.addEventListener("click", fecharPainelEdicao);
+btnCancelarEdicao?.addEventListener("click", fecharPainelEdicao);
+
+editOverlay?.addEventListener("click", (e)=>{
+  if(e.target === editOverlay){
+    fecharPainelEdicao();
+  }
+});
+editPanel?.addEventListener("click", (e)=> e.stopPropagation());
+
+formEditMotorista?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(!motoristaAtual) return;
+  const uref = doc(db,"usuarios",motoristaAtual.id);
+
+  const payload = {
+    nome: inputEditNome.value.trim(),
+    telefone: inputEditTelefone.value.trim(),
+    cpf: inputEditCPF.value.trim(),
+    placaCavalo: inputEditCavalo.value.trim(),
+    placaReboque: inputEditReboque.value.trim(),
+    email: inputEditEmail.value.trim()
+  };
+
+  await updateDoc(uref,payload);
+
+  // atualizar lista e reabrir motorista
+  await carregarMotoristas();
+  const atualizado = motoristas.find(x=>x.id === motoristaAtual.id);
+  if(atualizado){
+    abrirMotorista(atualizado);
+  }
+  fecharPainelEdicao();
+});
+
+/* AUTENTICAÇÃO E VALIDAÇÃO ADMIN */
+async function validarAdmin(user){
+  if(!user){
+    window.location.href = "login_admin.html";
+    return;
+  }
+  const ref = doc(db,"admins",user.uid);
+  const snap = await getDoc(ref);
+  if(!snap.exists()){
+    alert("Acesso negado! Usuário não é gestor.");
+    window.location.href = "login_admin.html";
+    return;
+  }
+  adminUser = snap.data();
+  $("infoAdmin").textContent = `Gestor: ${adminUser.nome || user.email}`;
+  await carregarMotoristas();
+}
+
+/* CARREGAR MOTORISTAS */
+async function carregarMotoristas(){
+  const snap = await getDocs(collection(db,"usuarios"));
+  motoristas = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  renderMotoristas(motoristas);
+}
+
+function renderMotoristas(lista){
+  const box = $("listaMotoristas");
+  box.innerHTML = "";
+  if(!lista.length){
+    box.innerHTML = '<p class="small">Nenhum motorista encontrado.</p>';
+    return;
+  }
+  lista.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "motorista-item";
+    div.innerHTML = `
+      <strong>${m.nome || "Sem nome"}</strong><br>
+      <span class="small">${m.email || ""}</span>
+    `;
+    div.onclick = () => abrirMotorista(m);
+    box.appendChild(div);
+  });
+}
+
+$("busca").addEventListener("input", e=>{
+  const termo = e.target.value.toLowerCase();
+  const filtrados = motoristas.filter(m =>
+    (m.nome || "").toLowerCase().includes(termo)
+  );
+  renderMotoristas(filtrados);
+});
+
+/* ABRIR MOTORISTA */
+async function abrirMotorista(m){
+  motoristaAtual = m;
+
+  $("conteudo").innerHTML = `
+    <div class="card">
+      <h2>${m.nome || "Motorista"}</h2>
+      <p class="small">${m.email || "Sem e-mail"}</p>
+
+      <div class="dados-grid">
+        <div class="dado"><span>Telefone</span><strong>${m.telefone || "—"}</strong></div>
+        <div class="dado"><span>CPF</span><strong>${m.cpf || "—"}</strong></div>
+        <div class="dado"><span>Cavalo</span><strong>${m.placaCavalo || "—"}</strong></div>
+        <div class="dado"><span>Reboque</span><strong>${m.placaReboque || "—"}</strong></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="btn btn-primary" id="btnEditarUsuario">Editar dados do motorista</button>
+        <button class="btn btn-danger" id="btnExcluirUsuario">Excluir motorista</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="abast">Abastecimentos</button>
+        <button class="tab-btn" data-tab="media">Média</button>
+        <button class="tab-btn" data-tab="gastos">Gastos</button>
+        <button class="tab-btn" data-tab="ponto">Ponto</button>
+        <button class="tab-btn" data-tab="entregas">Entregas</button>
+        <button class="tab-btn" data-tab="manut">Manutenção</button>
+        <button class="tab-btn" data-tab="viagem">Viagem</button>
+      </div>
+
+      <div id="tab-abast" class="tab-content active"></div>
+      <div id="tab-media" class="tab-content"></div>
+      <div id="tab-gastos" class="tab-content"></div>
+      <div id="tab-ponto" class="tab-content"></div>
+      <div id="tab-entregas" class="tab-content"></div>
+      <div id="tab-manut" class="tab-content"></div>
+      <div id="tab-viagem" class="tab-content"></div>
+    </div>
+  `;
+
+  // eventos tabs
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+      btn.classList.add("active");
+      const target = "tab-" + btn.dataset.tab;
+      document.getElementById(target).classList.add("active");
+    };
+  });
+
+  // eventos editar/excluir usuário
+  const btnEditar = $("btnEditarUsuario");
+  const btnExcluir = $("btnExcluirUsuario");
+
+  if(btnEditar){
+    btnEditar.onclick = editarUsuarioAtual;
+  }
+  if(btnExcluir){
+    btnExcluir.onclick = excluirUsuarioAtual;
+  }
+
+  // carregar dados das subcoleções
+  await Promise.all([
+    carregarAbastecimentos(),
+    carregarMedia(),
+    carregarGastos(),
+    carregarPonto(),
+    carregarEntregas(),
+    carregarManutencao(),
+    carregarViagem()
+  ]);
+}
+
+/* ===== EDITAR / EXCLUIR USUÁRIO ===== */
+function editarUsuarioAtual(){
+  abrirPainelEdicao();
+}
+
+async function excluirUsuarioAtual(){
+  if(!motoristaAtual) return;
+  if(!confirm("Tem certeza que deseja excluir esse motorista? Os registros podem ficar órfãos no banco.")) return;
+
+  await deleteDoc(doc(db,"usuarios",motoristaAtual.id));
+  motoristaAtual = null;
+  await carregarMotoristas();
+
+  $("conteudo").innerHTML = `
+    <div class="card">
+      <h2>Selecione um motorista</h2>
+      <p class="small">Use a lista ao lado para escolher um motorista e acessar todos os registros.</p>
+    </div>
+  `;
+}
+
+/* ==================== ABASTECIMENTOS ==================== */
+async function carregarAbastecimentos(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-abast");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"abastecimentos"), orderBy("data","desc"));
+  const snap = await getDocs(q);
+  dadosAbastecimentos = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  renderAbastecimentos();
+}
+
+function renderAbastecimentos(){
+  const cont = $("tab-abast");
+  if(!dadosAbastecimentos.length){
+    cont.innerHTML = `<p class="texto-central">Nenhum abastecimento encontrado.</p>` + formAbastecimentoHtml();
+  }else{
+    let rows = "";
+    dadosAbastecimentos.forEach(a=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(a.data || "")}</td>
+          <td>${a.quilometragem || ""}</td>
+          <td>${a.litros || ""}</td>
+          <td>${a.valor || ""}</td>
+          <td>${a.tipo || ""}</td>
+          <td>${a.pagamento || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editAbast('${a.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delAbast('${a.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Abastecimentos</strong>
+        <button class="btn btn-ghost" onclick="window._pdfAbast()">Gerar PDF</button>
+      </div>
+      ${formAbastecimentoHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>KM</th><th>Litros</th><th>Valor</th><th>Tipo</th><th>Pagto</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormAbastecimento();
+}
+
+function formAbastecimentoHtml(){
+  return `
+    <form id="formAbast">
+      <div class="grid">
+        <div>
+          <label>Data</label>
+          <input type="date" id="abastData">
+        </div>
+        <div>
+          <label>KM</label>
+          <input type="number" id="abastKm">
+        </div>
+        <div>
+          <label>Litros</label>
+          <input type="text" id="abastLitros">
+        </div>
+        <div>
+          <label>Valor (R$)</label>
+          <input type="text" id="abastValor">
+        </div>
+        <div>
+          <label>Tipo</label>
+          <input type="text" id="abastTipo" placeholder="Diesel, Arla...">
+        </div>
+        <div>
+          <label>Pagamento</label>
+          <input type="text" id="abastPagto" placeholder="Pix, Nota, Base...">
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="abastCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormAbastecimento(){
+  editAbastId = null;
+  const form = $("formAbast");
+  if(!form) return;
+  const btnCancel = $("abastCancelar");
+  btnCancel.onclick = ()=>{
+    editAbastId = null;
+    form.reset();
+  };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      data: $("abastData").value,
+      quilometragem: parseNum($("abastKm").value),
+      litros: parseNum($("abastLitros").value),
+      valor: parseNum($("abastValor").value),
+      tipo: $("abastTipo").value,
+      pagamento: $("abastPagto").value
+    };
+    if(editAbastId){
+      await updateDoc(doc(db,"usuarios",uid,"abastecimentos",editAbastId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"abastecimentos"),payload);
+    }
+    editAbastId = null;
+    form.reset();
+    await carregarAbastecimentos();
+  };
+}
+
+window._editAbast = id=>{
+  const a = dadosAbastecimentos.find(x=>x.id===id);
+  if(!a) return;
+  editAbastId = id;
+  $("abastData").value = a.data || "";
+  $("abastKm").value = a.quilometragem || "";
+  $("abastLitros").value = a.litros || "";
+  $("abastValor").value = a.valor || "";
+  $("abastTipo").value = a.tipo || "";
+  $("abastPagto").value = a.pagamento || "";
+};
+
+window._delAbast = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir abastecimento?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"abastecimentos",id));
+  await carregarAbastecimentos();
+};
+
+window._pdfAbast = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+
+  docPDF.setFontSize(14);
+  docPDF.text(`Abastecimentos — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosAbastecimentos.map(a=>[
+    fmtBR(a.data||""), a.quilometragem||"", a.litros||"", a.valor||"", a.tipo||"", a.pagamento||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","KM","Litros","Valor","Tipo","Pagto"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("abastecimentos_admin.pdf");
+};
+
+/* ==================== GASTOS ==================== */
+async function carregarGastos(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-gastos");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"gastos"), orderBy("date","desc"));
+  const snap = await getDocs(q);
+  dadosGastos = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderGastos();
+}
+
+function renderGastos(){
+  const cont = $("tab-gastos");
+  if(!dadosGastos.length){
+    cont.innerHTML = `<p class="texto-central">Nenhum gasto encontrado.</p>` + formGastosHtml();
+  }else{
+    let rows = "";
+    dadosGastos.forEach(g=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(g.date || "")}</td>
+          <td>${g.motivo || ""}</td>
+          <td>${g.local || ""}</td>
+          <td>${g.aut || ""}</td>
+          <td>${g.valor || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editGasto('${g.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delGasto('${g.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Gastos</strong>
+        <button class="btn btn-ghost" onclick="window._pdfGastos()">Gerar PDF</button>
+      </div>
+      ${formGastosHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>Motivo</th><th>Local</th><th>Aut.</th><th>Valor</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormGastos();
+}
+
+function formGastosHtml(){
+  return `
+    <form id="formGastos">
+      <div class="grid">
+        <div>
+          <label>Data</label>
+          <input type="date" id="gastoData">
+        </div>
+        <div>
+          <label>Motivo</label>
+          <input type="text" id="gastoMotivo">
+        </div>
+        <div>
+          <label>Local</label>
+          <input type="text" id="gastoLocal">
+        </div>
+        <div>
+          <label>Autorização</label>
+          <input type="text" id="gastoAut">
+        </div>
+        <div>
+          <label>Valor (R$)</label>
+          <input type="text" id="gastoValor">
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="gastoCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormGastos(){
+  editGastoId = null;
+  const form = $("formGastos");
+  if(!form) return;
+  $("gastoCancelar").onclick = ()=>{ editGastoId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      date: $("gastoData").value,
+      motivo: $("gastoMotivo").value,
+      local: $("gastoLocal").value,
+      aut: $("gastoAut").value,
+      valor: parseNum($("gastoValor").value)
+    };
+    if(editGastoId){
+      await updateDoc(doc(db,"usuarios",uid,"gastos",editGastoId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"gastos"),payload);
+    }
+    editGastoId = null;
+    form.reset();
+    await carregarGastos();
+  };
+}
+
+window._editGasto = id=>{
+  const g = dadosGastos.find(x=>x.id===id);
+  if(!g) return;
+  editGastoId = id;
+  $("gastoData").value = g.date || "";
+  $("gastoMotivo").value = g.motivo || "";
+  $("gastoLocal").value = g.local || "";
+  $("gastoAut").value = g.aut || "";
+  $("gastoValor").value = g.valor || "";
+};
+
+window._delGasto = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir gasto?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"gastos",id));
+  await carregarGastos();
+};
+
+window._pdfGastos = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+  docPDF.setFontSize(14);
+  docPDF.text(`Gastos — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosGastos.map(g=>[
+    fmtBR(g.date||""), g.motivo||"", g.local||"", g.aut||"", g.valor||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","Motivo","Local","Aut.","Valor"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("gastos_admin.pdf");
+};
+
+/* ==================== PONTO ==================== */
+async function carregarPonto(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-ponto");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"ponto"), orderBy("data","desc"));
+  const snap = await getDocs(q);
+  dadosPonto = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderPonto();
+}
+
+function renderPonto(){
+  const cont = $("tab-ponto");
+  if(!dadosPonto.length){
+    cont.innerHTML = `<p class="texto-central">Nenhum registro de ponto.</p>` + formPontoHtml();
+  }else{
+    let rows = "";
+    dadosPonto.forEach(p=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(p.data || "")}</td>
+          <td>${p.horaEntrada || ""}</td>
+          <td>${p.horaSaida || ""}</td>
+          <td>${p.totalHoras || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editPonto('${p.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delPonto('${p.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Ponto</strong>
+        <button class="btn btn-ghost" onclick="window._pdfPonto()">Gerar PDF</button>
+      </div>
+      ${formPontoHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>Entrada</th><th>Saída</th><th>Total</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormPonto();
+}
+
+function formPontoHtml(){
+  return `
+    <form id="formPonto">
+      <div class="grid">
+        <div>
+          <label>Data</label>
+          <input type="date" id="pontoData">
+        </div>
+        <div>
+          <label>Hora Entrada</label>
+          <input type="time" id="pontoEntrada">
+        </div>
+        <div>
+          <label>Hora Saída</label>
+          <input type="time" id="pontoSaida">
+        </div>
+        <div>
+          <label>Total Horas</label>
+          <input type="text" id="pontoTotal">
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="pontoCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormPonto(){
+  editPontoId = null;
+  const form = $("formPonto");
+  if(!form) return;
+  $("pontoCancelar").onclick = ()=>{ editPontoId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      data: $("pontoData").value,
+      horaEntrada: $("pontoEntrada").value,
+      horaSaida: $("pontoSaida").value,
+      totalHoras: $("pontoTotal").value
+    };
+    if(editPontoId){
+      await updateDoc(doc(db,"usuarios",uid,"ponto",editPontoId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"ponto"),payload);
+    }
+    editPontoId = null;
+    form.reset();
+    await carregarPonto();
+  };
+}
+
+window._editPonto = id=>{
+  const p = dadosPonto.find(x=>x.id===id);
+  if(!p) return;
+  editPontoId = id;
+  $("pontoData").value = p.data || "";
+  $("pontoEntrada").value = p.horaEntrada || "";
+  $("pontoSaida").value = p.horaSaida || "";
+  $("pontoTotal").value = p.totalHoras || "";
+};
+
+window._delPonto = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir ponto?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"ponto",id));
+  await carregarPonto();
+};
+
+window._pdfPonto = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+  docPDF.setFontSize(14);
+  docPDF.text(`Folha de Ponto — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosPonto.map(p=>[
+    fmtBR(p.data||""), p.horaEntrada||"", p.horaSaida||"", p.totalHoras||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","Entrada","Saída","Total"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("ponto_admin.pdf");
+};
+
+/* ==================== ENTREGAS ==================== */
+async function carregarEntregas(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-entregas");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"entregas"), orderBy("data","desc"));
+  const snap = await getDocs(q);
+  dadosEntregas = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderEntregas();
+}
+
+function renderEntregas(){
+  const cont = $("tab-entregas");
+  if(!dadosEntregas.length){
+    cont.innerHTML = `<p class="texto-central">Nenhuma entrega.</p>` + formEntregasHtml();
+  }else{
+    let rows = "";
+    dadosEntregas.forEach(e=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(e.data || "")}</td>
+          <td>${e.cliente || e.destino || ""}</td>
+          <td>${e.cidade || e.local || ""}</td>
+          <td>${e.nota || e.nf || ""}</td>
+          <td>${e.status || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editEntrega('${e.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delEntrega('${e.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Entregas</strong>
+        <button class="btn btn-ghost" onclick="window._pdfEntregas()">Gerar PDF</button>
+      </div>
+      ${formEntregasHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>Cliente</th><th>Cidade</th><th>Nota</th><th>Status</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormEntregas();
+}
+
+function formEntregasHtml(){
+  return `
+    <form id="formEntregas">
+      <div class="grid">
+        <div><label>Data</label><input type="date" id="entData"></div>
+        <div><label>Cliente/Destino</label><input type="text" id="entCliente"></div>
+        <div><label>Cidade/Local</label><input type="text" id="entCidade"></div>
+        <div><label>Nota / NF</label><input type="text" id="entNota"></div>
+        <div><label>Status</label><input type="text" id="entStatus"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="entCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormEntregas(){
+  editEntregaId = null;
+  const form = $("formEntregas");
+  if(!form) return;
+  $("entCancelar").onclick = ()=>{ editEntregaId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      data: $("entData").value,
+      cliente: $("entCliente").value,
+      cidade: $("entCidade").value,
+      nota: $("entNota").value,
+      status: $("entStatus").value
+    };
+    if(editEntregaId){
+      await updateDoc(doc(db,"usuarios",uid,"entregas",editEntregaId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"entregas"),payload);
+    }
+    editEntregaId = null;
+    form.reset();
+    await carregarEntregas();
+  };
+}
+
+window._editEntrega = id=>{
+  const e = dadosEntregas.find(x=>x.id===id);
+  if(!e) return;
+  editEntregaId = id;
+  $("entData").value = e.data || "";
+  $("entCliente").value = e.cliente || e.destino || "";
+  $("entCidade").value = e.cidade || e.local || "";
+  $("entNota").value = e.nota || e.nf || "";
+  $("entStatus").value = e.status || "";
+};
+
+window._delEntrega = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir entrega?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"entregas",id));
+  await carregarEntregas();
+};
+
+window._pdfEntregas = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4",orientation:"landscape"});
+  let y = 40;
+  docPDF.setFontSize(16);
+  docPDF.text(`Relatório de Entregas — ${motoristaAtual?.nome||""}`, 32, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, 32, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, 32, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, 32, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, 32, y);
+  y += 14;
+
+  const body = dadosEntregas.map(e=>[
+    fmtBR(e.data||""), e.cliente||"", e.cidade||"", e.nota||"", e.status||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","Cliente","Cidade","Nota","Status"]],
+    body,
+    margin:{left:32,right:32},
+    headStyles:{fillColor:[243,146,32]}
+  });
+  docPDF.save("entregas_admin.pdf");
+};
+
+/* ==================== MANUTENÇÃO ==================== */
+async function carregarManutencao(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-manut");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"manutencao"), orderBy("data","desc"));
+  const snap = await getDocs(q);
+  dadosManutencao = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderManutencao();
+}
+
+function renderManutencao(){
+  const cont = $("tab-manut");
+  if(!dadosManutencao.length){
+    cont.innerHTML = `<p class="texto-central">Nenhuma manutenção registrada.</p>` + formManutHtml();
+  }else{
+    let rows = "";
+    dadosManutencao.forEach(m=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(m.data || "")}</td>
+          <td>${m.tipo || ""}</td>
+          <td>${m.oficina || ""}</td>
+          <td>${m.veiculo || ""}</td>
+          <td>${m.valor || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editManut('${m.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delManut('${m.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Manutenção</strong>
+        <button class="btn btn-ghost" onclick="window._pdfManut()">Gerar PDF</button>
+      </div>
+      ${formManutHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>Tipo</th><th>Oficina</th><th>Veículo</th><th>Valor</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormManut();
+}
+
+function formManutHtml(){
+  return `
+    <form id="formManut">
+      <div class="grid">
+        <div><label>Data</label><input type="date" id="manutData"></div>
+        <div><label>Tipo</label><input type="text" id="manutTipo"></div>
+        <div><label>Oficina</label><input type="text" id="manutOficina"></div>
+        <div><label>Veículo</label><input type="text" id="manutVeiculo"></div>
+        <div><label>Valor</label><input type="text" id="manutValor"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="manutCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormManut(){
+  editManutId = null;
+  const form = $("formManut");
+  if(!form) return;
+  $("manutCancelar").onclick = ()=>{ editManutId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      data: $("manutData").value,
+      tipo: $("manutTipo").value,
+      oficina: $("manutOficina").value,
+      veiculo: $("manutVeiculo").value,
+      valor: parseNum($("manutValor").value)
+    };
+    if(editManutId){
+      await updateDoc(doc(db,"usuarios",uid,"manutencao",editManutId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"manutencao"),payload);
+    }
+    editManutId = null;
+    form.reset();
+    await carregarManutencao();
+  };
+}
+
+window._editManut = id=>{
+  const m = dadosManutencao.find(x=>x.id===id);
+  if(!m) return;
+  editManutId = id;
+  $("manutData").value = m.data || "";
+  $("manutTipo").value = m.tipo || "";
+  $("manutOficina").value = m.oficina || "";
+  $("manutVeiculo").value = m.veiculo || "";
+  $("manutValor").value = m.valor || "";
+};
+
+window._delManut = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir manutenção?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"manutencao",id));
+  await carregarManutencao();
+};
+
+window._pdfManut = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+  docPDF.setFontSize(14);
+  docPDF.text(`Manutenções — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosManutencao.map(m=>[
+    fmtBR(m.data||""), m.tipo||"", m.oficina||"", m.veiculo||"", m.valor||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","Tipo","Oficina","Veículo","Valor"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("manutencao_admin.pdf");
+};
+
+/* ==================== VIAGEM ==================== */
+async function carregarViagem(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-viagem");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"viagem"), orderBy("inicio","desc"));
+  const snap = await getDocs(q);
+  dadosViagem = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderViagem();
+}
+
+function renderViagem(){
+  const cont = $("tab-viagem");
+  if(!dadosViagem.length){
+    cont.innerHTML = `<p class="texto-central">Nenhuma viagem cadastrada.</p>` + formViagemHtml();
+  }else{
+    let rows = "";
+    dadosViagem.forEach(v=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(v.inicio || "")}</td>
+          <td>${fmtBR(v.fim || "")}</td>
+          <td>${v.origem || ""}</td>
+          <td>${v.destino || ""}</td>
+          <td>${v.diarias || ""}</td>
+          <td>${v.valorDiaria || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editViagem('${v.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delViagem('${v.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Viagens / Diárias</strong>
+        <button class="btn btn-ghost" onclick="window._pdfViagem()">Gerar PDF</button>
+      </div>
+      ${formViagemHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Início</th><th>Fim</th><th>Origem</th><th>Destino</th><th>Diárias</th><th>Valor Diária</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormViagem();
+}
+
+function formViagemHtml(){
+  return `
+    <form id="formViagem">
+      <div class="grid">
+        <div><label>Início</label><input type="date" id="viaInicio"></div>
+        <div><label>Fim</label><input type="date" id="viaFim"></div>
+        <div><label>Origem</label><input type="text" id="viaOrigem"></div>
+        <div><label>Destino</label><input type="text" id="viaDestino"></div>
+        <div><label>Diárias</label><input type="number" id="viaDiarias"></div>
+        <div><label>Valor Diária</label><input type="text" id="viaValorDiaria"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="viaCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormViagem(){
+  editViagemId = null;
+  const form = $("formViagem");
+  if(!form) return;
+  $("viaCancelar").onclick = ()=>{ editViagemId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const payload = {
+      inicio: $("viaInicio").value,
+      fim: $("viaFim").value,
+      origem: $("viaOrigem").value,
+      destino: $("viaDestino").value,
+      diarias: parseNum($("viaDiarias").value),
+      valorDiaria: parseNum($("viaValorDiaria").value)
+    };
+    if(editViagemId){
+      await updateDoc(doc(db,"usuarios",uid,"viagem",editViagemId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"viagem"),payload);
+    }
+    editViagemId = null;
+    form.reset();
+    await carregarViagem();
+  };
+}
+
+window._editViagem = id=>{
+  const v = dadosViagem.find(x=>x.id===id);
+  if(!v) return;
+  editViagemId = id;
+  $("viaInicio").value = v.inicio || "";
+  $("viaFim").value = v.fim || "";
+  $("viaOrigem").value = v.origem || "";
+  $("viaDestino").value = v.destino || "";
+  $("viaDiarias").value = v.diarias || "";
+  $("viaValorDiaria").value = v.valorDiaria || "";
+};
+
+window._delViagem = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir viagem?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"viagem",id));
+  await carregarViagem();
+};
+
+window._pdfViagem = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+  docPDF.setFontSize(14);
+  docPDF.text(`Viagens / Diárias — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosViagem.map(v=>[
+    fmtBR(v.inicio||""), fmtBR(v.fim||""), v.origem||"", v.destino||"", v.diarias||"", v.valorDiaria||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Início","Fim","Origem","Destino","Diárias","Valor Diária"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("viagem_admin.pdf");
+};
+
+/* ==================== MÉDIA ==================== */
+async function carregarMedia(){
+  if(!motoristaAtual) return;
+  const uid = motoristaAtual.id;
+  const cont = $("tab-media");
+  cont.innerHTML = "Carregando...";
+
+  const q = query(collection(db,"usuarios",uid,"media"), orderBy("data","desc"));
+  const snap = await getDocs(q);
+  dadosMedia = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderMedia();
+}
+
+function renderMedia(){
+  const cont = $("tab-media");
+  if(!dadosMedia.length){
+    cont.innerHTML = `<p class="texto-central">Nenhum registro de média.</p>` + formMediaHtml();
+  }else{
+    let rows = "";
+    dadosMedia.forEach(m=>{
+      rows += `
+        <tr>
+          <td>${fmtBR(m.data || "")}</td>
+          <td>${m.kmInicial || ""}</td>
+          <td>${m.kmFinal || ""}</td>
+          <td>${m.litros || ""}</td>
+          <td>${m.media || ""}</td>
+          <td>
+            <button class="mini-btn mini-editar" onclick="window._editMedia('${m.id}')">Editar</button>
+            <button class="mini-btn mini-remover" onclick="window._delMedia('${m.id}')">X</button>
+          </td>
+        </tr>
+      `;
+    });
+    cont.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong>Média de Consumo</strong>
+        <button class="btn btn-ghost" onclick="window._pdfMedia()">Gerar PDF</button>
+      </div>
+      ${formMediaHtml()}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th><th>KM Inicial</th><th>KM Final</th><th>Litros</th><th>Média</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  bindFormMedia();
+}
+
+function formMediaHtml(){
+  return `
+    <form id="formMedia">
+      <div class="grid">
+        <div><label>Data</label><input type="date" id="mediaData"></div>
+        <div><label>KM Inicial</label><input type="number" id="mediaKmIni"></div>
+        <div><label>KM Final</label><input type="number" id="mediaKmFim"></div>
+        <div><label>Litros</label><input type="text" id="mediaLitros"></div>
+        <div><label>Média (km/L)</label><input type="text" id="mediaValor"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-ghost" id="mediaCancelar">Cancelar edição</button>
+      </div>
+    </form>
+  `;
+}
+
+function bindFormMedia(){
+  editMediaId = null;
+  const form = $("formMedia");
+  if(!form) return;
+  $("mediaCancelar").onclick = ()=>{ editMediaId=null; form.reset(); };
+  form.onsubmit = async e=>{
+    e.preventDefault();
+    if(!motoristaAtual) return;
+    const uid = motoristaAtual.id;
+    const kmIni = parseNum($("mediaKmIni").value);
+    const kmFim = parseNum($("mediaKmFim").value);
+    const litros = parseNum($("mediaLitros").value);
+    const mediaCalc = litros ? ((kmFim-kmIni)/litros) : 0;
+    const payload = {
+      data: $("mediaData").value,
+      kmInicial: kmIni,
+      kmFinal: kmFim,
+      litros: litros,
+      media: parseNum($("mediaValor").value || mediaCalc.toFixed(2))
+    };
+    if(editMediaId){
+      await updateDoc(doc(db,"usuarios",uid,"media",editMediaId),payload);
+    }else{
+      await addDoc(collection(db,"usuarios",uid,"media"),payload);
+    }
+    editMediaId = null;
+    form.reset();
+    await carregarMedia();
+  };
+}
+
+window._editMedia = id=>{
+  const m = dadosMedia.find(x=>x.id===id);
+  if(!m) return;
+  editMediaId = id;
+  $("mediaData").value = m.data || "";
+  $("mediaKmIni").value = m.kmInicial || "";
+  $("mediaKmFim").value = m.kmFinal || "";
+  $("mediaLitros").value = m.litros || "";
+  $("mediaValor").value = m.media || "";
+};
+
+window._delMedia = async id=>{
+  if(!motoristaAtual) return;
+  if(!confirm("Excluir registro de média?")) return;
+  const uid = motoristaAtual.id;
+  await deleteDoc(doc(db,"usuarios",uid,"media",id));
+  await carregarMedia();
+};
+
+window._pdfMedia = ()=>{
+  const { jsPDF } = window.jspdf;
+  const docPDF = new jsPDF({unit:"pt",format:"a4"});
+  const margin = 40;
+  let y = 40;
+  docPDF.setFontSize(14);
+  docPDF.text(`Média de Consumo — ${motoristaAtual?.nome||""}`, margin, y);
+  y += 16;
+
+  docPDF.setFontSize(10);
+  docPDF.text(`CPF: ${motoristaAtual?.cpf || ""}`, margin, y); y += 12;
+  docPDF.text(`Telefone: ${motoristaAtual?.telefone || ""}`, margin, y); y += 12;
+  docPDF.text(`Cavalo: ${motoristaAtual?.placaCavalo || ""}   Reboque: ${motoristaAtual?.placaReboque || ""}`, margin, y); y += 12;
+  docPDF.text(`E-mail: ${motoristaAtual?.email || ""}`, margin, y);
+  y += 18;
+
+  const body = dadosMedia.map(m=>[
+    fmtBR(m.data||""), m.kmInicial||"", m.kmFinal||"", m.litros||"", m.media||""
+  ]);
+  docPDF.autoTable({
+    startY:y,
+    head:[["Data","KM Inicial","KM Final","Litros","Média"]],
+    body,
+    headStyles:{fillColor:[243,146,32]},
+    styles:{fontSize:9}
+  });
+  docPDF.save("media_admin.pdf");
+};
+
+/* AUTH */
+onAuthStateChanged(auth, user=>{
+  validarAdmin(user);
+});
