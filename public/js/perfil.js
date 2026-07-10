@@ -19,6 +19,7 @@ export async function carregarPerfil(user){
     }
 
     const perfil = snap.data();
+    
 
     document.getElementById("menuNome").textContent =
         perfil.nome || "Motorista";
@@ -35,10 +36,11 @@ export async function carregarPerfil(user){
 
     }
 
-    return perfil;
+
+    
+    
     // Avatar
-const avatarCircle = document.getElementById("avatarCircle");
-const userFoto = document.getElementById("userFoto");
+
 
 const avatarCircleMenu = document.getElementById("avatarCircleMenu");
 const userFotoMenu = document.getElementById("userFotoMenu");
@@ -51,19 +53,11 @@ const iniciais =
 
 if (perfil.fotoUrl && perfil.fotoUrl.trim() !== "") {
 
-    userFoto.src = perfil.fotoUrl;
-    userFoto.style.display = "block";
-    avatarCircle.style.display = "none";
-
     userFotoMenu.src = perfil.fotoUrl;
     userFotoMenu.style.display = "block";
     avatarCircleMenu.style.display = "none";
 
 } else {
-
-    avatarCircle.textContent = iniciais.toUpperCase();
-    avatarCircle.style.display = "flex";
-    userFoto.style.display = "none";
 
     avatarCircleMenu.textContent = iniciais.toUpperCase();
     avatarCircleMenu.style.display = "flex";
@@ -72,5 +66,4 @@ if (perfil.fotoUrl && perfil.fotoUrl.trim() !== "") {
 }
 
 return perfil;
-
 }

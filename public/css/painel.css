@@ -156,6 +156,15 @@
       gap: 6px;
       margin-bottom: 14px;
     }
+    .avatar-img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f39220;
+    display: none;
+    cursor: pointer;
+}
 
     .avatar-circle,
     .avatar-img {
@@ -168,14 +177,17 @@
     }
 
     .avatar-circle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #1c2530, #253446);
-      color: #fff;
-      font-weight: 800;
-      font-size: 26px;
-    }
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid #f39220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: bold;
+    cursor: pointer;
+}
 
     .avatar-hint {
       font-size: 11px;

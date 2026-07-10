@@ -59,11 +59,9 @@ export function iniciarUploadFoto(user){
                     fotoUrl:url
                 }
             );
+            user.fotoURL = url;
 
-            userFoto.src = url;
-            userFoto.style.display="block";
-            avatarCircle.style.display="none";
-
+         
             userFotoMenu.src = url;
             userFotoMenu.style.display="block";
             avatarCircleMenu.style.display="none";
@@ -72,11 +70,13 @@ export function iniciarUploadFoto(user){
 
         }catch(err){
 
-            console.error(err);
+    console.error("ERRO COMPLETO:", err);
+    console.error("Código:", err.code);
+    console.error("Mensagem:", err.message);
 
-            alert("Erro ao enviar a foto.");
+    alert(err.message);
 
-        }
+}
 
     });
 
