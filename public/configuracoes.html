@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Configurações</title>
+
+    <link rel="stylesheet" href="css/global.css">
+    
+
+</head>
+
+<body>
+
+<header class="topo">
+
+    <h1>⚙ Configurações</h1>
+
+</header>
+
+<main class="container">
+
+    <h1>⚙️ Configurações</h1>
+
+    <div class="card">
+
+        <h2>👤 Conta</h2>
+
+        <div class="item-config" id="btnAlterarSenha">
+            <span>🔑 Alterar Senha</span>
+            <span>›</span>
+        </div>
+
+        <div class="item-config" id="btnAlterarEmail">
+            <span>📧 Alterar E-mail</span>
+            <span>›</span>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>🔔 Notificações</h2>
+
+        <div class="item-config">
+            <p>Receber Alertas</p>
+        </div>
+
+        <div class="item-config">
+            <span>CNH</span>
+            <input type="checkbox" id="alertaCNH" checked>
+        </div>
+
+        <div class="item-config">
+            <span>Toxicológico</span>
+            <input type="checkbox" id="alertaTox" checked>
+        </div>
+
+        <div class="item-config">
+            <span>MOPP</span>
+            <input type="checkbox" id="alertaMopp" checked>
+        </div>
+
+        <div class="item-config">
+            <span>Manutenção</span>
+            <input type="checkbox" id="alertaManutencao" checked>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>🎨 Aparência</h2>
+
+        <div class="item-config">
+            <span>Modo Escuro</span>
+            <input type="checkbox" id="temaEscuro" checked>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>💾 Dados</h2>
+
+        <div class="item-config" id="btnExportar">
+            <span>Exportar Backup</span>
+            <span>›</span>
+        </div>
+
+        <div class="item-config" id="btnImportar">
+            <span>Importar Backup</span>
+            <span>›</span>
+        </div>
+
+    </div>
+    <button id="btnSalvarConfiguracoes">
+    💾 Salvar Configurações
+</button>
+
+    <div class="card">
+
+        <h2>ℹ️ Sobre</h2>
+
+        <p>Motorista Plus</p>
+
+        <small>Versão 2.0</small>
+
+    </div>
+
+</main>
+<div id="modalSenha" class="modal">
+
+    <div class="modal-content">
+
+        <h2>🔑 Alterar Senha</h2>
+
+        <input
+            type="password"
+            id="senhaAtual"
+            placeholder="Senha atual">
+
+        <input
+            type="password"
+            id="novaSenha"
+            placeholder="Nova senha">
+
+        <input
+            type="password"
+            id="confirmarSenha"
+            placeholder="Confirmar nova senha">
+
+        <div class="botoesModal">
+
+            <button id="cancelarSenha">
+                Cancelar
+            </button>
+
+            <button id="salvarSenha">
+                Salvar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+<div id="modalEmail" class="modal">
+
+    <div class="modal-content">
+
+        <h2>📧 Alterar E-mail</h2>
+
+        <input
+            type="email"
+            id="novoEmail"
+            placeholder="Novo e-mail">
+
+        <input
+            type="password"
+            id="senhaEmail"
+            placeholder="Digite sua senha">
+
+        <div class="botoesModal">
+
+            <button id="cancelarEmail">
+                Cancelar
+            </button>
+
+            <button id="salvarEmail">
+                Salvar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="js/configuracoes.js"></script>
+
+</body>
+
+</html>

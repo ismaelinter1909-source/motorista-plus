@@ -8,6 +8,9 @@ export function iniciarMenu() {
 
     const menu = document.getElementById("menuLateral");
     const abrirMenu = document.getElementById("abrirMenu");
+    const logoutBtn = document.getElementById("logoutBtnMenu");
+
+    if (!menu || !abrirMenu) return;
 
     abrirMenu.onclick = () => {
 
@@ -15,14 +18,19 @@ export function iniciarMenu() {
 
     };
 
-    document.getElementById("logoutBtnMenu").onclick = async () => {
+    if (logoutBtn) {
 
-        await signOut(auth);
+        logoutBtn.onclick = async () => {
 
-        window.location.href = "login.html";
+            await signOut(auth);
 
-    };
-      destacarPaginaAtual();
+            window.location.href = "login.html";
+
+        };
+
+    }
+
+    destacarPaginaAtual();
 
     fecharMenuAoClicar();
 

@@ -1,0 +1,93 @@
+body{
+
+    background:#0f141b;
+    color:white;
+    font-family:Arial, Helvetica, sans-serif;
+
+}
+
+header{
+
+    text-align:center;
+    padding:20px;
+
+}
+
+main{
+
+    max-width:700px;
+    margin:auto;
+    padding:20px;
+
+}
+
+#listaVeiculos{
+
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+
+}
+
+.cardVeiculo{
+
+    background:#1b222d;
+
+    border-radius:12px;
+
+    padding:15px;
+
+    border:1px solid #2b3442;
+
+}
+
+.cardVeiculo h2{
+
+    color:#f39220;
+
+}
+
+#btnNovoVeiculo{
+
+    width:85%;
+    max-width:320px;
+    height:58px;
+    border-radius:14px;
+    font-size:18px;
+    background:#f39220;
+    color:#fff;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+
+}
+
+#btnNovoVeiculo:hover{
+
+    transform:translateY(-2px);
+
+    background:#ff9d21;
+
+}
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+
+.modal.active{
+    display:flex;
+}
+
+.modal-content{
+    width:90%;
+    max-width:420px;
+    background:#1b2028;
+    border-radius:16px;
+    padding:20px;
+}

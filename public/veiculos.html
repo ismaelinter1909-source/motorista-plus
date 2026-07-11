@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Meus Veículos</title>
+
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/veiculos.css">
+
+</head>
+
+<body>
+
+<header>
+
+<h1>🚗 Meus Veículos</h1>
+
+</header>
+
+<main>
+
+<div id="listaVeiculos">
+
+</div>
+
+<button id="btnNovoVeiculo">
+
+➕ Adicionar Veículo
+
+</button>
+
+</main>
+<div id="modalVeiculo" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Novo Veículo</h2>
+        <input type="text" id="nomeVeiculo" placeholder="Nome do veículo">
+        
+        <input type="text" id="marcaVeiculo" placeholder="Marca">
+
+        <input type="text" id="modeloVeiculo" placeholder="Modelo">
+
+        <input type="number" id="anoVeiculo" placeholder="Ano">
+
+        <select id="tipoVeiculo">
+
+            <option value="">Tipo do veículo</option>
+
+            <option>Hatch</option>
+            <option>Sedan</option>
+            <option>SUV</option>
+            <option>Picape</option>
+            <option>Van</option>
+            <option>3/4</option>
+            <option>Cavalo 4x2</option>
+            <option>Cavalo 6x2</option>
+            <option>Cavalo 6x4</option>
+            <option>Bitrem</option>
+            <option>VAN</option>
+            <option>VUC</option>
+            <option>Truck</option>
+            <option>BiTruck</option>
+            <option>Toco</option>
+            <option>3/4</option>
+            <option>Onibus</option>
+            <option>Bitrem</option>
+            <option>Carreta LS</option>
+            <option>Carreta LS 4 Eixos</option>
+            <option>Carreta Sider</option>
+            <option>Carreta Sider 4 Eixos</option>
+            <option>Rodotrem</option>
+            <option>Vanderleia</option>
+            <option>Vanderleia Sider</option>
+            <option>Tanque LS</option>
+            <option>Tanque Vanderleia</option>
+            <option>Tanque Rodotrem</option>
+            <option>Tanque 4 Eixos</option>
+
+        </select>
+
+        <input type="text" id="placaVeiculo" placeholder="Placa">
+
+        <select id="combustivel">
+
+            <option>Gasolina</option>
+            <option>Etanol</option>
+            <option>Flex</option>
+            <option>Diesel</option>
+            <option>GNV</option>
+            <option>Elétrico</option>
+
+        </select>
+
+        <input type="number" id="tanque" placeholder="Capacidade do tanque (L)">
+
+        <input type="number" id="consumo" placeholder="Consumo médio">
+
+        <div class="botoesModal">
+
+            <button id="salvarVeiculo">Salvar</button>
+
+            <button id="cancelarVeiculo">Cancelar</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="js/veiculos.js"></script>
+
+</body>
+
+</html>
