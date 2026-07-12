@@ -36,6 +36,7 @@
       font-weight: 700;
       cursor: pointer;
       transition: .25s;
+      
     }
 
     #abrirMenu:hover {
@@ -44,18 +45,21 @@
     }
 
     /* Menu lateral */
-    .menu-lateral {
-      position: fixed;
-      top: 0;
-      left: -330px;
-      width: 300px;
-      height: 100vh;
-      z-index: 9998;
-      background: var(--bg2);
-      padding: 20px;
-      border-right: 1px solid var(--outline);
-      transition: .3s;
-    }
+    .menu-lateral{
+    position: fixed;
+    top: 0;
+    left: -330px;
+    width: 300px;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background: var(--bg2);
+    border-right: 1px solid var(--outline);
+
+    transition: .3s;
+}
 
     .menu-lateral.active {
       left: 0
@@ -252,21 +256,19 @@
     }
 
     /* Botão sair */
-    #logoutBtn {
-      margin: 40px auto;
-      background: #d94343;
-      padding: 14px 20px;
-      border-radius: 12px;
-      color: #fff;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      transition: .25s;
-      display: block;
-      width: 220px;
-    }
+    #logoutBtnMenu {
+    background:#dc3545;
+    color:#fff;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    font-weight:600;
+    cursor:pointer;
+    transform: translateY(-20px);
+    margin-bottom:40px;
+}
 
-    #logoutBtn:hover {
+    #logoutBtnMenu:hover {
       background: #b93636;
       transform: scale(1.05)
     }
@@ -294,9 +296,12 @@
 }
 
 .menu-links{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    overflow-y: auto;
+    padding: 0 20px 20px;
 }
 
 .menu-links a,
