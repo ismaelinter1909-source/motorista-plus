@@ -27,7 +27,7 @@
       padding:20px;
       background:
         linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.85) 100%),
-        url("img/Logo.Motorista-Plus.png") center/cover no-repeat;
+        url("../img/Logo-Motorista-Plus.png") center/cover no-repeat;
     }
 
     .brand{
