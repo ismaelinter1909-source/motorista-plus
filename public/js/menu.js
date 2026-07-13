@@ -14,9 +14,11 @@ export function iniciarMenu() {
 
     abrirMenu.onclick = () => {
 
-        menu.classList.toggle("active");
+    menuLateral.classList.toggle("active");
 
-    };
+    document.body.classList.toggle("menu-open");
+
+};
 
     if (logoutBtn) {
 

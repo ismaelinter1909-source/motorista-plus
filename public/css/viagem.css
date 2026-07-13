@@ -187,3 +187,109 @@ thead th {
 .signature-line {
     margin-top: 28px
 }
+/* ===========================
+   MODAL
+=========================== */
+
+.modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    z-index:9999;
+}
+
+.modal-card{
+
+    width:min(95%,500px);
+
+    background:#161c23;
+
+    border:1px solid #2b3a49;
+
+    border-radius:18px;
+
+    padding:25px;
+
+    animation:modal .25s ease;
+
+}
+
+@keyframes modal{
+
+    from{
+        opacity:0;
+        transform:translateY(-20px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+.modal-card h2{
+
+    color:#f39220;
+
+    margin-bottom:20px;
+
+    text-align:center;
+
+}
+
+.modal-card label{
+
+    display:block;
+
+    margin-top:15px;
+
+    margin-bottom:6px;
+
+    font-weight:600;
+
+}
+
+.modal-card input,
+.modal-card textarea{
+
+    width:100%;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    border:1px solid #2b3a49;
+
+    background:#10161d;
+
+    color:#fff;
+
+    font-size:15px;
+
+}
+
+.modal-card textarea{
+
+    resize:vertical;
+
+    min-height:90px;
+
+}
+
+.modal-card .actions{
+
+    margin-top:25px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+}

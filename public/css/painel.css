@@ -58,6 +58,9 @@
     background: var(--bg2);
     border-right: 1px solid var(--outline);
 
+    z-index: 99999;
+    overflow: hidden;
+
     transition: .3s;
 }
 
@@ -296,11 +299,13 @@
 }
 
 .menu-links{
+    flex: 1;
+    overflow-y: auto;
+
     display: flex;
     flex-direction: column;
     gap: 8px;
 
-    overflow-y: auto;
     padding: 0 20px 20px;
 }
 
@@ -449,6 +454,8 @@
     margin:30px auto;
 
     padding:20px;
+    position: relative;
+    z-index: auto;
 
 }
 
@@ -555,4 +562,7 @@
 
     background:#252f3c;
 
+}
+body.menu-open{
+    overflow: hidden;
 }

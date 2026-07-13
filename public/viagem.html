@@ -17,14 +17,67 @@
 <header>
   <h1>Planilha de Viagem — Motorista<span class="plus">Plus</span></h1>
 </header>
-
-<main>
-  <!-- Dados do motorista -->
+<!-- Dados do motorista -->
   <section class="card">
     <h2>Dados do Motorista</h2>
     <div id="dadosUsuarioCard" class="small-muted">Carregando...</div>
   </section>
 
+<section class="card">
+
+    <h2>Controle da Viagem</h2>
+
+    <div id="statusViagem" class="resumo-box">
+        Nenhuma viagem em andamento.
+    </div>
+
+    <div id="acoesViagem" class="actions">
+
+        <button id="btnIniciarViagem" class="btn">
+            ▶ Iniciar Nova Viagem
+        </button>
+
+        <button
+            id="btnEncerrarViagem"
+            class="btn btn-red"
+            style="display:none">
+
+            🛑 Encerrar Viagem
+
+        </button>
+
+    </div>
+
+</section>
+<section
+    id="resumoFinal"
+    class="card"
+    style="display:none;">
+
+    <h2>📋 Resumo da Viagem</h2>
+
+    <div id="resumoFinalConteudo"></div>
+
+    <div class="actions">
+      
+
+        <button
+            id="gerarPDFBtn"
+            class="btn">
+
+            📄 Gerar Relatório
+
+        </button>
+        <p id="avisoRelatorio" class="note" style="display:none;">
+    ⚠ Gere o Relatório de Fechamento antes de iniciar uma nova viagem.
+</p>
+
+        
+    </div>
+
+</section>
+<main>
+  
   <!-- Viagem -->
   <section class="card">
     <h2>Viagem</h2>
@@ -51,7 +104,7 @@
       <button id="salvarViagemBtn" class="btn">Salvar Viagem</button>
       <button id="limparViagemBtn" class="btn btn-red">Limpar Viagem</button>
     </div>
-    <div class="note">Os dados de viagem e resumo ficam salvos no documento <code>usuarios/{uid}/viagemAtual/dados</code>.</div>
+    
   </section>
 
   <!-- Dívidas anteriores & resumo de diárias -->
@@ -97,13 +150,67 @@
   <!-- PDF e ações finais -->
   <section class="card" style="text-align:center">
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button id="gerarPDFBtn" class="btn">Gerar PDF Completo</button>
+      
       <button id="exportCsvBtn" class="btn btn-ghost">Exportar CSV (Diárias)</button>
     </div>
     <div class="note">O PDF inclui resumo, folgas, tabela de folgas, diárias, tabela de compensação e uma linha para assinatura manual.</div>
   </section>
 
 </main>
+<!-- Modal Nova/Encerrar Viagem -->
+<div id="modalViagem" class="modal-overlay" style="display:none;">
+
+    <div class="modal-card">
+
+        <h2 id="tituloModal">
+            🚛 Nova Viagem
+        </h2>
+
+        <label>Data</label>
+        <input
+            type="date"
+            id="modalData"
+            readonly>
+
+        <label id="labelKm">
+            KM Inicial
+        </label>
+
+        <input
+            type="number"
+            id="modalKm"
+            placeholder="Informe o KM">
+
+        <label>Observações (opcional)</label>
+
+        <textarea
+            id="modalObs"
+            rows="4"
+            placeholder="Digite alguma observação..."></textarea>
+
+        <div class="actions">
+
+            <button
+                class="btn btn-red"
+                id="btnCancelarModal">
+
+                Cancelar
+
+            </button>
+
+            <button
+                class="btn"
+                id="btnConfirmarModal">
+
+                Confirmar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
 <footer style="text-align:center;padding:12px;color:var(--muted)">© 2025 Motorista Plus</footer>
 

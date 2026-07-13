@@ -25,6 +25,8 @@ const $ = id => document.getElementById(id);
 let uid = null;
 let perfil = null;
 let diarias = [];
+let viagemAtiva = false;
+let acaoModal = "";
 
 /* ========= Datas ========= */
 const toISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -34,7 +36,7 @@ const fmtBR = iso => iso ? iso.split("-").reverse().join("/") : "";
 /* ========= Folgas ========= */
 function calcularFolgas(dias){
   if(dias<=7) return 1;
-  if(dias<=14) return 2;
+  if(dias<=15) return 2;
   if(dias<=21) return 3;
   if(dias<=30) return 4;
   if(dias<=37) return 5;
@@ -143,6 +145,220 @@ $('limparViagemBtn').onclick = async ()=>{
     inicio:"",fim:"",kmInicio:null,kmFim:null
   });
   location.reload();
+};
+
+async function atualizarStatusViagem() {
+
+    const snap = await getDoc(viagemRef());
+
+    if (!snap.exists()) {
+
+        mostrarSemViagem();
+        return;
+
+    }
+
+    const viagem = snap.data();
+
+    if (viagem.status === "ativa") {
+
+        viagemAtiva = true;
+
+        $("resumoFinal").style.display = "none";
+
+        $("statusViagem").innerHTML = `
+            <strong>🟢 Viagem em andamento</strong><br>
+            Início: ${fmtBR(viagem.inicio)}
+        `;
+
+        $("btnIniciarViagem").style.display = "none";
+        $("btnEncerrarViagem").style.display = "block";
+
+    }
+    else if (viagem.status === "encerrada") {
+
+        mostrarResumoFinal(viagem);
+
+    }
+    else {
+
+        mostrarSemViagem();
+
+    }
+
+}
+
+function mostrarSemViagem(){
+
+    viagemAtiva = false;
+
+    $("statusViagem").innerHTML =
+        "Nenhuma viagem em andamento.";
+
+    $("btnIniciarViagem").style.display = "block";
+    $("btnEncerrarViagem").style.display = "none";
+
+}
+
+$("btnIniciarViagem").onclick = ()=>{
+
+    abrirModal("iniciar");
+
+};
+function mostrarResumoFinal(viagem){
+
+    viagemAtiva = false;
+
+    $("btnIniciarViagem").style.display = "block";
+    $("btnEncerrarViagem").style.display = "none";
+
+    $("statusViagem").innerHTML =
+        "✅ Última viagem encerrada.";
+
+    $("resumoFinal").style.display = "block";
+
+    const info = calcularRetorno(
+        viagem.inicio,
+        viagem.fim
+    );
+
+    const kmRodados =
+        viagem.kmFim - viagem.kmInicio;
+
+    $("resumoFinalConteudo").innerHTML = `
+
+        <h3>🚛 Resumo da Última Viagem</h3>
+
+        <hr>
+
+        <p><strong>Período:</strong>
+        ${fmtBR(viagem.inicio)}
+        até
+        ${fmtBR(viagem.fim)}
+        </p>
+
+        <p><strong>KM Inicial:</strong>
+        ${viagem.kmInicio}</p>
+
+        <p><strong>KM Final:</strong>
+        ${viagem.kmFim}</p>
+
+        <p><strong>KM Rodados:</strong>
+        ${kmRodados}</p>
+
+        <hr>
+
+        <p><strong>Dias Viajados:</strong>
+        ${info.dias}</p>
+
+        <p><strong>Folgas:</strong>
+        ${info.folgas}</p>
+
+        <p><strong>Retorno:</strong>
+        ${fmtBR(info.retornoISO)}</p>
+
+    `;
+    if (viagem.relatorioGerado) {
+
+    $("btnIniciarViagem").disabled = false;
+    $("btnIniciarViagem").textContent = "▶ Iniciar Nova Viagem";
+
+} else {
+
+    $("btnIniciarViagem").disabled = true;
+    $("btnIniciarViagem").textContent = "📄 Gere o Relatório para liberar uma nova viagem";
+
+}
+
+}
+function abrirModal(tipo){
+
+    acaoModal = tipo;
+
+    const hoje = toISO(new Date());
+
+    $("modalData").value = hoje;
+    $("modalKm").value = "";
+    $("modalObs").value = "";
+
+    if(tipo === "iniciar"){
+
+        $("tituloModal").textContent = "🚛 Nova Viagem";
+        $("labelKm").textContent = "KM Inicial";
+
+    }else{
+
+        $("tituloModal").textContent = "🛑 Encerrar Viagem";
+        $("labelKm").textContent = "KM Final";
+
+    }
+
+    $("modalViagem").style.display = "flex";
+
+}
+$("btnConfirmarModal").onclick = async () => {
+
+    const km = Number($("modalKm").value);
+
+    if (!km) {
+        alert("Informe o KM.");
+        return;
+    }
+
+    const data = $("modalData").value;
+
+    if (acaoModal === "iniciar") {
+
+        await setDoc(viagemRef(), {
+            status: "ativa",
+            inicio: data,
+            fim: "",
+            kmInicio: km,
+            kmFim: null,
+            atualizadoEm: serverTimestamp()
+        }, { merge: true });
+
+    } else {
+
+        const snap = await getDoc(viagemRef());
+
+        if (!snap.exists()) return;
+
+        const viagem = snap.data();
+
+        await setDoc(viagemRef(), {
+            status: "encerrada",
+            inicio: viagem.inicio,
+            fim: data,
+            kmInicio: viagem.kmInicio,
+            kmFim: km,
+            atualizadoEm: serverTimestamp()
+        }, { merge: true });
+
+    }
+
+    fecharModal();
+
+    await carregarViagem();
+
+    await atualizarStatusViagem();
+
+};
+
+function fecharModal(){
+
+    $("modalViagem").style.display = "none";
+
+}
+$("btnEncerrarViagem").onclick = ()=>{
+
+    abrirModal("encerrar");
+
+};
+$("btnCancelarModal").onclick = () => {
+
+    fecharModal();
+
 };
 
 /* ========= SOMAR AUTOMATICAMENTE TODAS AS DIÁRIAS ========= */
@@ -358,6 +574,18 @@ $('gerarPDFBtn').onclick = async ()=>{
   pdf.text($('resumoDiariasUI').textContent,40,y);
 
   pdf.save("planilha_viagem.pdf");
+
+  await setDoc(
+    viagemRef(),
+    {
+        relatorioGerado: true
+    },
+    { merge: true }
+);
+
+await atualizarStatusViagem();
+
+alert("Relatório gerado com sucesso!\nAgora você pode iniciar uma nova viagem.");
 };
 
 /* ========= Export CSV ========= */
@@ -381,4 +609,5 @@ onAuthStateChanged(auth, async user=>{
   await carregarPerfil();
   await carregarViagem();
   await carregarDiarias();
+  await atualizarStatusViagem();
 });
