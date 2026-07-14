@@ -23,7 +23,7 @@
     <div id="dadosUsuarioCard" class="small-muted">Carregando...</div>
   </section>
 
-<section class="card">
+<section class="card" id="cardControleViagem">
 
     <h2>Controle da Viagem</h2>
 
@@ -79,7 +79,7 @@
 <main>
   
   <!-- Viagem -->
-  <section class="card">
+  <section class="card" id="cardViagem">
     <h2>Viagem</h2>
 
     <div class="grid4">
@@ -108,7 +108,7 @@
   </section>
 
   <!-- Dívidas anteriores & resumo de diárias -->
-  <section class="card">
+  <section class="card" id="cardResumoDiarias">
     <h2>Dívidas Anteriores & Resumo de Diárias</h2>
 
     <div class="grid4">
@@ -130,7 +130,7 @@
   </section>
 
   <!-- Diárias (coleção usuarios/{uid}/diarias) -->
-  <section class="card">
+  <section class="card" id="cardDiarias">
     <h2>Diárias (detalhes)</h2>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -151,10 +151,7 @@
   <section class="card" style="text-align:center">
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       
-      <button id="exportCsvBtn" class="btn btn-ghost">Exportar CSV (Diárias)</button>
-    </div>
-    <div class="note">O PDF inclui resumo, folgas, tabela de folgas, diárias, tabela de compensação e uma linha para assinatura manual.</div>
-  </section>
+     
 
 </main>
 <!-- Modal Nova/Encerrar Viagem -->

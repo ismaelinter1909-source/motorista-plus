@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gastos & Bônus — Motorista Plus</title>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="css/gastos.css">
+  <link rel="stylesheet" href="css/global.css">
+</head>
+ 
+  
+
+<body>
+
+  
+
+  <header>
+    <h1>Gastos & Bônus — Motorista<span class="plus">Plus</span></h1>
+  </header>
+
+  <main class="wrap">
+
+    <!-- Dados -->
+    <section class="card">
+      <h2>Dados do Motorista</h2>
+      <div class="dados" id="dadosUsuario">Carregando...</div>
+    </section>
+
+    <!-- Diárias -->
+    <section class="card">
+     
+    <!-- Gastos / Vales -->
+    <div class="grid2">
+      <!-- Gastos -->
+      <section class="card">
+        <h2>Registrar Gastos</h2>
+        <label>Data</label><input type="date" id="gastoDate">
+        <label>Descrição</label><input id="gastoMotivo">
+        <label>Local</label><input id="gastoLocal">
+        <label>Valor (R$)</label><input type="number" step="0.01" id="gastoValor">
+    
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="addGasto" class="btn btn-green" style="flex:1">Salvar</button>
+          <button id="cancelarEditGasto" class="btn btn-ghost" style="flex:1;display:none">Cancelar edição</button>
+        </div>
+
+        <h3 style="margin-top:12px;color:var(--primary)">Lista de Gastos</h3>
+        <ul id="listaGastos"></ul>
+      </section>
+
+      
+
+    <!-- Gráfico -->
+    <section class="card" style="text-align:center">
+      <h2>Resumo Visual</h2>
+      <canvas id="chartResumo" width="420" height="280"></canvas>
+      <p id="saldoTexto" style="margin-top:8px;font-weight:700"></p>
+    </section>
+
+    <!-- Ações -->
+    <section class="card" style="text-align:center">
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button id="gerarPDF" class="btn btn-green" style="min-width:180px">Gerar PDF Compacto</button>
+        <button id="clearAll" class="btn btn-red" style="min-width:180px">Apagar TODOS</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>© 2025 Motorista Plus</footer>
+
+ <script type="module" src="js/gastospessoais.js"></script>
+</body>
+
+</html>

@@ -108,24 +108,46 @@ async function carregarPerfil(){
 }
 
 /* ========= Carregar Viagem ========= */
-async function carregarViagem(){
-  const snap = await getDoc(viagemRef());
-  if(!snap.exists()) return;
+async function carregarViagem() {
 
-  const d = snap.data();
-  $('viagemInicio').value = d.inicio || "";
-  $('viagemFim').value = d.fim || "";
-  $('kmInicio').value = d.kmInicio ?? "";
-  $('kmFim').value = d.kmFim ?? "";
-  $('empresaDevia').value = d.empresaDevia ?? 0;
-  $('motoristaDevia').value = d.motoristaDevia ?? 0;
-  $('diariasRecebidas').value = d.diariasRecebidas ?? 0;
-  $('valorDiaria').value = d.valorDiaria ?? 100;
+    const snap = await getDoc(viagemRef());
 
-  preencherDerivadosUI();
-  recalcularResumo();
+    if (!snap.exists()) return;
+
+    const d = snap.data();
+
+    // Dados da viagem
+    $("viagemInicio").value = d.inicio || "";
+    $("viagemFim").value = d.fim || "";
+    $("kmInicio").value = d.kmInicio ?? "";
+    $("kmFim").value = d.kmFim ?? "";
+
+    // Resumo de diárias
+    $("empresaDevia").value = d.empresaDevia ?? 0;
+    $("motoristaDevia").value = d.motoristaDevia ?? 0;
+    $("diariasRecebidas").value = d.diariasRecebidas ?? 0;
+    $("valorDiaria").value = d.valorDiaria ?? 100;
+
+    // Se existir uma viagem ativa
+    if (d.status === "ativa") {
+
+        preencherDerivadosUI();
+        recalcularResumo();
+
+    }
+    // Se a viagem estiver encerrada
+    else {
+
+        $("diasViajados").value = "";
+        $("diasFolga").value = "";
+        $("retornoFolga").value = "";
+        $("kmRodados").value = "";
+
+        $("resumoViagem").textContent = "Resumo: —";
+
+    }
+
 }
-
 /* ========= Salvar viagem ========= */
 $('salvarViagemBtn').onclick = async ()=>{
   await setDoc(viagemRef(),{
@@ -174,6 +196,12 @@ async function atualizarStatusViagem() {
         $("btnIniciarViagem").style.display = "none";
         $("btnEncerrarViagem").style.display = "block";
 
+        $("cardViagem").style.display = "block";
+        $("cardResumoDiarias").style.display = "block";
+        $("cardDiarias").style.display = "block";
+        $("btnEncerrarViagem").style.display = "block";
+
+    
     }
     else if (viagem.status === "encerrada") {
 
@@ -185,9 +213,8 @@ async function atualizarStatusViagem() {
         mostrarSemViagem();
 
     }
-
+    
 }
-
 function mostrarSemViagem(){
 
     viagemAtiva = false;
@@ -198,6 +225,11 @@ function mostrarSemViagem(){
     $("btnIniciarViagem").style.display = "block";
     $("btnEncerrarViagem").style.display = "none";
 
+    $("resumoFinal").style.display = "none";
+
+    $("cardViagem").style.display = "none";
+    $("cardResumoDiarias").style.display = "none";
+    $("cardDiarias").style.display = "none";
 }
 
 $("btnIniciarViagem").onclick = ()=>{
@@ -205,6 +237,8 @@ $("btnIniciarViagem").onclick = ()=>{
     abrirModal("iniciar");
 
 };
+
+
 function mostrarResumoFinal(viagem){
 
     viagemAtiva = false;
@@ -216,6 +250,9 @@ function mostrarResumoFinal(viagem){
         "✅ Última viagem encerrada.";
 
     $("resumoFinal").style.display = "block";
+    $("cardViagem").style.display = "none";
+    $("cardResumoDiarias").style.display = "none";
+    $("cardDiarias").style.display = "none";
 
     const info = calcularRetorno(
         viagem.inicio,
@@ -253,23 +290,33 @@ function mostrarResumoFinal(viagem){
 
         <p><strong>Folgas:</strong>
         ${info.folgas}</p>
-
+        
         <p><strong>Retorno:</strong>
         ${fmtBR(info.retornoISO)}</p>
 
-    `;
-    if (viagem.relatorioGerado) {
+        <p><strong>Diarias Recebidas:</strong>
+        ${info.diarias}</p>
 
+        <p><strong>Total de Entregas:</strong>
+        ${info.entregas}</p>
+
+
+    `;
+    if (viagem.relatorioGerado === true) {
+
+    $("btnIniciarViagem").style.display = "block";
     $("btnIniciarViagem").disabled = false;
-    $("btnIniciarViagem").textContent = "▶ Iniciar Nova Viagem";
+
+    $("avisoRelatorio").style.display = "none";
 
 } else {
 
+    $("btnIniciarViagem").style.display = "none";
     $("btnIniciarViagem").disabled = true;
-    $("btnIniciarViagem").textContent = "📄 Gere o Relatório para liberar uma nova viagem";
+
+    $("avisoRelatorio").style.display = "block";
 
 }
-
 }
 function abrirModal(tipo){
 
@@ -309,14 +356,43 @@ $("btnConfirmarModal").onclick = async () => {
 
     if (acaoModal === "iniciar") {
 
+      const snapDiarias = await getDocs(
+    collection(db, "usuarios", uid, "diarias")
+      );
+
+       for (const docSnap of snapDiarias.docs) {
+          await deleteDoc(docSnap.ref);
+      }
+
+      diarias = [];
+      renderDiarias();
+
+      $("empresaDevia").value = 0;
+      $("motoristaDevia").value = 0;
+      $("diariasRecebidas").value = 0;
+      $("valorDiaria").value = 100;
+
+      $("resumoDiariasUI").textContent = "Sem pendências.";
+     
         await setDoc(viagemRef(), {
             status: "ativa",
             inicio: data,
             fim: "",
             kmInicio: km,
             kmFim: null,
-            atualizadoEm: serverTimestamp()
-        }, { merge: true });
+
+            empresaDevia: 0,
+            motoristaDevia: 0,
+            diariasRecebidas: 0,
+            valorDiaria: 100,
+
+            resumoDiarias: {},
+
+            relatorioGerado: false,
+
+             atualizadoEm: serverTimestamp()
+
+         }, { merge: true });
 
     } else {
 
@@ -332,6 +408,7 @@ $("btnConfirmarModal").onclick = async () => {
             fim: data,
             kmInicio: viagem.kmInicio,
             kmFim: km,
+            relatorioGerado: false,
             atualizadoEm: serverTimestamp()
         }, { merge: true });
 
@@ -381,6 +458,31 @@ async function carregarDiarias(){
     diariasRecebidas: totalRecebidas,
     atualizadoResumoEm: serverTimestamp()
   },{merge:true});
+}
+
+async function atualizarEstruturaViagem() {
+
+    const snap = await getDoc(viagemRef());
+
+    if (!snap.exists()) return;
+
+    const viagem = snap.data();
+
+    const atualizacao = {};
+
+    if (viagem.relatorioGerado === undefined)
+        atualizacao.relatorioGerado = false;
+
+    if (viagem.versaoRelatorio === undefined)
+        atualizacao.versaoRelatorio = "2.0";
+
+    if (viagem.numeroRelatorio === undefined)
+        atualizacao.numeroRelatorio = "";
+
+    if (Object.keys(atualizacao).length > 0) {
+        await setDoc(viagemRef(), atualizacao, { merge: true });
+    }
+
 }
 
 /* ========= Render tabela ========= */
@@ -491,6 +593,8 @@ $('gerarPDFBtn').onclick = async ()=>{
 
   // Garantir soma automática antes do PDF
   await carregarDiarias();
+  const viagemSnap = await getDoc(viagemRef());
+  const viagem = viagemSnap.data();
   const resumo = recalcularResumo();
 
   const { jsPDF } = window.jspdf;
@@ -508,13 +612,13 @@ $('gerarPDFBtn').onclick = async ()=>{
     startY:y,
     head:[["Início","Fim","Folgas","Retorno","KM Início","KM Fim","Rodado"]],
     body:[[
-      fmtBR($('viagemInicio').value),
-      fmtBR($('viagemFim').value),
+      fmtBR(viagem.inicio),
+      fmtBR(viagem.fim),
       $('diasFolga').value,
       $('retornoFolga').value,
-      $('kmInicio').value,
-      $('kmFim').value,
-      $('kmRodados').value
+      viagem.kmInicio,
+      viagem.kmFim,
+      viagem.kmFim - viagem.kmInicio
     ]],
     margin:{left:40,right:40},
     headStyles:{ fillColor:[243,146,32] } // LARANJA OFICIAL
@@ -583,29 +687,21 @@ $('gerarPDFBtn').onclick = async ()=>{
     { merge: true }
 );
 
+const snap = await getDoc(viagemRef());
+
 await atualizarStatusViagem();
 
 alert("Relatório gerado com sucesso!\nAgora você pode iniciar uma nova viagem.");
 };
 
-/* ========= Export CSV ========= */
-$('exportCsvBtn').onclick = ()=>{
-  let csv = "data;qtd;valor\n";
-  diarias.forEach(d=>{
-    csv += `${d.data};${d.qtd};${(d.qtd * $('valorDiaria').value).toFixed(2)}\n`;
-  });
 
-  const blob = new Blob([csv],{type:"text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href=url; a.download="diarias.csv"; a.click();
-  URL.revokeObjectURL(url);
-};
 
 /* ========= Início ========= */
 onAuthStateChanged(auth, async user=>{
   if(!user){location.href="login.html";return;}
   uid = user.uid;
+  await atualizarEstruturaViagem();
+
   await carregarPerfil();
   await carregarViagem();
   await carregarDiarias();
