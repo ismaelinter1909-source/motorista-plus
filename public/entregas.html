@@ -29,43 +29,29 @@
       <div id="dadosUsuarioCard">Carregando...</div>
     </section>
 
-    <section class="card">
-      <h2>Registrar Entrega</h2>
+   <section class="card">
 
-      <div class="grid2">
-        <div><label>Data</label><input type="date" id="deliveryDate"></div>
-        <div><label>Cliente</label><input type="text" id="clientName"></div>
-        <div><label>Origem</label><input type="text" id="origin"></div>
-        <div><label>Destino</label><input type="text" id="destination"></div>
-        <div><label>KM Inicial</label><input type="number" id="initialKm"></div>
-        <div><label>KM Final</label><input type="number" id="finalKm"></div>
-        <div><label>Placa</label><input type="text" id="implementPlate"></div>
-        <div><label>Produto</label><input type="text" id="product"></div>
-        <div><label>Peso (kg)</label><input type="number" id="weight" step="0.01"></div>
-      </div>
+    <h2>📦 Entregas</h2>
 
-      <div class="row" style="margin-top:10px">
-        <button id="salvarEntrega" class="btn-green btn" style="flex:1">Salvar</button>
-        <button id="cancelarEdicao" class="btn-ghost" style="flex:1;display:none">Cancelar edição</button>
-        <button id="apagarTodos" class="btn-red btn" style="flex:1">Apagar TODOS</button>
-      </div>
+    <div class="actions">
 
-      <p id="statusEdicao" class="tag"></p>
-    </section>
+        <button
+            id="btnNovaEntrega"
+            class="btn">
 
-    <section class="card">
-      <h2>Filtro de Datas</h2>
+            ➕ Nova Entrega
 
-      <div class="grid2">
-        <div><label>Início</label><input type="date" id="filterStart"></div>
-        <div><label>Fim</label><input type="date" id="filterEnd"></div>
-      </div>
+        </button>
 
-      <div class="row" style="margin-top:10px">
-        <button id="gerarPDFFiltro" class="btn-green btn" style="flex:1">Gerar PDF do Período</button>
-        <button id="gerarPDFCompleto" class="btn-green btn" style="flex:1">Gerar PDF Completo</button>
-      </div>
-    </section>
+    </div>
+
+    <p class="note">
+        Clique em "Nova Entrega" para registrar uma nova carga.
+    </p>
+
+</section>
+
+    
 
     <section class="card">
       <h2>Entregas Registradas</h2>
@@ -73,6 +59,79 @@
     </section>
 
   </main>
+  <div id="modalEntrega" class="modal-overlay" style="display:none;">
+
+    <div class="modal-card">
+
+        <h2>📦 Nova Entrega</h2>
+
+        <div class="grid2">
+
+            <div>
+                <label>Data</label>
+                <input type="date" id="deliveryDate">
+            </div>
+
+            <div>
+                <label>Cliente</label>
+                <input type="text" id="clientName">
+            </div>
+
+            <div>
+                <label>Origem</label>
+                <input type="text" id="origin">
+            </div>
+
+            <div>
+                <label>Destino</label>
+                <input type="text" id="destination">
+            </div>
+
+            <div>
+                <label>KM Inicial</label>
+                <input type="number" id="initialKm">
+            </div>
+
+            <div>
+                <label>KM Final</label>
+                <input type="number" id="finalKm">
+            </div>
+
+            <div>
+                <label>Produto</label>
+                <input type="text" id="product">
+            </div>
+
+            <div>
+                <label>Peso (kg)</label>
+                <input type="number" id="weight">
+            </div>
+
+        </div>
+
+        <div class="actions">
+
+            <button
+                id="cancelarEntrega"
+                class="btn btn-red">
+
+                Cancelar
+
+            </button>
+
+            <button
+                id="salvarEntrega"
+                class="btn">
+
+                Salvar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
   <footer>© 2025 Motorista Plus</footer>
 

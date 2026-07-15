@@ -93,10 +93,18 @@ function preencherDerivadosUI(){
 /* ========= Firestore caminhos ========= */
 const viagemRef = () => doc(db,"usuarios",uid,"viagemAtual","dados");
 
+ function gerarIdViagem() {
+
+    return `MP-${Date.now()}`;
+
+}
+
 /* ========= Carregar Perfil ========= */
 async function carregarPerfil(){
   const snap = await getDoc(doc(db,"usuarios",uid));
   if(!snap.exists()) return;
+
+ 
 
   perfil = snap.data();
   $('dadosUsuarioCard').innerHTML = `
@@ -106,6 +114,8 @@ async function carregarPerfil(){
     <div><strong>Reboque:</strong> ${perfil.placaReboque}</div>
   `;
 }
+
+
 
 /* ========= Carregar Viagem ========= */
 async function carregarViagem() {
@@ -373,8 +383,9 @@ $("btnConfirmarModal").onclick = async () => {
       $("valorDiaria").value = 100;
 
       $("resumoDiariasUI").textContent = "Sem pendências.";
-     
+        const idViagem = gerarIdViagem();
         await setDoc(viagemRef(), {
+            idViagem,
             status: "ativa",
             inicio: data,
             fim: "",
