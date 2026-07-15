@@ -214,4 +214,48 @@
       color: var(--muted);
       border-top: 1px solid var(--outline)
     }
-  
+
+    .driver-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.item{
+    background:#252a33;
+    border:1px solid #3a404b;
+    border-radius:12px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.item.motorista{
+    grid-column:1 / -1;
+}
+
+.item.email{
+    grid-column:1 / -1;
+}
+
+.titulo{
+    font-size:12px;
+    text-transform:uppercase;
+    font-weight:700;
+    color:#ff9800;
+    margin-bottom:6px;
+}
+
+.valor{
+    color:#fff;
+    font-size:15px;
+    word-break:break-word;
+    line-height:1.4;
+}
+    
+.item.reboque{
+    grid-column:1 / -1;
+}

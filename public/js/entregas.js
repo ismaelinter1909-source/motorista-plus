@@ -1,51 +1,87 @@
 
 /* ===== Firebase CORRIGIDO ===== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { auth, db } from "./firebase.js";
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 import {
-  getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc,
-  collection, addDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  addDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-  authDomain: "motorista-plus-c53f4.firebaseapp.com",
-  projectId: "motorista-plus-c53f4",
-  storageBucket: "motorista-plus-c53f4.appspot.com"
-});
+import {
 
-const auth = getAuth(app);
-const db = getFirestore(app);
+  $,
+  abrirModal,
+  fecharModal,
+  limparFormulario,
+  formatarDataBR,
+  moeda
 
-const $ = (id) => document.getElementById(id);
-
+} from "./utils.js";
+// ============================
+// Variáveis Globais
+// ============================
 let uid = null;
 let perfil = null;
 let entregas = [];
 let editId = null;
 
 
-function fmtBR(d) {
-  const x = new Date(d);
-  return isNaN(x) ? "" :
-    `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
-}
-const asDateOnly = v => !v ? "" : new Date(v).toISOString().slice(0, 10);
+// ============================
+// Utilidades
+// ============================
 
+const asDateOnly = v => !v ? "" : new Date(v).toISOString().slice(0, 10);
+// ============================
+// Perfil
+// ============================
 async function carregarPerfil() {
   const snap = await getDoc(doc(db, "usuarios", uid));
   if (!snap.exists()) return;
 
   perfil = snap.data();
   $('dadosUsuarioCard').innerHTML = `
-        <div class="item"><strong>Motorista</strong>${perfil.nome}</div>
-        <div class="item"><strong>Telefone</strong>${perfil.telefone}</div>
-        <div class="item"><strong>Cavalo</strong>${perfil.placaCavalo}</div>
-        <div class="item"><strong>Reboque</strong>${perfil.placaReboque}</div>
-        <div class="item"><strong>Email</strong>${perfil.email}</div>
-      `;
+    <div class="item motorista">
+        <span class="titulo">👤 Motorista</span>
+        <span class="valor">${perfil.nome}</span>
+    </div>
+
+    <div class="item">
+        <span class="titulo">📞 Telefone</span>
+        <span class="valor">${perfil.telefone}</span>
+    </div>
+
+    <div class="item">
+        <span class="titulo">🚛 Cavalo</span>
+        <span class="valor">${perfil.placaCavalo}</span>
+    </div>
+
+    <div class="item reboque">
+    <span class="titulo">🚚 Reboque</span>
+    <span class="valor">${perfil.placaReboque}</span>
+</div>
+
+    <div class="item email">
+        <span class="titulo">✉️ E-mail</span>
+        <span class="valor">${perfil.email}</span>
+    </div>
+`;
+      $("placaCavalo").textContent = perfil.placaCavalo;
+      $("placaReboque").textContent = perfil.placaReboque;
 }
 
+// ============================
+// Lista de Entregas
+// ============================
 function iniciarStream() {
   const qRef = query(
     collection(db, "usuarios", uid, "entregas"),
@@ -83,7 +119,7 @@ function renderLista() {
   ul.innerHTML = entregas.map(e => `
         <li>
           <div style="flex:1;min-width:260px">
-            <div style="font-weight:700">${fmtBR(e.date)} — ${e.client}</div>
+            <div style="font-weight:700">${formatarDataBR(e.date)} — ${e.client}</div>
             <div class="tag">Origem: ${e.origin} • Destino: ${e.destination}</div>
             <div class="tag">KM: ${e.kmStart} → ${e.kmEnd} (${e.kmPercorrido})</div>
             <div class="tag">🚛 Cavalo: ${e.placaCavalo} <br> 🚚 Reboque: ${e.placaReboque}
@@ -113,7 +149,7 @@ function renderLista() {
         $('weight').value = e.weight;
         editId = id;
 
-        $("modalEntrega").style.display = "flex";
+        abrirModal("modalEntrega");
 
       } else if (act === "del") {
         if (confirm("Excluir esta entrega?")) {
@@ -165,9 +201,20 @@ $('salvarEntrega').onclick = async () => {
     await addDoc(collection(db, "usuarios", uid, "entregas"), registro);
 
   }
-  limparFormularioEntrega();
+  limparFormulario([
+    "deliveryDate",
+    "clientName",
+    "origin",
+    "destination",
+    "initialKm",
+    "finalKm",
+    "product",
+    "weight"
+  ]);
+
   editId = null;
-  $("modalEntrega").style.display = "none";
+
+fecharModal("modalEntrega");
 };
 
 
@@ -179,31 +226,51 @@ const btnCancelar = $("cancelarEntrega");
 if (btnNova && modal && btnCancelar) {
 
   btnNova.onclick = () => {
-    modal.style.display = "flex";
+
+    editId = null;
+
+    limparFormulario([
+      "deliveryDate",
+      "clientName",
+      "origin",
+      "destination",
+      "initialKm",
+      "finalKm",
+      "product",
+      "weight"
+    ]);
+
+    abrirModal("modalEntrega");
+
   };
 
-  btnCancelar.onclick = () => {
-    modal.style.display = "none";
-  };
+ btnCancelar.onclick = () => {
+
+    editId = null;
+
+    limparFormulario([
+        "deliveryDate",
+        "clientName",
+        "origin",
+        "destination",
+        "initialKm",
+        "finalKm",
+        "product",
+        "weight"
+    ]);
+
+    fecharModal("modalEntrega");
+
+};
 
 }
 
-function limparFormularioEntrega() {
-
-  $("deliveryDate").value = "";
-  $("clientName").value = "";
-  $("origin").value = "";
-  $("destination").value = "";
-  $("initialKm").value = "";
-  $("finalKm").value = "";
-  $("product").value = "";
-  $("weight").value = "";
-
-}
-
+// ============================
+// PDF
+// ============================
 function construirLinhasPDF(arr) {
   return arr.map(e => [
-    fmtBR(e.date), e.client, e.origin, e.destination,
+    formatarDataBR(e.date), e.client, e.origin, e.destination,
     e.kmStart, e.kmEnd, e.kmPercorrido, `${e.placaCavalo} / ${e.placaReboque}`,
     e.product, e.weight
   ]);
@@ -231,8 +298,9 @@ async function gerarPDF(lista, titulo = "") {
   docpdf.save("entregas.pdf");
 }
 
-
-
+// ============================
+// Inicialização
+// ============================
 
 onAuthStateChanged(auth, async user => {
   if (!user) return window.location.href = "login.html";

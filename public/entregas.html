@@ -16,56 +16,71 @@
 
 <body>
 
-  
-
   <header>
     <h1>Entregas — Motorista<span class="plus">Plus</span></h1>
   </header>
 
   <main>
 
-    <section class="card">
-      <h2>Dados do Motorista</h2>
-      <div id="dadosUsuarioCard">Carregando...</div>
-    </section>
-
    <section class="card">
 
-    <h2>📦 Entregas</h2>
+    <h2>👤 Dados do Motorista</h2>
 
-    <div class="actions">
+    <div id="dadosUsuarioCard" class="driver-grid">
 
-        <button
-            id="btnNovaEntrega"
-            class="btn">
-
-            ➕ Nova Entrega
-
-        </button>
+        Carregando...
 
     </div>
 
-    <p class="note">
-        Clique em "Nova Entrega" para registrar uma nova carga.
-    </p>
+</section>
 
+   <section class="card">
+
+    <h2>📦 Controle de Entregas</h2>
+    <button
+        id="btnNovaEntrega"
+        class="btn btn-full">
+
+        ➕ Registrar Nova Entrega
+
+    </button>
+
+         <p class="note">
+        Cadastre todas as entregas realizadas durante a viagem.
+    </p>
+    
 </section>
 
     
 
     <section class="card">
-      <h2>Entregas Registradas</h2>
-      <ul id="listaEntregas"></ul>
-    </section>
+
+    <h2>📋 Histórico de Entregas</h2>
+
+    <ul id="listaEntregas"></ul>
+
+</section>
 
   </main>
   <div id="modalEntrega" class="modal-overlay" style="display:none;">
 
     <div class="modal-card">
 
-        <h2>📦 Nova Entrega</h2>
+       <h2 id="tituloModalEntrega">
+        📦 Nova Entrega
+    </h2>
+    <div class="info-veiculo">
 
-        <div class="grid2">
+        🚛 <span id="placaCavalo"></span>
+
+        &nbsp;&nbsp;
+
+        🚚 <span id="placaReboque"></span>
+
+    </div>
+
+    <div class="grid2">
+        
 
             <div>
                 <label>Data</label>
@@ -118,14 +133,13 @@
                 Cancelar
 
             </button>
+<button
+    id="salvarEntrega"
+    class="btn btn-green">
 
-            <button
-                id="salvarEntrega"
-                class="btn">
+    Salvar Entrega
 
-                Salvar
-
-            </button>
+</button>
 
         </div>
 
