@@ -711,6 +711,7 @@ alert("Relatório gerado com sucesso!\nAgora você pode iniciar uma nova viagem.
 onAuthStateChanged(auth, async user=>{
   if(!user){location.href="login.html";return;}
   uid = user.uid;
+
   await atualizarEstruturaViagem();
 
   await carregarPerfil();

@@ -34,6 +34,7 @@ let uid = null;
 let perfil = null;
 let entregas = [];
 let editId = null;
+let viagem = null;
 
 
 // ============================
@@ -77,6 +78,17 @@ async function carregarPerfil() {
 `;
       $("placaCavalo").textContent = perfil.placaCavalo;
       $("placaReboque").textContent = perfil.placaReboque;
+}
+async function carregarViagemAtual() {
+
+    const snap = await getDoc(
+        doc(db, "usuarios", uid, "viagemAtual", "dados")
+    );
+
+    if (snap.exists()) {
+        viagem = snap.data();
+    }
+
 }
 
 // ============================
@@ -177,6 +189,9 @@ $('salvarEntrega').onclick = async () => {
   }
 
   const registro = {
+
+    idViagem: viagem?.idViagem || null,
+
     date,
     client,
     origin,
@@ -184,6 +199,7 @@ $('salvarEntrega').onclick = async () => {
 
     kmStart: initialKm,
     kmEnd: finalKm,
+
     kmPercorrido: finalKm - initialKm,
 
     placaCavalo: perfil.placaCavalo,
@@ -191,8 +207,10 @@ $('salvarEntrega').onclick = async () => {
 
     product,
     weight,
+
     criadoEm: serverTimestamp()
-  };
+
+};
 
   if (editId) {
     await updateDoc(doc(db, "usuarios", uid, "entregas", editId), registro);
@@ -222,6 +240,35 @@ fecharModal("modalEntrega");
 const btnNova = $("btnNovaEntrega");
 const modal = $("modalEntrega");
 const btnCancelar = $("cancelarEntrega");
+
+const btnHistorico = $("btnHistorico");
+const listaEntregas = $("listaEntregas");
+
+let historicoAberto = false;
+
+if (btnHistorico && listaEntregas) {
+
+    btnHistorico.onclick = () => {
+
+        historicoAberto = !historicoAberto;
+
+        if (historicoAberto) {
+
+            listaEntregas.style.display = "block";
+
+            btnHistorico.textContent = "📂 Ocultar Histórico";
+
+        } else {
+
+            listaEntregas.style.display = "none";
+
+            btnHistorico.textContent = "📋 Mostrar Histórico";
+
+        }
+
+    };
+
+}
 
 if (btnNova && modal && btnCancelar) {
 
@@ -266,46 +313,22 @@ if (btnNova && modal && btnCancelar) {
 }
 
 // ============================
-// PDF
-// ============================
-function construirLinhasPDF(arr) {
-  return arr.map(e => [
-    formatarDataBR(e.date), e.client, e.origin, e.destination,
-    e.kmStart, e.kmEnd, e.kmPercorrido, `${e.placaCavalo} / ${e.placaReboque}`,
-    e.product, e.weight
-  ]);
-}
-
-async function gerarPDF(lista, titulo = "") {
-  const { jsPDF } = window.jspdf;
-  const docpdf = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
-
-  docpdf.setFontSize(16);
-  docpdf.text(`Relatório de Entregas — Motorista Plus ${titulo}`, 32, 34);
-
-  docpdf.setFontSize(10);
-  docpdf.text(`Motorista: ${perfil?.nome || ""}`, 32, 50);
-  docpdf.text(`Placas: ${perfil?.placaCavalo || ""} / ${perfil?.placaReboque || ""}`, 260, 50);
-
-  docpdf.autoTable({
-    startY: 70,
-    head: [["Data", "Cliente", "Origem", "Destino", "KM Inicial", "KM Final", "KM Percorrido", "Placa", "Produto", "Peso"]],
-    body: construirLinhasPDF(lista),
-    headStyles: { fillColor: [243, 146, 32] },
-    margin: { left: 32, right: 32 }
-  });
-
-  docpdf.save("entregas.pdf");
-}
-
-// ============================
 // Inicialização
 // ============================
 
 onAuthStateChanged(auth, async user => {
-  if (!user) return window.location.href = "login.html";
-  uid = user.uid;
-  await carregarPerfil();
-  iniciarStream();
-});
 
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    uid = user.uid;
+
+    await carregarPerfil();
+
+    await carregarViagemAtual();
+
+    iniciarStream();
+
+});

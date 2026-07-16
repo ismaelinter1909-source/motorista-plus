@@ -2,8 +2,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, addDoc, deleteDoc,
-  collection, getDocs, query, orderBy, serverTimestamp
+  getFirestore, 
+  doc, 
+  getDoc, 
+  addDoc, 
+  deleteDoc,
+  updateDoc,
+  collection, 
+  getDocs, 
+  query, 
+  orderBy, 
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const app = initializeApp({
@@ -22,6 +31,8 @@ const $ = id => document.getElementById(id);
 let uid = null;
 let perfil = null;
 let abastecimentos = [];
+let viagem = null;
+let editId = null;
 
 /* Converte valores br → número */
 function parseValor(v){
@@ -33,18 +44,50 @@ function parseValor(v){
 }
 
 /* PERFIL */
-async function carregarPerfil(){
-  const snap = await getDoc(doc(db,"usuarios",uid));
-  if(!snap.exists()) return;
-  perfil = snap.data();
+async function carregarPerfil() {
+  const snap = await getDoc(doc(db, "usuarios", uid));
+  if (!snap.exists()) return;
 
-  $("dadosUsuarioCard").innerHTML = `
-    <div><strong>Motorista</strong><br>${perfil.nome}</div>
-    <div><strong>Telefone</strong><br>${perfil.telefone}</div>
-    <div><strong>Cavalo</strong><br>${perfil.placaCavalo}</div>
-    <div><strong>Reboque</strong><br>${perfil.placaReboque}</div>
-    <div><strong>Email</strong><br>${perfil.email}</div>
-  `;
+  perfil = snap.data();
+  $('dadosUsuarioCard').innerHTML = `
+    <div class="item motorista">
+        <span class="titulo">👤 Motorista</span>
+        <span class="valor">${perfil.nome}</span>
+    </div>
+
+    <div class="item">
+        <span class="titulo">📞 Telefone</span>
+        <span class="valor">${perfil.telefone}</span>
+    </div>
+
+    <div class="item">
+        <span class="titulo">🚛 Cavalo</span>
+        <span class="valor">${perfil.placaCavalo}</span>
+    </div>
+
+    <div class="item reboque">
+    <span class="titulo">🚚 Reboque</span>
+    <span class="valor">${perfil.placaReboque}</span>
+</div>
+
+    <div class="item email">
+        <span class="titulo">✉️ E-mail</span>
+        <span class="valor">${perfil.email}</span>
+    </div>
+`;
+      $("placaCavalo").textContent = perfil.placaCavalo;
+      $("placaReboque").textContent = perfil.placaReboque;
+}
+async function carregarViagemAtual() {
+
+    const snap = await getDoc(
+        doc(db, "usuarios", uid, "viagemAtual", "dados")
+    );
+
+    if (snap.exists()) {
+        viagem = snap.data();
+    }
+
 }
 
 /* CARREGAR */
@@ -63,39 +106,84 @@ async function carregarAbastecimentos(){
   }));
 
   renderLista();
-  atualizarGrafico();
+
 }
 
+
 /* SALVAR — aceita valores altos e 0 */
-$("adicionar").onclick = async ()=>{
-  const data = $("data").value;
-  const km = Number($("km").value || 0);
-  const litros = parseValor($("litros").value || 0);
-  const valor = parseValor($("valor").value || 0);
-  const tipo = $("tipoCombustivel").value;
-  const pagamento = $("pagamento").value;
 
-  if(!data){
-    alert("Selecione uma data.");
-    return;
-  }
+$("salvarAbastecimento").onclick = async ()=>{
 
-  await addDoc(collection(db,"usuarios",uid,"abastecimentos"),{
-    data,
-    quilometragem: km,
-    litros,
-    valor,
-    tipo,
-    pagamento,
-    criadoEm: serverTimestamp()
-  });
+    const data = $("data").value;
 
-  $("data").value="";
-  $("km").value="";
-  $("litros").value="";
-  $("valor").value="";
+    const km = Number($("km").value);
 
-  carregarAbastecimentos();
+    const litros = parseValor($("litros").value);
+
+    const valor = parseValor($("valor").value);
+
+    const tipo = $("tipoCombustivel").value;
+
+    const pagamento = $("pagamento").value;
+
+    if(!data){
+
+        alert("Informe a data.");
+
+        return;
+
+    }
+
+    const registro = {
+
+        idViagem: viagem?.idViagem || null,
+
+        data,
+
+        quilometragem: km,
+
+        litros,
+
+        valor,
+
+        tipo,
+
+        pagamento,
+
+        criadoEm: serverTimestamp()
+
+    };
+
+    if(editId){
+
+        await updateDoc(
+
+            doc(db,"usuarios",uid,"abastecimentos",editId),
+
+            registro
+
+        );
+
+    }else{
+
+        await addDoc(
+
+            collection(db,"usuarios",uid,"abastecimentos"),
+
+            registro
+
+        );
+
+    }
+
+    editId = null;
+
+    limparFormulario();
+
+    modal.style.display = "none";
+
+    carregarAbastecimentos();
+
 };
 
 /* REMOVER */
@@ -106,103 +194,194 @@ window.remover = async(id)=>{
 };
 
 /* LISTA */
-function renderLista(){
-  const ul = $("listaAbastecimentos");
-  ul.innerHTML = "";
+function renderLista() {
 
-  abastecimentos.forEach(r=>{
-    ul.innerHTML += `
-      <li>
-        <div style="flex:1;min-width:230px">
-          <strong>${r.data}</strong><br>
-          KM: ${r.quilometragem}<br>
-          Litros: ${r.litros.toFixed(2)}<br>
-          Valor: R$ ${r.valor.toFixed(2).replace(".",",")}<br>
-          <span style="padding:3px 8px;border-radius:6px;background:${r.tipo==="Diesel"?"#1b5e20":"#0d47a1"}">
-            ${r.tipo}
-          </span>
-        </div>
-        <button class="btn-red" onclick="remover('${r.id}')">Excluir</button>
-      </li>
-    `;
-  });
+    const ul = $("listaAbastecimentos");
+
+    if (!abastecimentos.length) {
+
+        ul.innerHTML = "<li>Nenhum abastecimento registrado.</li>";
+
+        return;
+
+    }
+
+    ul.innerHTML = abastecimentos.map(r => `
+
+        <li>
+
+            <div style="flex:1">
+
+                <div style="font-weight:700">
+
+                    ${r.data}
+
+                </div>
+
+                <div class="tag">
+
+                    ⛽ ${r.tipo}
+
+                </div>
+
+                <div class="tag">
+
+                    📍 KM ${r.quilometragem}
+
+                </div>
+
+                <div class="tag">
+
+                    🛢 ${r.litros.toFixed(2)} litros
+
+                </div>
+
+                <div class="tag">
+
+                    💰 R$ ${r.valor.toFixed(2).replace(".", ",")}
+
+                </div>
+
+                <div class="tag">
+
+                    💳 ${r.pagamento}
+
+                </div>
+
+            </div>
+
+            <div class="row-actions">
+
+                <button
+                    class="btn"
+                    data-id="${r.id}"
+                    data-act="edit">
+
+                    Editar
+
+                </button>
+
+                <button
+                    class="btn-red"
+                    data-id="${r.id}"
+                    data-act="del">
+
+                    Remover
+
+                </button>
+
+            </div>
+
+        </li>
+
+    `).join("");
+
+    ul.querySelectorAll("button").forEach(btn => {
+
+    btn.onclick = async () => {
+
+        const id = btn.dataset.id;
+        const acao = btn.dataset.act;
+
+        const abastecimento = abastecimentos.find(a => a.id === id);
+
+        if (acao === "edit") {
+
+            $("data").value = abastecimento.data;
+            $("km").value = abastecimento.quilometragem;
+            $("litros").value = abastecimento.litros;
+            $("valor").value = abastecimento.valor;
+            $("tipoCombustivel").value = abastecimento.tipo;
+            $("pagamento").value = abastecimento.pagamento;
+
+            editId = id;
+
+            $("tituloModalAbastecimento").textContent = "✏️ Editar Abastecimento";
+
+            modal.style.display = "flex";
+
+        }
+
+        if (acao === "del") {
+
+            if (!confirm("Deseja remover este abastecimento?")) return;
+
+            await deleteDoc(
+                doc(db, "usuarios", uid, "abastecimentos", id)
+            );
+
+            carregarAbastecimentos();
+
+        }
+
+    };
+
+});
+
+}
+const btnNovo = $("btnNovoAbastecimento");
+const modal = $("modalAbastecimento");
+const btnCancelar = $("cancelarAbastecimento");
+
+if (btnNovo && modal && btnCancelar) {
+
+    btnNovo.onclick = () => {
+
+        editId = null;
+
+        limparFormulario();
+
+        modal.style.display = "flex";
+
+    };
+
+    btnCancelar.onclick = () => {
+
+        modal.style.display = "none";
+
+    };
+
 }
 
-/* GRÁFICO */
-let grafico=null;
-function atualizarGrafico(){
-  const ctx = $("graficoAbastecimento").getContext("2d");
+const btnHistorico = $("btnHistorico");
+const lista = $("listaAbastecimentos");
 
-  if(grafico) grafico.destroy();
+let historicoAberto = false;
 
-  grafico = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels: abastecimentos.map(a=>a.data),
-      datasets:[{ label:"Litros", data:abastecimentos.map(a=>a.litros) }]
-    },
-    options:{ responsive:true, maintainAspectRatio:false }
-  });
-}
+btnHistorico.onclick = () => {
 
-/* PDF COMPLETO */
-$("gerarPDFButton").onclick = ()=>{
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:"pt", format:"a4" });
+    historicoAberto = !historicoAberto;
 
-  let y = 40;
-  const margin = 40;
+    if(historicoAberto){
 
-  /* TÍTULO */
-  doc.setFontSize(16);
-  doc.text("Relatório de Abastecimentos — Motorista Plus", margin, y);
-  y+=25;
+        lista.style.display = "block";
 
-  /* DADOS MOTORISTA */
-  doc.setFontSize(11);
-  doc.text(`Motorista: ${perfil?.nome||""}`, margin, y); y+=15;
-  doc.text(`Cavalo: ${perfil?.placaCavalo||""}`, margin, y);
-  doc.text(`Reboque: ${perfil?.placaReboque||""}`, margin+240, y); y+=15;
-  doc.text(`Telefone: ${perfil?.telefone||""}`, margin, y);
-  doc.text(`Email: ${perfil?.email||""}`, margin+240, y); y+=25;
+        btnHistorico.textContent = "📂 Ocultar Histórico";
 
-  /* TABELA */
-  doc.autoTable({
-    startY:y,
-    head:[["Data","KM","Litros","Valor","Tipo","Pagamento"]],
-    body: abastecimentos.map(a=>[
-      a.data,
-      a.quilometragem,
-      a.litros.toFixed(2),
-      "R$ "+a.valor.toFixed(2),
-      a.tipo,
-      a.pagamento
-    ]),
-    headStyles:{ fillColor:[243,146,32], textColor:[0,0,0], halign:"center" },
-    bodyStyles:{ fillColor:[245,245,245], textColor:[0,0,0] },
-    alternateRowStyles:{ fillColor:[230,230,230] },
-    styles:{ fontSize:10, lineWidth:0.4, lineColor:[43,58,73] },
-    margin:{ left:margin, right:margin }
-  });
+    }else{
 
-  y = doc.lastAutoTable.finalY + 50;
+        lista.style.display = "none";
 
-  /* ASSINATURA */
-  const pageW = doc.internal.pageSize.width;
-  const lineW = 300;
-  const cx = pageW/2;
+        btnHistorico.textContent = "📋 Mostrar Histórico";
 
-  doc.line(cx-lineW/2, y, cx+lineW/2, y);
-  doc.setFontSize(12);
-  doc.text("Assinatura do Motorista", cx, y+18, { align:"center" });
+    }
 
-  doc.save("abastecimentos.pdf");
 };
+function limparFormulario(){
 
+    $("data").value = "";
+    $("km").value = "";
+    $("litros").value = "";
+    $("valor").value = "";
+
+    $("tipoCombustivel").selectedIndex = 0;
+    $("pagamento").selectedIndex = 0;
+}
 /* AUTENTICAÇÃO */
 onAuthStateChanged(auth, async user=>{
   if(!user) return location.href="login.html";
   uid = user.uid;
   await carregarPerfil();
+  await carregarViagemAtual();
   await carregarAbastecimentos();
 });
