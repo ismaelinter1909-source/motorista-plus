@@ -88,3 +88,25 @@ export function moeda(valor) {
     );
 
 }
+// =============================
+// Somar Valores
+// =============================
+
+export function somarValores(lista, campo){
+
+    return lista.reduce((total,item)=>{
+
+        return total + Number(item[campo] || 0);
+
+    },0);
+
+}
+// =============================
+// Contar Registros
+// =============================
+
+export function contar(lista){
+
+    return lista.length;
+
+}

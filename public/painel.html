@@ -2,192 +2,295 @@
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel Motorista — Motorista Plus</title>
-   <link rel="stylesheet" href="css/painel.css">
-  
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Motorista — Motorista Plus</title>
+    <link rel="stylesheet" href="css/painel.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+
 
 </head>
 
 
 <body>
 
- <button id="abrirMenu">
-☰ Menu
-</button>
+    <button id="abrirMenu">
+        ☰ Menu
+    </button>
 
- <div class="menu-lateral" id="menuLateral">
+    <div class="menu-lateral" id="menuLateral">
 
-    <div class="perfil-menu">
+        <div class="perfil-menu">
 
-       <div id="avatarCircleMenu" class="avatar-circle"></div>
+            <div id="avatarCircleMenu" class="avatar-circle"></div>
 
-        <img
-            id="userFotoMenu"
-            class="avatar-img"
-            style="display:none;"
-        >
+            <img id="userFotoMenu" class="avatar-img" style="display:none;">
 
-            <input
-            type="file"
-            id="inputFoto"
-            accept="image/*"
-            style="display:none;">
-            
+            <input type="file" id="inputFoto" accept="image/*" style="display:none;">
 
-           
-          
 
-        <h3 id="menuNome">Motorista</h3>
 
-        <p id="menuEmail">email@email.com</p>
 
-    </div>
 
-    <hr>
+            <h3 id="menuNome">Motorista</h3>
 
-    <nav class="menu-links">
+            <p id="menuEmail">email@email.com</p>
 
-        <a href="painel.html">🏠 Página Inicial</a>
-
-        <a href="viagem.html">🚛 Viagem</a>
-
-        <a href="abastecimentos.html">⛽ Abastecimentos</a>
-
-        <a href="media.html">📈 Média</a>
-
-        <a href="gastos.html">💰 Gastos Empresa</a>
-
-        <a href="gastospessoais.html">💰 Gastos Pessoais</a>
-
-        <a href="entregas.html">📦 Entregas</a>
-
-        <a href="manutencao.html">🔧 Manutenção</a>
-
-        <a href="ponto.html">🕒 Ponto</a>
-        
-        <a href="veiculos.html">🚗 Meus Veículos</a>
+        </div>
 
         <hr>
 
-        <a href="perfil.html">👤 Meu Perfil</a>
-        <a href="configuracoes.html">⚙ Configurações</a>
-        <a href="sobre.html">ℹ Sobre</a>
-        <button id="logoutBtnMenu">🚪 Sair </button>
+        <nav class="menu-links">
 
-    </nav>
-   
+            <a href="painel.html">🏠 Página Inicial</a>
 
-</div>
-  <header class="hero">
-    
+            <a href="viagem.html">🚛 Viagem</a>
 
-    <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
-    <p class="slogan">SEMPRE EM MOVIMENTO</p>
+            <a href="abastecimentos.html">⛽ Abastecimentos</a>
 
-     <h2 id="boasVindas"></h2>
-      <p class="subtitulo">
-        Gerencie sua viagem de forma inteligente.
-    </p>
-     
-  </header>
-  <section class="dashboard">
+            <a href="media.html">📈 Média</a>
+
+            <a href="gastos.html">💰 Gastos Empresa</a>
+
+            <a href="gastospessoais.html">💰 Gastos Pessoais</a>
+
+            <a href="entregas.html">📦 Entregas</a>
+
+            <a href="manutencao.html">🔧 Manutenção</a>
+
+            <a href="ponto.html">🕒 Ponto</a>
+
+            <a href="veiculos.html">🚗 Meus Veículos</a>
+
+            <hr>
+
+            <a href="perfil.html">👤 Meu Perfil</a>
+            <a href="configuracoes.html">⚙ Configurações</a>
+            <a href="sobre.html">ℹ Sobre</a>
+            <button id="logoutBtnMenu">🚪 Sair </button>
+
+        </nav>
+
+
+    </div>
+    <header class="hero">
+
+
+        <h1 class="brand">Motorista<span class="plus">Plus</span></h1>
+        <p class="slogan">SEMPRE EM MOVIMENTO</p>
+
+        <h2 id="boasVindas"></h2>
+        <p class="subtitulo">
+            Gerencie sua viagem de forma inteligente.
+        </p>
+
+    </header>
+
+    <section class="viagem-card">
+
+    <h2>
+        <span class="material-symbols-rounded">local_shipping</span>
+        Viagem Atual
+    </h2>
+
+    <div class="viagem-grid">
+
+        <div class="item">
+            <span>📍 Origem</span>
+            <strong id="origemViagem">---</strong>
+        </div>
+
+        <div class="item">
+            <span>🏁 Destino</span>
+            <strong id="destinoViagem">---</strong>
+        </div>
+
+        <div class="item">
+            <span>📅 Início</span>
+            <strong id="inicioViagem">--/--/----</strong>
+        </div>
+
+        <div class="item">
+            <span>📅 Previsão</span>
+            <strong id="fimViagem">--/--/----</strong>
+        </div>
+
+    </div>
+
+    <div class="status-viagem">
+        🟢 <strong id="statusViagem">Em andamento</strong>
+    </div>
+
+</section>
+    </section>
+
+    <section class="painel-section">
+
+    <h2>
+        <span class="material-symbols-rounded">monitoring</span>
+        Operação da Viagem
+    </h2>
 
     <div class="dashboard-grid">
 
-        <div class="dash-card">
-        <span>🗓️</span>
-        <h3>Dias Viajados</h3>
-        <strong id="quantidadedediasviajados">0 dias</strong>
+        <div class="widget-card">
+            <span class="material-symbols-rounded">inventory_2</span>
+            <h3>Entregas</h3>
+            <strong id="totalEntregas">0</strong>
         </div>
 
-        <div class="dash-card">
-        <span>🗓️</span>
-        <h3>Dias de Folgas</h3>
-        <strong id="quantidadedefolgas">0 dias</strong>
-        </div>
-
-         <div class="dash-card">
-            <span>💰</span>
-            <h3>Diarias Recebidas</h3>
-            <strong id="diariasMes">R$ 0,00</strong>
-        </div>
-
-        <div class="dash-card">
-            <span>🚛</span>
+        <div class="widget-card">
+            <span class="material-symbols-rounded">local_shipping</span>
             <h3>KM Rodados</h3>
             <strong id="kmRodados">0 km</strong>
         </div>
 
-        <div class="dash-card">
-            <span>⛽</span>
+        <div class="widget-card">
+            <span class="material-symbols-rounded">local_gas_station</span>
+            <h3>Abastecimentos</h3>
+            <strong id="totalAbastecimentos">0</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">construction</span>
+            <h3>Manutenções</h3>
+            <strong id="totalManutencoes">0</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">speed</span>
             <h3>Média</h3>
-            <strong id="mediaGeral">0,00 km/L</strong>
+            <strong id="mediaConsumo">0 km/L</strong>
         </div>
 
-        <div class="dash-card">
-            <span>💰</span>
-            <h3>Gastos da Empresa</h3>
-            <strong id="gastosMes">R$ 0,00</strong>
-        </div>
-         <div class="dash-card">
-            <span>💰</span>
-            <h3>Gastos Pessoais</h3>
-            <strong id="gastosPessoaisMes">R$ 0,00</strong>
-        </div>
-
-        <div class="dash-card">
-            <span>💰</span>
-            <h3> Retiradas de Vales</h3>
-            <strong id="valesMes">R$ 0,00</strong>
-        </div>
-
-        <div class="dash-card">
-            <span>🕒</span>
-            <h3>Ponto</h3>
-            <strong id="pontoMes">0</strong>
-        </div>
-
-        <div class="dash-card">
-            <span>📦</span>
-            <h3>Entregas</h3>
-            <strong id="entregasMes">0</strong>
+        <div class="widget-card">
+            <span class="material-symbols-rounded">today</span>
+            <h3>Diárias</h3>
+            <strong id="totalDiarias">0</strong>
         </div>
 
     </div>
 
 </section>
-<section class="dashboard">
 
-<div class="painel-alertas">
+   <section class="painel-section">
 
-    <h2>⚠ Alertas</h2>
+    <h2>
+        <span class="material-symbols-rounded">payments</span>
+        Financeiro
+    </h2>
 
-    <div class="alerta-ok">
+    <div class="dashboard-grid">
 
-        ✅ Nenhum alerta pendente.
+        <div class="widget-card">
+            <span class="material-symbols-rounded">business</span>
+            <h3>Empresa</h3>
+            <strong id="gastosEmpresa">R$ 0,00</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">person</span>
+            <h3>Pessoal</h3>
+            <strong id="gastosPessoais">R$ 0,00</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">account_balance_wallet</span>
+            <h3>Vales</h3>
+            <strong id="totalVales">R$ 0,00</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">attach_money</span>
+            <h3>Saldo</h3>
+            <strong id="saldoViagem">R$ 0,00</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">local_gas_station</span>
+            <h3>Combustível</h3>
+            <strong id="valorCombustivel">R$ 0,00</strong>
+        </div>
+
+        <div class="widget-card">
+            <span class="material-symbols-rounded">analytics</span>
+            <h3>Custo/KM</h3>
+            <strong id="custoKm">R$ 0,00</strong>
+        </div>
 
     </div>
 
-</div>
-
-<div class="painel-atividade">
-
-<h2>📋 Última atividade</h2>
-
-<p>
-📋 Ainda não existem registros.
-
-Quando você cadastra uma nova atividade, ela aparecerá aqui.</p>
-
-</div>
-
 </section>
 
-  
-  <script type="module" src="js/painel.js"></script>
-  
+     </section>
+    <section class="acoes-rapidas">
+
+        <h2>
+            <span class="material-symbols-rounded">bolt</span>
+            Ações Rápidas
+        </h2>
+
+        <div class="acoes-grid">
+
+            <button id="btnNovaEntrega" class="acao-btn">
+                <span class="material-symbols-rounded">inventory_2</span>
+                <span>Nova Entrega</span>
+            </button>
+
+            <button id="btnNovoAbastecimento" class="acao-btn">
+                <span class="material-symbols-rounded">local_gas_station</span>
+                <span>Abastecimento</span>
+            </button>
+
+            <button id="btnNovoGasto" class="acao-btn">
+                <span class="material-symbols-rounded">payments</span>
+                <span>Novo Gasto</span>
+            </button>
+
+            <button id="btnGerarPdf" class="acao-btn">
+                <span class="material-symbols-rounded">picture_as_pdf</span>
+                <span>Gerar PDF</span>
+            </button>
+
+            <button id="btnFinalizarViagem" class="acao-btn finalizar">
+                <span class="material-symbols-rounded">flag</span>
+                <span>Finalizar Viagem</span>
+            </button>
+
+        </div>
+
+    </section>
+    <section class="dashboard">
+
+        <div class="painel-alertas">
+
+            <h2>⚠ Alertas</h2>
+
+            <div class="alerta-ok">
+
+                ✅ Nenhum alerta pendente.
+
+            </div>
+
+        </div>
+
+        <div class="painel-atividade">
+
+            <h2>📋 Última atividade</h2>
+
+            <p>
+                📋 Ainda não existem registros.
+
+                Quando você cadastra uma nova atividade, ela aparecerá aqui.</p>
+
+        </div>
+
+   
+
+
+    <script type="module" src="js/painel.js"></script>
+
 
 </body>
 
