@@ -109,7 +109,7 @@
     .btn {
       background: var(--primary);
       border: none;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       color: #fff;
       transition: .25s
@@ -242,4 +242,20 @@
 
     }
 
+}
+/* ===========================
+   AÇÕES
+=========================== */
+
+.actions{
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    margin-top:15px;
+}
+
+.actions .btn{
+    height:52px;
+    font-size:17px;
+    font-weight:600;
 }

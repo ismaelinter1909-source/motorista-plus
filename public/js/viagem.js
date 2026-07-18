@@ -40,10 +40,10 @@ function calcularFolgas(dias){
   if(dias<=21) return 3;
   if(dias<=30) return 4;
   if(dias<=37) return 5;
-  if(dias<=44) return 6;
+  if(dias<=45) return 6;
   if(dias<=52) return 7;
   if(dias<=60) return 8;
-  return Math.ceil(dias/7);
+  return Math.ceil(dias/7,5);
 }
 
 function calcularRetorno(iniISO,fimISO){

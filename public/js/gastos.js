@@ -331,8 +331,7 @@ $("salvarGasto").onclick = async ()=>{
         );
 
     }else{
-console.log("UID:", uid);
-console.log("Viagem:", viagem);
+
         await addDoc(
 
             collection(
