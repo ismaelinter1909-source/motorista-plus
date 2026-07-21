@@ -1,224 +1,520 @@
-import { db } from "./firebase.js";
+//========================================================
+// PDF OPERACIONAL
+// Motorista Plus
+//========================================================
 
+//========================================================
+// IMPORTAÇÕES
+//====
+import { db } from "./firebase.js";
 import {
     doc,
-    getDoc
+    getDoc,
+    collection,
+    getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-export async function gerarRelatorioOperacional(uid) {
+//========================================================
+// CARREGAR DADOS DA VIAGEM
+//========================================================
 
-    console.log("Gerando relatório operacional...");
+async function carregarDadosRelatorio(uid){
+       const perfilSnap = await getDoc(
+        doc(db,"usuarios",uid)
+    );
 
-    // Busca o perfil do motorista
-    const snap = await getDoc(doc(db, "usuarios", uid));
+    if(!perfilSnap.exists()){
+        return null;
+    }
 
-    if (!snap.exists()) {
+    const viagemSnap = await getDoc(
+        doc(db,"usuarios",uid,"viagemAtual","dados")
+    );
+//========================================================
+// ENTREGAS
+//========================================================
+
+const entregasSnap = await getDocs(
+    collection(db, "usuarios", uid, "entregas")
+);
+
+const entregas = [];
+
+entregasSnap.forEach(doc => {
+    entregas.push(doc.data());
+});
+    
+//========================================================
+// ABASTECIMENTOS
+//========================================================
+
+const abastecimentosSnap = await getDocs(
+    collection(db, "usuarios", uid, "abastecimentos")
+);
+
+const abastecimentos = [];
+
+abastecimentosSnap.forEach(doc => {
+    abastecimentos.push(doc.data());
+});
+//========================================================
+// MANUTENÇÕES
+//========================================================
+
+const manutencoesSnap = await getDocs(
+    collection(db, "usuarios", uid, "manutencoes")
+);
+
+const manutencoes = [];
+
+manutencoesSnap.forEach(doc => {
+    manutencoes.push(doc.data());
+});
+//========================================================
+// DIÁRIAS
+//========================================================
+
+const diariasSnap = await getDocs(
+    collection(db, "usuarios", uid, "diarias")
+);
+
+const diarias = [];
+
+diariasSnap.forEach(doc => {
+    diarias.push(doc.data());
+});
+
+//========================================================
+// VALES
+//========================================================
+
+const valesSnap = await getDocs(
+    collection(db, "usuarios", uid, "vales")
+);
+
+const vales = [];
+
+valesSnap.forEach(doc => {
+    vales.push(doc.data());
+});
+//========================================================
+// TOTAL DE VALES
+//========================================================
+
+const totalVales = vales.reduce((total, vale) => {
+    return total + Number(vale.valor || 0);
+}, 0);
+//========================================================
+// GASTOS DA EMPRESA
+//========================================================
+
+const gastosEmpresaSnap = await getDocs(
+    collection(db, "usuarios", uid, "gastosEmpresa")
+);
+
+const gastosEmpresa = [];
+
+gastosEmpresaSnap.forEach(doc => {
+    gastosEmpresa.push(doc.data());
+});
+//========================================================
+// TOTAL GASTOS DA EMPRESA
+//========================================================
+
+const totalGastosEmpresa = gastosEmpresa.reduce((total, gasto) => {
+    return total + Number(gasto.valor || 0);
+}, 0);
+//========================================================
+// SALDO DA VIAGEM
+//========================================================
+
+const saldo = totalVales - totalGastosEmpresa;
+return {
+
+    perfil: perfilSnap.data(),
+
+    viagem: viagemSnap.exists()
+        ? viagemSnap.data()
+        : {},
+
+    entregas,
+    abastecimentos,
+    manutencoes,
+    diarias,
+    vales,
+    gastosEmpresa,
+    totalVales,
+    totalGastosEmpresa,
+    saldo
+
+};
+
+}
+
+//========================================================
+// FUNÇÃO PRINCIPAL
+//========================================================
+export async function gerarRelatorioOperacional(uid){
+
+    const dados = await carregarDadosRelatorio(uid);
+
+    if(!dados){
         alert("Motorista não encontrado.");
         return;
     }
 
-    const perfil = snap.data();
-
-    // Busca os dados da viagem atual
-    const viagemSnap = await getDoc(
-        doc(db, "usuarios", uid, "viagemAtual", "dados")
-    );
-
-    const viagem = viagemSnap.exists()
-        ? viagemSnap.data()
-        : {};
-
-    // Cria o PDF
     const { jsPDF } = window.jspdf;
 
     const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4"
+        orientation:"portrait",
+        unit:"mm",
+        format:"a4"
     });
 
-    // Desenha as partes do relatório
     desenharCabecalho(pdf);
 
-    desenharDadosMotorista(pdf, perfil);
+    desenharFaixaInformacoes(
+        pdf,
+        dados.perfil,
+        dados.viagem
+    );
 
-    desenharResumoViagem(pdf, viagem);
+    desenharResumoViagem(
+        pdf,
+        dados.viagem
+    );
 
-    // Salva o PDF
+    desenharMovimentacaoViagem(
+        pdf,
+        dados
+    );
+
+//========================================================
+// GERAR ARQUIVO
+//========================================================
+
     pdf.save("Relatorio_Operacional.pdf");
-
 }
-
-// ======================================================
-// CABEÇALHO
-// ======================================================
+//========================================================
+// CABEÇALHO DO RELATÓRIO
+//========================================================
 
 function desenharCabecalho(pdf){
 
+    // Fundo laranja
     pdf.setFillColor(243,146,32);
-    pdf.rect(0,0,210,18,"F");
+    pdf.rect(0,0,210,22,"F");
 
+    // Nome do sistema
     pdf.setFont("helvetica","bold");
     pdf.setFontSize(24);
-
     pdf.setTextColor(255);
-    pdf.text("Motorista",12,12);
 
-    pdf.setTextColor(243,146,32);
-    pdf.text("Plus",53,12);
-
-    pdf.setTextColor(255);
-    pdf.setFontSize(18);
-
-    pdf.text("RELATÓRIO DE",132,8);
-    pdf.text("FECHAMENTO DE VIAGEM",108,16);
+    pdf.text("MOTORISTA",12,10);
 
     pdf.setTextColor(0);
+    pdf.text("PLUS",58,10);
 
-    pdf.setFontSize(11);
+    // Título
 
-    pdf.text(
-        `Gerado em: ${new Date().toLocaleString("pt-BR")}`,
-        12,
+    pdf.setFontSize(18);
+    pdf.setTextColor(255);
+
+   pdf.text(
+    "RELATÓRIO OPERACIONAL",
+    105,
+    14,
+    { align: "center" }
+);
+
+    // Linha inferior
+
+    pdf.setDrawColor(230);
+
+    pdf.line(
+        10,
+        28,
+        200,
         28
     );
 
-    pdf.setDrawColor(243,146,32);
-    pdf.setLineWidth(.5);
-    pdf.line(10,33,200,33);
-
 }
+//========================================================
+// FAIXA DE IDENTIFICAÇÃO DA VIAGEM
+//========================================================
 
-// ======================================================
-// DADOS DO MOTORISTA
-// ======================================================
-
-function desenharDadosMotorista(pdf, perfil){
-
-    pdf.setFillColor(243,146,32);
-    pdf.rect(10,38,190,8,"F");
-
-    pdf.setTextColor(255);
-    pdf.setFontSize(12);
-
-    pdf.text("1. DADOS DO MOTORISTA",14,44);
-
-    pdf.setDrawColor(220);
-    pdf.rect(10,46,190,32);
-
-    pdf.setTextColor(0);
-    pdf.setFontSize(10);
-
-    // Esquerda
-
-    pdf.setFont("helvetica","bold");
-    pdf.text("Motorista:",15,56);
-
-    pdf.setFont("helvetica","normal");
-    pdf.text(perfil.nome || "-",42,56);
-
-    pdf.setFont("helvetica","bold");
-    pdf.text("Telefone:",15,64);
-
-    pdf.setFont("helvetica","normal");
-    pdf.text(perfil.telefone || "-",42,64);
-
-    pdf.setFont("helvetica","bold");
-    pdf.text("E-mail:",15,72);
-
-    pdf.setFont("helvetica","normal");
-    pdf.text(perfil.email || "-",42,72);
-
-    // Direita
-
-    pdf.setFont("helvetica","bold");
-    pdf.text("Cavalo:",110,56);
-
-    pdf.setFont("helvetica","normal");
-    pdf.text(perfil.placaCavalo || "-",136,56);
-
-    pdf.setFont("helvetica","bold");
-    pdf.text("Reboque:",110,64);
-
-    pdf.setFont("helvetica","normal");
-    pdf.text(perfil.placaReboque || "-",136,64);
-
-}
-
-// ======================================================
-// RESUMO DA VIAGEM
-// ======================================================
-
-function desenharResumoViagem(pdf, viagem){
-
-    pdf.setFillColor(243,146,32);
-    pdf.rect(10,85,190,8,"F");
-
-    pdf.setFont("helvetica","bold");
-    pdf.setFontSize(12);
-    pdf.setTextColor(255);
-
-    pdf.text("2. RESUMO DA VIAGEM",14,91);
-
-    pdf.setDrawColor(220);
-    pdf.rect(10,93,190,35);
-
-    pdf.setTextColor(0);
-    pdf.setFontSize(10);
+function desenharFaixaInformacoes(pdf, perfil, viagem){
 
     const kmRodado =
-        (viagem.kmFim || 0) -
-        (viagem.kmInicio || 0);
+        Number(viagem.kmFim || 0) -
+        Number(viagem.kmInicio || 0);
 
-    let dias = "-";
+    pdf.setFillColor(248,248,248);
+    pdf.roundedRect(10,32,190,22,2,2,"F");
+
+    pdf.setDrawColor(220);
+    pdf.roundedRect(10,32,190,22,2,2);
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(8);
+
+    pdf.text("PERÍODO",14,39);
+    pdf.text("MOTORISTA",58,39);
+    pdf.text("CAVALO",118,39);
+    pdf.text("CARRETA",148,39);
+    pdf.text("KM",182,39);
+
+    pdf.setFont("helvetica","normal");
+
+    pdf.text(
+        `${viagem.inicio || "-"}  até  ${viagem.fim || "-"}`,
+        14,
+        47
+    );
+
+    pdf.text(
+        perfil.nome || "-",
+        58,
+        47
+    );
+
+    pdf.text(
+        perfil.placaCavalo || "-",
+        118,
+        47
+    );
+
+    pdf.text(
+        perfil.placaReboque || "-",
+        148,
+        47
+    );
+
+    pdf.text(
+        `${kmRodado} km`,
+        182,
+        47
+    );
+
+}
+//========================================================
+// RESUMO DA VIAGEM
+//========================================================
+function desenharResumoViagem(pdf, viagem){
+
+
+    //===========================
+    // CÁLCULOS DA VIAGEM
+    //===========================
+
+    const kmInicial = Number(viagem.kmInicio || 0);
+    const kmFinal = Number(viagem.kmFim || 0);
+    const kmRodados = kmFinal - kmInicial;
+
+    let diasViajados = "-";
     let folgas = "-";
     let retorno = "-";
 
-    if(viagem.inicio && viagem.fim){
+    if (viagem.inicio && viagem.fim) {
 
-        const inicio = new Date(viagem.inicio);
-        const fim = new Date(viagem.fim);
+        const dataInicio = new Date(viagem.inicio);
+        const dataFim = new Date(viagem.fim);
 
-        dias =
-            Math.floor((fim-inicio)/86400000)+1;
+        diasViajados =
+            Math.floor((dataFim - dataInicio) / 86400000) + 1;
 
-        folgas = Math.ceil(dias/7);
+        folgas = Math.ceil(diasViajados / 7);
 
-        const retornoData = new Date(fim);
+        const dataRetorno = new Date(dataFim);
 
-        retornoData.setDate(
-            retornoData.getDate()+folgas+1
+        dataRetorno.setDate(
+            dataRetorno.getDate() + folgas + 1
         );
 
-        retorno =
-            retornoData.toLocaleDateString("pt-BR");
+        retorno = dataRetorno.toLocaleDateString("pt-BR");
     }
 
-    pdf.text("Período",18,102);
-    pdf.text("KM Inicial",75,102);
-    pdf.text("KM Final",118,102);
-    pdf.text("KM Rodado",160,102);
 
-    pdf.text(
-        `${viagem.inicio || "-"} até ${viagem.fim || "-"}`,
-        18,
-        110
+    // Cabeçalho do bloco
+    pdf.setFillColor(243,146,32);
+    pdf.rect(10,60,190,8,"F");
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(255);
+
+   pdf.text(
+    "RESUMO DA VIAGEM",
+    105,
+    66,
+    { align: "center" }
+);
+    //========================================================
+    // CARDS DO RESUMO DA VIAGEM
+    //========================================================
+
+    // Primeira linha
+    desenharCard(pdf, 15, 75, 42, 18, "INÍCIO", viagem.inicio || "-");
+    desenharCard(pdf, 61, 75, 42, 18, "FIM", viagem.fim || "-");
+    desenharCard(pdf, 107, 75, 42, 18, "DIAS", diasViajados);
+    desenharCard(pdf, 153, 75, 42, 18, "FOLGAS", folgas);
+
+    // Segunda linha
+    desenharCard(pdf, 15, 98, 42, 18, "RETORNO", retorno);
+    desenharCard(pdf, 61, 98, 42, 18, "KM INICIAL", kmInicial.toLocaleString("pt-BR"));
+    desenharCard(pdf, 107, 98, 42, 18, "KM FINAL", kmFinal.toLocaleString("pt-BR"));
+    desenharCard(pdf, 153, 98, 42, 18, "KM RODADOS", kmRodados.toLocaleString("pt-BR"));
+
+    }
+//========================================================
+// CARD DE INFORMAÇÃO
+//========================================================
+
+function desenharCard(pdf, x, y, largura, altura, titulo, valor){
+
+    // Fundo
+    pdf.setFillColor(242,242,242);
+    pdf.roundedRect(x, y, largura, altura, 2, 2, "F");
+
+    // Borda
+    pdf.setDrawColor(220);
+    pdf.roundedRect(x, y, largura, altura, 2, 2);
+
+    // Título
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(7);
+    pdf.setTextColor(120);
+
+   pdf.text(
+    titulo,
+    x + (largura / 2),
+    y + 6,
+    {
+        align: "center"
+    }
     );
 
-    pdf.text(String(viagem.kmInicio ?? "-"),82,110);
+    // Valor
+    pdf.setFont("helvetica","bold");
 
-    pdf.text(String(viagem.kmFim ?? "-"),123,110);
+    if (String(valor).startsWith("R$")) {
+        pdf.setFontSize(9);
+    } else {
+        pdf.setFontSize(12);
+    }
 
-    pdf.text(String(kmRodado),168,110);
+    pdf.setTextColor(0);
 
-    pdf.text("Dias",18,123);
-    pdf.text("Folgas",82,123);
-    pdf.text("Retorno",145,123);
+    pdf.text(
+    String(valor),
+    x + (largura / 2),
+    y + 15,
+    {
+        align: "center"
+    }
+    );
+            
+    }
+//========================================================
+// MOVIMENTAÇÃO DA VIAGEM
+//========================================================
 
-    pdf.text(String(dias),18,131);
+function desenharMovimentacaoViagem(pdf, dados){
+     // Cabeçalho
+    pdf.setFillColor(243,146,32);
+    pdf.rect(10,125,190,8,"F");
 
-    pdf.text(String(folgas),82,131);
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(12);
+    pdf.setTextColor(255);
 
-    pdf.text(retorno,145,131);
+    pdf.text(
+        "MOVIMENTAÇÃO DA VIAGEM",
+        105,
+        131,
+        { align:"center" }
+    );
+    
+// Primeira linha
+desenharCard(
+    pdf,
+    15,
+    140,
+    42,
+    18,
+    "ENTREGAS",
+    dados.entregas.length
+);
+
+desenharCard(
+    pdf,
+    61,
+    140,
+    42,
+    18,
+    "ABAST.",
+    dados.abastecimentos.length
+);
+
+desenharCard(
+    pdf,
+    107,
+    140,
+    42,
+    18,
+    "MANUT.",
+    dados.manutencoes.length
+);
+
+
+desenharCard(
+    pdf,
+    153,
+    140,
+    42,
+    18,
+    "DIÁRIAS",
+    dados.diarias.length
+);
+// Segunda linha
+desenharCard(
+    pdf,
+    15,
+    163,
+    42,
+    18,
+    "VALES",
+    dados.totalVales.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    })
+);
+
+desenharCard(
+    pdf,
+    61,
+    163,
+    42,
+    18,
+    "GASTOS",
+    dados.totalGastosEmpresa.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    })
+);
+
+desenharCard(
+    pdf,
+    107,
+    163,
+    42,
+    18,
+    "SALDO",
+    dados.saldo.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    })
+);
 
 }
+    

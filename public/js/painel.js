@@ -31,93 +31,158 @@ verificarLogin(async (user) => {
     await carregarTotalVales(user);
     await carregarSaldoViagem(user);
     await carregarGastosPessoais(user);
+     // ========= AÇÕES RÁPIDAS =========
+
+       document.getElementById("btnNovaEntrega").onclick = () => {
+        window.location.href = "entregas.html";
+    };
+
+    document.getElementById("btnNovoAbastecimento").onclick = () => {
+        window.location.href = "abastecimentos.html";
+    };
+
+    document.getElementById("btnNovoGasto").onclick = () => {
+        window.location.href = "gastos.html";
+    };
+
+    document.getElementById("btnPonto").onclick = () => {
+        window.location.href = "ponto.html";
+    };
+
+    document.getElementById("btnIniciarNovaviagem").onclick = () => {
+        window.location.href = "viagem.html";
+    };
+
+    document.getElementById("btnFinalizarViagem").onclick = () => {
+        window.location.href = "viagem.html";
+    };
 
 });
-  async function calcularKmRodados(user){
+ async function calcularKmRodados(user){
 
-    const snap = await getDocs(
-        collection(db, "usuarios", user.uid, "viagemAtual")
+    const viagemSnap = await getDoc(
+        doc(db, "usuarios", user.uid, "viagemAtual", "dados")
     );
-     console.log("Quantidade de viagens:", snap.size);
 
-    let totalKm = 0;
+    if (!viagemSnap.exists()) {
+        document.getElementById("kmRodados").textContent = "0 km";
+        return 0;
+    }
 
-    snap.forEach(doc => {
+    const viagem = viagemSnap.data();
 
-        const viagem = doc.data();
-
-        const inicio = Number(viagem.kmInicio || 0);
-        const fim = Number(viagem.kmFim || 0);
-
-         console.log("Início:", inicio, "Fim:", fim);
-
-        if (fim > inicio) {
-
-            totalKm += (fim - inicio);
-
-        }
-
-    });
-     console.log("Total KM:", totalKm);
+    const kmRodados =
+        Math.max(0, Number(viagem.kmFim || 0) - Number(viagem.kmInicio || 0));
 
     document.getElementById("kmRodados").textContent =
-        totalKm.toLocaleString("pt-BR") + " km";
+        kmRodados.toLocaleString("pt-BR") + " km";
 
-        return totalKm;
-
+    return kmRodados;
 }
 async function carregarTotalEntregas(user) {
+
+    const viagemSnap = await getDoc(
+        doc(db, "usuarios", user.uid, "viagemAtual", "dados")
+    );
+
+    if (!viagemSnap.exists()) {
+        document.getElementById("totalEntregas").textContent = "0";
+        return;
+    }
+
+    const viagem = viagemSnap.data();
 
     const snap = await getDocs(
         collection(db, "usuarios", user.uid, "entregas")
     );
 
-    document.getElementById("totalEntregas").textContent = snap.size;
+    const total = snap.docs
+        .map(doc => doc.data())
+        .filter(e => e.idViagem === viagem.idViagem)
+        .length;
 
+    document.getElementById("totalEntregas").textContent = total;
 }
 async function carregarTotalAbastecimentos(user) {
-    try {
-        const snapshot = await getDocs(
-            collection(db, "usuarios", user.uid, "abastecimentos")
-        );
 
-        document.getElementById("totalAbastecimentos").textContent = snapshot.size;
-    } catch (erro) {
-        console.error("Erro ao carregar abastecimentos:", erro);
+    const viagemSnap = await getDoc(
+        doc(db, "usuarios", user.uid, "viagemAtual", "dados")
+    );
+
+    if (!viagemSnap.exists()) {
         document.getElementById("totalAbastecimentos").textContent = "0";
+        return;
     }
-} 
-async function carregarTotalManutencoes(user) {
-    try {
-        const snapshot = await getDocs(
-            collection(db, "usuarios", user.uid, "manutencoes")
-        );
 
-        document.getElementById("totalManutencoes").textContent = snapshot.size;
-    } catch (erro) {
-        console.error("Erro ao carregar manutenções:", erro);
-        document.getElementById("totalManutencoes").textContent = "0";
-    }
+    const viagem = viagemSnap.data();
+
+    // Buscar os abastecimentos
+    const snapshot = await getDocs(
+        collection(db, "usuarios", user.uid, "abastecimentos")
+    );
+
+    const total = snapshot.docs
+        .map(doc => doc.data())
+        .filter(a => a.idViagem === viagem.idViagem)
+        .length;
+
+    document.getElementById("totalAbastecimentos").textContent = total;
+
+}
+async function carregarTotalManutencoes(user) {
+    const viagemSnap = await getDoc(
+    doc(db, "usuarios", user.uid, "viagemAtual", "dados")
+);
+
+if (!viagemSnap.exists()) {
+    document.getElementById("totalManutencoes").textContent = "0";
+    return;
+}
+
+const viagem = viagemSnap.data();
+
+const snapshot = await getDocs(
+    collection(db, "usuarios", user.uid, "manutencoes")
+);
+
+const total = snapshot.docs
+    .map(doc => doc.data())
+    .filter(m => m.idViagem === viagem.idViagem)
+    .length;
+
+document.getElementById("totalManutencoes").textContent = total;
 }
 async function carregarTotalDiarias(user) {
-    try {
-        const snapshot = await getDocs(
-            collection(db, "usuarios", user.uid, "diarias")
-        );
 
-        let totalDiarias = 0;
+    const viagemSnap = await getDoc(
+        doc(db, "usuarios", user.uid, "viagemAtual", "dados")
+    );
 
-        snapshot.forEach((doc) => {
-            const dados = doc.data();
-            totalDiarias += Number(dados.qtd || 0);
-        });
-
-        document.getElementById("totalDiarias").textContent = totalDiarias;
-
-    } catch (erro) {
-        console.error("Erro ao carregar diárias:", erro);
+    if (!viagemSnap.exists()) {
         document.getElementById("totalDiarias").textContent = "0";
+        return;
     }
+
+    const viagem = viagemSnap.data();
+
+    const snapshot = await getDocs(
+        collection(db, "usuarios", user.uid, "diarias")
+    );
+
+    let totalDiarias = 0;
+
+    snapshot.forEach((doc) => {
+
+        const dados = doc.data();
+
+        if (dados.idViagem === viagem.idViagem) {
+            totalDiarias += Number(dados.qtd || 0);
+        }
+
+    });
+
+    document.getElementById("totalDiarias").textContent = totalDiarias;
+
 }
 //==============Abastecimento==============//
 

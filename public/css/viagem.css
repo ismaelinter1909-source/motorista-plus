@@ -293,3 +293,37 @@ thead th {
     gap:12px;
 
 }
+.resumo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:12px;
+    margin-top:15px;
+}
+
+.resumo-grid .item{
+    background:#232933;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:12px;
+}
+
+.resumo-grid .item span{
+    display:block;
+    color:#9ca3af;
+    font-size:13px;
+    margin-bottom:6px;
+}
+
+.resumo-grid .item strong{
+    font-size:18px;
+    color:#fff;
+}
+
+.resumo-grid .saldo{
+    background:#25cd08;
+}
+
+.resumo-grid .saldo span,
+.resumo-grid .saldo strong{
+    color:#fff;
+}
