@@ -1,24 +1,24 @@
 
 /* =============== Firebase Setup =============== */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { gerarRelatorioOperacional } from "./relatorioOperacional.js";
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 import {
-  getFirestore, doc, getDoc, setDoc, collection,
-  addDoc, getDocs, deleteDoc, query, orderBy, serverTimestamp
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  query,
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCnlpnTTJvJPZxuZdmpKQWbbHtvH72nMUU",
-  authDomain: "motorista-plus-c53f4.firebaseapp.com",
-  projectId: "motorista-plus-c53f4",
-  storageBucket: "motorista-plus-c53f4.firebasestorage.app",
-  messagingSenderId: "766097061342",
-  appId: "1:766097061342:web:36d999bec6d9fe8c46994f"
-};
+import { auth, db } from "./firebase.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 /* ========= Helpers ========= */
 const $ = id => document.getElementById(id);
@@ -754,109 +754,21 @@ $('limparResumoBtn').onclick = async () => {
 /* ========= PDF ========= */
 $('gerarPDFBtn').onclick = async () => {
 
-  // Garantir soma automática antes do PDF
-  await carregarDiarias();
-  const viagemSnap = await getDoc(viagemRef());
-  const viagem = viagemSnap.data();
-  const resumo = recalcularResumo();
+    await gerarRelatorioOperacional(uid);
 
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "pt", format: "a4" });
-  let y = 40;
+    await setDoc(
+        viagemRef(),
+        {
+            relatorioGerado: true
+        },
+        { merge: true }
+    );
 
-  pdf.setFontSize(16).text("Planilha de Viagem — Motorista Plus", 40, y); y += 25;
+    await atualizarStatusViagem();
 
-  pdf.setFontSize(12);
-  pdf.text(`Motorista: ${perfil?.nome || "-"}`, 40, y); y += 16;
-  pdf.text(`Placas: ${perfil?.placaCavalo || "-"} / ${perfil?.placaReboque || "-"}`, 40, y); y += 20;
+    alert("Relatório Operacional gerado com sucesso!");
 
-  /* ======= TABELA VIAGEM ======= */
-  pdf.autoTable({
-    startY: y,
-    head: [["Início", "Fim", "Folgas", "Retorno", "KM Início", "KM Fim", "Rodado"]],
-    body: [[
-      fmtBR(viagem.inicio),
-      fmtBR(viagem.fim),
-      $('diasFolga').value,
-      $('retornoFolga').value,
-      viagem.kmInicio,
-      viagem.kmFim,
-      viagem.kmFim - viagem.kmInicio
-    ]],
-    margin: { left: 40, right: 40 },
-    headStyles: { fillColor: [243, 146, 32] } // LARANJA OFICIAL
-  });
-
-  y = pdf.lastAutoTable.finalY + 25;
-
-  /* ======= TABELA DIÁRIAS ======= */
-  pdf.text("Diárias:", 40, y); y += 10;
-
-  pdf.autoTable({
-    startY: y,
-    head: [["Data", "Qtd", "Valor"]],
-    body: diarias.map(d => [
-      fmtBR(d.data),
-      d.qtd,
-      `R$ ${(d.qtd * Number($('valorDiaria').value)).toFixed(2)}`
-    ]),
-    margin: { left: 40, right: 40 },
-    headStyles: { fillColor: [243, 146, 32] }
-  });
-
-  y = pdf.lastAutoTable.finalY + 30;
-
-  /* ======= TABELA RESUMO DE DIÁRIAS — IGUAL AO CARD ======= */
-  pdf.text("Resumo de Diárias:", 40, y); y += 10;
-
-  pdf.autoTable({
-    startY: y,
-    head: [[
-      "Empresa devia",
-      "Motorista devia",
-      "Diárias recebidas",
-      "Dias viajados",
-      "Empresa final",
-      "Motorista final"
-    ]],
-    body: [[
-      $('empresaDevia').value,
-      $('motoristaDevia').value,
-      $('diariasRecebidas').value,
-      resumo.viajados,
-      resumo.empresaFinal,
-      resumo.motoristaFinal
-    ]],
-    margin: { left: 40, right: 40 },
-    headStyles: { fillColor: [243, 146, 32] }
-  });
-
-  y = pdf.lastAutoTable.finalY + 25;
-
-  /* ======= RESUMO FINAL ======= */
-  pdf.setFontSize(12);
-  pdf.text("Resumo Final:", 40, y); y += 18;
-
-  pdf.setFontSize(11);
-  pdf.text($('resumoDiariasUI').textContent, 40, y);
-
-  pdf.save("planilha_viagem.pdf");
-
-  await setDoc(
-    viagemRef(),
-    {
-      relatorioGerado: true
-    },
-    { merge: true }
-  );
-
-  const snap = await getDoc(viagemRef());
-
-  await atualizarStatusViagem();
-
-  alert("Relatório gerado com sucesso!\nAgora você pode iniciar uma nova viagem.");
 };
-
 
 
 /* ========= Início ========= */
