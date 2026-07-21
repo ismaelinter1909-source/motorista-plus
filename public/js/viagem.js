@@ -507,6 +507,7 @@ $("btnConfirmarModal").onclick = async () => {
   }
 
   const data = $("modalData").value;
+  console.log("Data escolhida no modal:", data);
 
   if (acaoModal === "iniciar") {
 
