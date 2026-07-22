@@ -220,6 +220,26 @@ export async function gerarRelatorioOperacional(uid) {
 
     desenharTabelaGastosVales(pdf, dados);
 
+    pdf.addPage();
+
+    desenharCabecalhoManutencoes(pdf, dados);
+
+    desenharResumoManutencoes(pdf, dados);
+
+    const yFinal = desenharTabelaManutencoes(pdf, dados);
+
+    const yObs = desenharObservacoesManutencoes(
+        pdf,
+        dados,
+        yFinal + 3
+    );
+
+    desenharAssinaturaManutencoes(
+        pdf,
+        yObs + 12
+    );
+
+
     //========================================================
     // GERAR ARQUIVO
     //========================================================
@@ -1541,74 +1561,74 @@ function desenharTabelaGastosVales(pdf, dados) {
     );
     y += 32;
 
-// Verifica se há espaço suficiente
-if(y > 240){
+    // Verifica se há espaço suficiente
+    if (y > 240) {
 
-    pdf.addPage();
+        pdf.addPage();
 
-    desenharCabecalhoGastosVales(pdf,dados);
+        desenharCabecalhoGastosVales(pdf, dados);
 
-    y = 54;
+        y = 54;
 
-}
+    }
 
-y = desenharObservacoesGastosVales(
-    pdf,
-    dados,
-    y
-);
+    y = desenharObservacoesGastosVales(
+        pdf,
+        dados,
+        y
+    );
 
-desenharAssinaturaGastosVales(
-    pdf,
-    y
-);
+    desenharAssinaturaGastosVales(
+        pdf,
+        y
+    );
 
 }
 //========================================================
 // RESUMO FINANCEIRO GASTOS E VALES
 //========================================================
 
-function desenharResumoFinanceiroGastos(pdf, dados, y){
+function desenharResumoFinanceiroGastos(pdf, dados, y) {
 
-    pdf.setFillColor(235,245,235);
+    pdf.setFillColor(235, 245, 235);
     pdf.rect(10, y, 190, 24, "F");
 
     pdf.setDrawColor(220);
     pdf.rect(10, y, 190, 24);
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(10);
-    pdf.setTextColor(20,90,40);
+    pdf.setTextColor(20, 90, 40);
 
     pdf.text("RESUMO FINANCEIRO", 15, y + 6);
 
-    pdf.setFont("helvetica","normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
 
     pdf.text(
-        `Total de Vales: ${dados.totalVales.toLocaleString("pt-BR",{
-            style:"currency",
-            currency:"BRL"
+        `Total de Vales: ${dados.totalVales.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         })}`,
         15,
         y + 13
     );
 
     pdf.text(
-        `Total de Gastos: ${dados.totalGastosEmpresa.toLocaleString("pt-BR",{
-            style:"currency",
-            currency:"BRL"
+        `Total de Gastos: ${dados.totalGastosEmpresa.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         })}`,
         15,
         y + 18
     );
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
 
     pdf.text(
-        `Saldo: ${dados.saldo.toLocaleString("pt-BR",{
-            style:"currency",
-            currency:"BRL"
+        `Saldo: ${dados.saldo.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         })}`,
         120,
         y + 18
@@ -1634,44 +1654,44 @@ function desenharTabelaVales(pdf, dados, y) {
 
     dados.vales.forEach((vale, index) => {
 
-    desenharLinhaVale(
-        pdf,
-        vale,
-        y,
-        index
+        desenharLinhaVale(
+            pdf,
+            vale,
+            y,
+            index
+        );
+
+        y += 8;
+
+    });
+
+    // Total de Vales
+
+    pdf.setFillColor(235, 245, 235);
+    pdf.rect(10, y, 190, 10, "F");
+
+    pdf.setDrawColor(220);
+    pdf.rect(10, y, 190, 10);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(20, 90, 40);
+
+    pdf.text("TOTAL DE VALES", 15, y + 6);
+
+    pdf.text(
+        dados.totalVales.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        }),
+        190,
+        y + 6,
+        {
+            align: "right"
+        }
     );
 
-    y += 8;
-
-});
-
-// Total de Vales
-
-pdf.setFillColor(235,245,235);
-pdf.rect(10,y,190,10,"F");
-
-pdf.setDrawColor(220);
-pdf.rect(10,y,190,10);
-
-pdf.setFont("helvetica","bold");
-pdf.setFontSize(8);
-pdf.setTextColor(20,90,40);
-
-pdf.text("TOTAL DE VALES",15,y+6);
-
-pdf.text(
-    dados.totalVales.toLocaleString("pt-BR",{
-        style:"currency",
-        currency:"BRL"
-    }),
-    190,
-    y+6,
-    {
-        align:"right"
-    }
-);
-
-return y + 10;
+    return y + 10;
 
 }
 //========================================================
@@ -1680,57 +1700,57 @@ return y + 10;
 
 function desenharTabelaGastos(pdf, dados, y) {
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
 
-    pdf.text("GASTOS DA EMPRESA",10,y);
+    pdf.text("GASTOS DA EMPRESA", 10, y);
 
     y += 6;
 
-    desenharCabecalhoTabelaGastos(pdf,y);
+    desenharCabecalhoTabelaGastos(pdf, y);
 
     y += 8;
 
-    dados.gastosEmpresa.forEach((gasto,index)=>{
+    dados.gastosEmpresa.forEach((gasto, index) => {
 
-    desenharLinhaGasto(
-        pdf,
-        gasto,
-        y,
-        index
+        desenharLinhaGasto(
+            pdf,
+            gasto,
+            y,
+            index
+        );
+
+        y += 8;
+
+    });
+
+    // Total Gastos
+
+    pdf.setFillColor(235, 245, 235);
+    pdf.rect(10, y, 190, 10, "F");
+
+    pdf.setDrawColor(220);
+    pdf.rect(10, y, 190, 10);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(20, 90, 40);
+
+    pdf.text("TOTAL GASTOS", 15, y + 6);
+
+    pdf.text(
+        dados.totalGastosEmpresa.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        }),
+        190,
+        y + 6,
+        {
+            align: "right"
+        }
     );
 
-    y += 8;
-
-});
-
-// Total Gastos
-
-pdf.setFillColor(235,245,235);
-pdf.rect(10,y,190,10,"F");
-
-pdf.setDrawColor(220);
-pdf.rect(10,y,190,10);
-
-pdf.setFont("helvetica","bold");
-pdf.setFontSize(8);
-pdf.setTextColor(20,90,40);
-
-pdf.text("TOTAL GASTOS",15,y+6);
-
-pdf.text(
-    dados.totalGastosEmpresa.toLocaleString("pt-BR",{
-        style:"currency",
-        currency:"BRL"
-    }),
-    190,
-    y+6,
-    {
-        align:"right"
-    }
-);
-
-return y + 10;
+    return y + 10;
 
 }
 //========================================================
@@ -1738,27 +1758,27 @@ return y + 10;
 //========================================================
 
 
-function desenharCabecalhoTabelaVales(pdf, y){
+function desenharCabecalhoTabelaVales(pdf, y) {
 
-    pdf.setFillColor(243,146,32);
-    pdf.rect(10,y,190,8,"F");
+    pdf.setFillColor(243, 146, 32);
+    pdf.rect(10, y, 190, 8, "F");
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(8);
     pdf.setTextColor(255);
 
-    pdf.text("DATA",15,y+5);
-    pdf.text("MOTIVO",60,y+5);
+    pdf.text("DATA", 15, y + 5);
+    pdf.text("MOTIVO", 60, y + 5);
 
     pdf.text(
         "VALOR",
         190,
-        y+5,
-        {align:"right"}
+        y + 5,
+        { align: "right" }
     );
 
 }
-function desenharLinhaVale(pdf, vale, y, index){
+function desenharLinhaVale(pdf, vale, y, index) {
 
     pdf.setFillColor(
         index % 2 === 0 ? 248 : 255,
@@ -1766,60 +1786,60 @@ function desenharLinhaVale(pdf, vale, y, index){
         index % 2 === 0 ? 248 : 255
     );
 
-    pdf.rect(10,y,190,8,"F");
+    pdf.rect(10, y, 190, 8, "F");
 
     pdf.setDrawColor(225);
-    pdf.line(10,y+8,200,y+8);
+    pdf.line(10, y + 8, 200, y + 8);
 
-    pdf.setFont("helvetica","normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(40);
 
     pdf.text(
         formatarData(vale.date),
         15,
-        y+5
+        y + 5
     );
 
     pdf.text(
         vale.motivo || "-",
         60,
-        y+5
+        y + 5
     );
 
     pdf.text(
-        Number(vale.valor || 0).toLocaleString("pt-BR",{
-            style:"currency",
-            currency:"BRL"
+        Number(vale.valor || 0).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         }),
         190,
-        y+5,
-        {align:"right"}
+        y + 5,
+        { align: "right" }
     );
 
 }
-function desenharCabecalhoTabelaGastos(pdf,y){
+function desenharCabecalhoTabelaGastos(pdf, y) {
 
-    pdf.setFillColor(243,146,32);
-    pdf.rect(10,y,190,8,"F");
+    pdf.setFillColor(243, 146, 32);
+    pdf.rect(10, y, 190, 8, "F");
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(8);
     pdf.setTextColor(255);
 
-    pdf.text("DATA",15,y+5);
-    pdf.text("MOTIVO",50,y+5);
-    pdf.text("LOCAL",105,y+5);
+    pdf.text("DATA", 15, y + 5);
+    pdf.text("MOTIVO", 50, y + 5);
+    pdf.text("LOCAL", 105, y + 5);
 
     pdf.text(
         "VALOR",
         190,
-        y+5,
-        {align:"right"}
+        y + 5,
+        { align: "right" }
     );
 
 }
-function desenharLinhaGasto(pdf, gasto, y, index){
+function desenharLinhaGasto(pdf, gasto, y, index) {
 
     pdf.setFillColor(
         index % 2 === 0 ? 248 : 255,
@@ -1827,41 +1847,41 @@ function desenharLinhaGasto(pdf, gasto, y, index){
         index % 2 === 0 ? 248 : 255
     );
 
-    pdf.rect(10,y,190,8,"F");
+    pdf.rect(10, y, 190, 8, "F");
 
     pdf.setDrawColor(225);
-    pdf.line(10,y+8,200,y+8);
+    pdf.line(10, y + 8, 200, y + 8);
 
-    pdf.setFont("helvetica","normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(40);
 
     pdf.text(
         formatarData(gasto.date),
         15,
-        y+5
+        y + 5
     );
 
     pdf.text(
         gasto.motivo || "-",
         50,
-        y+5
+        y + 5
     );
 
     pdf.text(
-        (gasto.local || "-").substring(0,25),
+        (gasto.local || "-").substring(0, 25),
         105,
-        y+5
+        y + 5
     );
 
     pdf.text(
-        Number(gasto.valor || 0).toLocaleString("pt-BR",{
-            style:"currency",
-            currency:"BRL"
+        Number(gasto.valor || 0).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
         }),
         190,
-        y+5,
-        {align:"right"}
+        y + 5,
+        { align: "right" }
     );
 
 }
@@ -1869,20 +1889,20 @@ function desenharLinhaGasto(pdf, gasto, y, index){
 // OBSERVAÇÕES GASTOS E VALES
 //========================================================
 
-function desenharObservacoesGastosVales(pdf, dados, y){
+function desenharObservacoesGastosVales(pdf, dados, y) {
 
-    pdf.setFillColor(243,146,32);
-    pdf.rect(10,y,190,8,"F");
+    pdf.setFillColor(243, 146, 32);
+    pdf.rect(10, y, 190, 8, "F");
 
-    pdf.setFont("helvetica","bold");
+    pdf.setFont("helvetica", "bold");
     pdf.setFontSize(11);
     pdf.setTextColor(255);
 
     pdf.text(
         "OBSERVAÇÕES",
         105,
-        y+5,
-        {align:"center"}
+        y + 5,
+        { align: "center" }
     );
 
     y += 10;
@@ -1900,16 +1920,16 @@ function desenharObservacoesGastosVales(pdf, dados, y){
         "FD"
     );
 
-    pdf.setFont("helvetica","normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
     pdf.setTextColor(50);
 
     pdf.text(
         dados.viagem.observacoes || "Sem observações.",
         15,
-        y+8,
+        y + 8,
         {
-            maxWidth:180
+            maxWidth: 180
         }
     );
 
@@ -1920,7 +1940,7 @@ function desenharObservacoesGastosVales(pdf, dados, y){
 // ASSINATURA GASTOS E VALES
 //========================================================
 
-function desenharAssinaturaGastosVales(pdf, y){
+function desenharAssinaturaGastosVales(pdf, y) {
 
     y += 15;
 
@@ -1933,16 +1953,388 @@ function desenharAssinaturaGastosVales(pdf, y){
         y
     );
 
-    pdf.setFont("helvetica","normal");
+    pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
     pdf.setTextColor(80);
 
     pdf.text(
         "Motorista Responsável",
         105,
-        y+5,
+        y + 5,
         {
+            align: "center"
+        }
+    );
+
+}
+//========================================================
+// CABEÇALHO MANUTENÇÕES
+//========================================================
+
+function desenharCabecalhoManutencoes(pdf, dados) {
+
+    const cabecalho = new Image();
+
+    cabecalho.src = "./img/cabecalho-manutencao.png";
+
+    pdf.addImage(
+        cabecalho,
+        "PNG",
+        0,
+        0,
+        210,
+        35
+    );
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(70);
+
+    pdf.text(
+        `Motorista: ${dados.perfil.nome || "-"}`,
+        12,
+        39
+    );
+
+    pdf.text(
+        `Período: ${formatarData(dados.viagem.inicio)} até ${formatarData(dados.viagem.fim)}`,
+        120,
+        39
+    );
+
+    pdf.text(
+        `Cavalo: ${dados.perfil.placaCavalo || "-"}`,
+        12,
+        45
+    );
+
+    pdf.text(
+        `Carreta: ${dados.perfil.placaReboque || "-"}`,
+        120,
+        45
+    );
+
+}
+//========================================================
+// RESUMO MANUTENÇÕES
+//========================================================
+
+function desenharResumoManutencoes(pdf, dados) {
+
+    const total = dados.manutencoes.length;
+
+    const cavalo = dados.manutencoes.filter(
+    m => m.descCavalo && m.descCavalo.trim() !== ""
+).length;
+
+const carreta = dados.manutencoes.filter(
+    m => m.descReboque && m.descReboque.trim() !== ""
+).length;
+
+    const kmRodados = Number(dados.viagem.kmPercorrido || 0);
+
+    desenharCardManutencao(
+        pdf,
+        10,
+        54,
+        45,
+        28,
+        "TOTAL",
+        total,
+        "Manutenções",
+        [243, 146, 32]
+    );
+
+    desenharCardManutencao(
+        pdf,
+        60,
+        54,
+        45,
+        28,
+        "CAVALO",
+        cavalo,
+        "Registros",
+        [52, 120, 246]
+    );
+
+    desenharCardManutencao(
+        pdf,
+        110,
+        54,
+        45,
+        28,
+        "CARRETA",
+        carreta,
+        "Registros",
+        [46, 160, 67]
+    );
+
+}
+//========================================================
+// CARD MANUTENÇÃO
+//========================================================
+
+function desenharCardManutencao(
+    pdf,
+    x,
+    y,
+    largura,
+    altura,
+    titulo,
+    valor,
+    subtitulo,
+    cor
+) {
+
+    pdf.setDrawColor(cor[0], cor[1], cor[2]);
+    pdf.setFillColor(250, 250, 250);
+
+    pdf.roundedRect(
+        x,
+        y,
+        largura,
+        altura,
+        2,
+        2,
+        "FD"
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(60);
+
+    pdf.text(
+        titulo,
+        x + largura / 2,
+        y + 7,
+        {
+            align: "center"
+        }
+    );
+
+    pdf.setFontSize(18);
+    pdf.setTextColor(cor[0], cor[1], cor[2]);
+
+    pdf.text(
+        String(valor),
+        x + largura / 2,
+        y + 18,
+        {
+            align: "center"
+        }
+    );
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(90);
+
+    pdf.text(
+        subtitulo,
+        x + largura / 2,
+        y + 24,
+        {
+            align: "center"
+        }
+    );
+
+}
+//========================================================
+// CABEÇALHO TABELA MANUTENÇÕES
+//========================================================
+
+function desenharCabecalhoTabelaManutencoes(pdf, y){
+
+    pdf.setFillColor(243,146,32);
+    pdf.rect(10,y,190,8,"F");
+
+    pdf.setFont("helvetica","bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(255);
+
+    pdf.text("DATA",15,y+5);
+    pdf.text("CAVALO",45,y+5);
+    pdf.text("CARRETA",105,y+5);
+    pdf.text("FOTO",182,y+5,{
+        align:"center"
+    });
+
+}
+//========================================================
+// TABELA MANUTENÇÕES
+//========================================================
+
+function desenharTabelaManutencoes(pdf, dados){
+
+    let y = 86;
+
+    desenharCabecalhoTabelaManutencoes(pdf,y);
+
+    y += 8;
+
+    dados.manutencoes.forEach((manutencao,index)=>{
+
+        if(y > 265){
+
+            pdf.addPage();
+
+            desenharCabecalhoManutencoes(pdf,dados);
+
+            y = 54;
+
+            desenharCabecalhoTabelaManutencoes(pdf,y);
+
+            y += 8;
+
+        }
+
+        desenharLinhaManutencao(
+            pdf,
+            manutencao,
+            y,
+            index
+        );
+
+        y += 22;
+
+    });
+
+    return y;
+
+}
+function desenharLinhaManutencao(pdf, manutencao, y, index){
+
+    pdf.setDrawColor(220);
+    pdf.rect(10, y, 190, 22);
+
+        pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(40,40,40);
+
+    pdf.text(
+        formatarData(manutencao.data),
+        15,
+        y + 7
+    );
+
+    pdf.text(
+        manutencao.descCavalo || "-",
+        45,
+        y + 7,
+        {
+            maxWidth:55
+        }
+    );
+
+    pdf.text(
+        manutencao.descReboque || "-",
+        105,
+        y + 7,
+        {
+            maxWidth:55
+        }
+    );
+
+    // Espaço reservado para a foto
+    if (manutencao.fotos && manutencao.fotos.length > 0) {
+
+    try {
+
+        pdf.addImage(
+    manutencao.fotos[0],
+    "PNG",
+    177,
+    y + 3,
+    15,
+    15
+);
+
+    } catch(e){
+
+        pdf.text("-",184,y+9,{
             align:"center"
+        });
+
+    }
+
+}else{
+
+    pdf.text("-",184,y+9,{
+        align:"center"
+    });
+
+    }
+}
+//========================================================
+// OBSERVAÇÕES MANUTENÇÕES
+//========================================================
+
+function desenharObservacoesManutencoes(pdf, dados, y) {
+
+    // Cabeçalho
+    pdf.setFillColor(243, 146, 32);
+    pdf.rect(10, y, 190, 8, "F");
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.setTextColor(255);
+
+    pdf.text(
+        "OBSERVAÇÕES",
+        105,
+        y + 5,
+        { align: "center" }
+    );
+
+    y += 10;
+
+    // Caixa
+    pdf.setFillColor(250);
+    pdf.setDrawColor(220);
+
+    pdf.roundedRect(
+        10,
+        y,
+        190,
+        22,
+        2,
+        2,
+        "FD"
+    );
+
+    // Texto
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(50);
+
+    pdf.text(
+        dados.viagem.observacoes || "Sem observações.",
+        15,
+        y + 8,
+        {
+            maxWidth: 180
+        }
+    );
+
+    return y + 28;
+}
+//========================================================
+// ASSINATURA MANUTENÇÕES
+//========================================================
+
+function desenharAssinaturaManutencoes(pdf, y) {
+
+    pdf.setDrawColor(120);
+    pdf.line(60, y, 150, y);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+
+    pdf.text(
+        "Motorista Responsável",
+        105,
+        y + 5,
+        {
+            align: "center"
         }
     );
 

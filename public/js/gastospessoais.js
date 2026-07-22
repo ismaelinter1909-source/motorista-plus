@@ -23,7 +23,25 @@ import {
     $,
     moeda
 } from "./utils.js";
+import { gerarRelatorioGastosPessoais } from "./relatorioGastosPessoais.js";
+async function carregarDadosRelatorioGastos() {
 
+    return {
+
+        perfil,
+        viagem,
+        gastos
+
+    };
+
+}
+$("btnGerarPdfGastos").onclick = async () => {
+
+    const dados = await carregarDadosRelatorioGastos();
+
+    await gerarRelatorioGastosPessoais(dados);
+
+};
 
 /* =====================================================
    Variáveis Globais
@@ -452,6 +470,7 @@ function adicionarEventosHistorico() {
         });
 
 }
+
 
 
 onAuthStateChanged(auth, async (user) => {
