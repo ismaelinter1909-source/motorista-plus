@@ -177,13 +177,49 @@
       const w = docpdf.internal.pageSize.getWidth();
       docpdf.setFontSize(18);
       docpdf.setFont(undefined, "bold");
-      docpdf.text("Motorista Plus — Registro de Ponto", w / 2, 32, { align: "center" });
+      const cabecalho = new Image();
+      cabecalho.src = "./img/cabecalho-ponto.png";
+
+      await new Promise(resolve => {
+          cabecalho.onload = resolve;
+      });
+
+    // Cabeçalho
+   docpdf.addImage(
+    cabecalho,
+    "PNG",
+    0,
+    0,
+    docpdf.internal.pageSize.getWidth(),
+    90
+);
 
       docpdf.setFontSize(10);
       docpdf.setFont(undefined, "normal");
-      docpdf.text(`Motorista: ${perfil?.nome || "—"}`, 40, 55);
-      docpdf.text(`Telefone: ${perfil?.telefone || "—"}`, 250, 55);
-      docpdf.text(`Mês: ${meses[mesIdx]} / ${ano}`, w - 140, 55);
+     docpdf.setFontSize(11);
+docpdf.setFont(undefined, "bold");
+docpdf.setTextColor(40);
+
+// Motorista
+docpdf.text(
+    `Motorista: ${perfil?.nome || "—"}`,
+    40,
+    130
+);
+
+// Telefone
+docpdf.text(
+    `Telefone: ${perfil?.telefone || "—"}`,
+    330,
+    130
+);
+
+// Mês
+docpdf.text(
+    `Mês: ${meses[mesIdx]} / ${ano}`,
+    w - 170,
+    130
+);
 
       const registros = await carregarMes(mesIdx, ano);
       const map = {};
@@ -205,7 +241,7 @@
       }
 
       docpdf.autoTable({
-        startY: 65,
+        startY: 145,
         head: [["Data", "Início", "Intervalo", "Reinício", "Fim", "Extras"]],
         body,
         theme: "grid",
@@ -218,7 +254,7 @@
       /* ===== ASSINATURA MANUAL (CENTRALIZADA) ===== */
 
         // Y logo após a última tabela
-        let finalY = docpdf.lastAutoTable.finalY + 50;
+        let finalY = docpdf.lastAutoTable.finalY + 25;
 
         // largura da página
         const pageWidth = docpdf.internal.pageSize.getWidth();
@@ -236,10 +272,36 @@
         // texto centralizado
         docpdf.setFontSize(11);
         docpdf.text("Assinatura do Motorista", pageWidth / 2, finalY + 16, { align: "center" });
+const agora = new Date();
 
+const dataHora =
+    agora.toLocaleDateString("pt-BR") +
+    " às " +
+    agora.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+  const yRodape = docpdf.internal.pageSize.getHeight() - 25;
+
+  // Linha superior
+  docpdf.setDrawColor(220);
+  docpdf.line(30, yRodape - 10, pageWidth - 30, yRodape - 10);
+
+  // Texto
+  docpdf.setFontSize(8);
+  docpdf.setTextColor(120);
+
+  docpdf.text(
+      `Motorista Plus • Gerado automaticamente em ${dataHora}`,
+      pageWidth / 2,
+      yRodape,
+      { align: "center" }
+  );
       
       docpdf.save(`ponto_${meses[mesIdx]}_${ano}.pdf`);
     };
+    
     
     // Botões de registro rápido
     document.querySelectorAll('button[data-tipo]').forEach(b => {
