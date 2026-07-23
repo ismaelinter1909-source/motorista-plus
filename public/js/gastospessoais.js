@@ -1,7 +1,6 @@
 /* =====================================================
    GASTOS PESSOAIS - Motorista Plus
    ===================================================== */
-
 import { auth, db } from "./firebase.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
@@ -23,7 +22,8 @@ import {
     $,
     moeda
 } from "./utils.js";
-import { gerarRelatorioGastosPessoais } from "./relatorioGastosPessoais.js";
+import { gerarRelatorioGastosPessoais } from "./relatoriogastospessoais.js";
+
 async function carregarDadosRelatorioGastos() {
 
     return {
@@ -35,13 +35,6 @@ async function carregarDadosRelatorioGastos() {
     };
 
 }
-$("btnGerarPdfGastos").onclick = async () => {
-
-    const dados = await carregarDadosRelatorioGastos();
-
-    await gerarRelatorioGastosPessoais(dados);
-
-};
 
 /* =====================================================
    Variáveis Globais
@@ -74,29 +67,18 @@ const btnHistorico = $("btnHistoricoGastos");
 /* =====================================================
    Carregar Perfil
 ===================================================== */
-
 async function carregarPerfil() {
-
     const snap = await getDoc(
-
-        doc(
-            db,
-            "usuarios",
-            uid
-        )
-
+        doc(db, "usuarios",uid )
     );
-
     if (!snap.exists()) return;
 
     perfil = snap.data();
-
     $("dadosUsuarioCard").innerHTML = `
 
         <div class="item motorista">
 
             <span class="titulo">👤 Motorista</span>
-
             <span class="valor">${perfil.nome}</span>
 
         </div>
@@ -104,39 +86,32 @@ async function carregarPerfil() {
         <div class="item">
 
             <span class="titulo">📞 Telefone</span>
-
             <span class="valor">${perfil.telefone || "-"}</span>
 
         </div>
 
-        <div class="item">
+          <div class="item">
 
             <span class="titulo">🚛 Cavalo</span>
-
             <span class="valor">${perfil.placaCavalo || "-"}</span>
 
         </div>
 
-        <div class="item">
+         <div class="item">
 
-            <span class="titulo">🚚 Reboque</span>
-
+            <span class="titulo">🚚 Carreta</span>
             <span class="valor">${perfil.placaReboque || "-"}</span>
 
         </div>
-
+        
         <div class="item email">
 
             <span class="titulo">✉️ E-mail</span>
-
             <span class="valor">${perfil.email}</span>
 
         </div>
-
-    `;
-
+        `;
 }
-
 
 /* =====================================================
    Carregar Viagem Atual
@@ -471,6 +446,13 @@ function adicionarEventosHistorico() {
 
 }
 
+$("btnGerarPdfGastos").onclick = async () => {
+
+    const dados = await carregarDadosRelatorioGastos();
+
+    await gerarRelatorioGastosPessoais(dados);
+
+};
 
 
 onAuthStateChanged(auth, async (user) => {
